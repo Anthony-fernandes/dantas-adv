@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Plus, Search, Pencil, Trash2, Copy } from 'lucide-react';
+import { FileText, Plus, Search, Pencil, Trash2, Copy, Download, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,8 +20,10 @@ import {
   useCreateLegalTemplate,
   useUpdateLegalTemplate,
   useDeleteLegalTemplate,
+  useProcesses,
   getTotalPages,
 } from '@/hooks/useApiData';
+import { api } from '@/integrations/api/client';
 
 const CATEGORY_OPTIONS = [
   'geral',
@@ -164,6 +166,113 @@ function TemplateDialog({
   );
 }
 
+function GenerateDialog({
+  template,
+  onClose,
+}: {
+  template: any | null;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const { data: processes = [] } = useProcesses();
+  const [processId, setProcessId] = useState('');
+  const [title, setTitle] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ url: string; name: string } | null>(null);
+
+  function reset() {
+    setProcessId('');
+    setTitle('');
+    setResult(null);
+  }
+
+  async function generate() {
+    if (!template || !processId) return;
+    setLoading(true);
+    try {
+      const data: any = await api.post(`/legal-templates/${template.id}/export-pdf/`, {
+        process: processId,
+        title: title.trim() || undefined,
+      });
+      setResult({ url: data.file_download_url ?? data.file ?? '', name: data.name ?? data.title ?? template.name });
+      toast({ title: 'Documento gerado com sucesso!' });
+    } catch (e: any) {
+      toast({ title: e?.message || 'Erro ao gerar documento.', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const open = !!template;
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Gerar documento</DialogTitle>
+        </DialogHeader>
+        {result ? (
+          <div className="space-y-4 py-2">
+            <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 dark:border-green-900/40 dark:bg-green-950/20">
+              <FileText className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-green-800 dark:text-green-300">Documento gerado</p>
+                <p className="truncate text-xs text-green-700 dark:text-green-400">{result.name}</p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { reset(); onClose(); }}>Fechar</Button>
+              {result.url && (
+                <Button asChild className="gap-2">
+                  <a href={result.url} target="_blank" rel="noopener noreferrer">
+                    <Download className="h-4 w-4" />
+                    Baixar PDF
+                  </a>
+                </Button>
+              )}
+            </DialogFooter>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4 py-2">
+              <div className="grid gap-1.5">
+                <Label>Processo *</Label>
+                <Select value={processId} onValueChange={setProcessId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o processo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(processes as any[]).map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.number ? `${p.number} — ` : ''}{p.title ?? p.name ?? p.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Título do documento <span className="text-muted-foreground">(opcional)</span></Label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={template?.name ?? 'Deixe em branco para usar o nome do modelo'}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancelar</Button>
+              <Button onClick={generate} disabled={loading || !processId} className="gap-2">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                {loading ? 'Gerando...' : 'Gerar PDF'}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function TemplatesWorkspace() {
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -172,6 +281,7 @@ export default function TemplatesWorkspace() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [generateTarget, setGenerateTarget] = useState<any | null>(null);
 
   const filters: Record<string, any> = {};
   if (categoryFilter !== 'all') filters.category = categoryFilter;
@@ -375,6 +485,15 @@ export default function TemplatesWorkspace() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-primary"
+                        title="Gerar documento"
+                        onClick={() => setGenerateTarget(t)}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-7 w-7 text-muted-foreground hover:text-foreground"
                         title="Duplicar"
                         onClick={() => handleDuplicate(t)}
@@ -423,6 +542,11 @@ export default function TemplatesWorkspace() {
           </div>
         </div>
       )}
+
+      <GenerateDialog
+        template={generateTarget}
+        onClose={() => setGenerateTarget(null)}
+      />
 
       <TemplateDialog
         open={dialogOpen}
