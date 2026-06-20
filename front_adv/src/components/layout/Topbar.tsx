@@ -46,6 +46,7 @@ function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/blog')) return 'Blog';
   if (pathname.startsWith('/app/auditoria')) return 'Log de Auditoria';
   if (pathname.startsWith('/app/modelos')) return 'Modelos de documentos';
+  if (pathname.startsWith('/app/perfil')) return 'Meu perfil';
   return 'Painel';
 }
 
@@ -76,6 +77,7 @@ function resolvePageSection(pathname: string) {
   }
   if (pathname.startsWith('/app/landing') || pathname.startsWith('/app/blog')) return 'Conteúdo';
   if (pathname.startsWith('/app/auditoria')) return 'Cadastros';
+  if (pathname.startsWith('/app/perfil')) return 'Configurações';
   return 'Painel';
 }
 
@@ -246,7 +248,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
                 <p className="text-xs font-normal text-muted-foreground">{profile?.email || ''}</p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="gap-2 text-sm" disabled>
+              <DropdownMenuItem className="gap-2 text-sm" onClick={() => navigate('/app/perfil')}>
                 <User className="h-4 w-4" />
                 Meu perfil
               </DropdownMenuItem>

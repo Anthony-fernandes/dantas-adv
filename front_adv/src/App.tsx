@@ -40,6 +40,7 @@ import TimesheetPage from "@/pages/app/TimesheetPage";
 import ChatPage from "@/pages/app/ChatPage";
 import AuditLogPage from "@/pages/app/AuditLogPage";
 import TemplatesPage from "@/pages/app/TemplatesPage";
+import ProfilePage from "@/pages/app/ProfilePage";
 import PortalLogin from "@/pages/portal/PortalLogin";
 import PortalHome from "@/pages/portal/PortalHome";
 import PortalProcesses from "@/pages/portal/PortalProcesses";
@@ -266,6 +267,7 @@ const App = () => (
                 <Route path="blog" element={<RequireRole roles={RoleGroups.ADMIN}><LandingBlog /></RequireRole>} />
                 <Route path="auditoria" element={<RequireRole roles={RoleGroups.ADMIN}><AuditLogPage /></RequireRole>} />
                 <Route path="modelos" element={<RequireRole roles={RoleGroups.LEGAL}><TemplatesPage /></RequireRole>} />
+                <Route path="perfil" element={<ProfilePage />} />
                 <Route path="admin" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
                 <Route path="admin/*" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
               </Route>
