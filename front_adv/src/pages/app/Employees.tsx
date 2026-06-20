@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, CheckCircle2, Mail, MoreHorizontal, Pencil, Phone, UserSquare2, Users } from "lucide-react";
 import { api, apiGetAllPages, apiRequest } from "@/integrations/api/client";
 import { maskCEP, maskCpfCnpj, maskMoneyBRInput, maskPhoneBR, maskUF, moneyToApiDecimal } from "@/lib/masks";
+import { useCepLookup } from "@/hooks/useCepLookup";
 import { useScopedTenant } from "@/hooks/useScopedTenant";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -198,6 +199,7 @@ export default function Employees() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const cepLookup = useCepLookup();
   const [open, setOpen] = useState(false);
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
   const [form, setForm] = useState<EmployeeForm>(INITIAL_FORM);
@@ -652,7 +654,28 @@ export default function Employees() {
                     <div className="grid gap-3 md:grid-cols-3">
                       <div>
                         <Label>CEP</Label>
-                        <Input value={form.zip_code} onChange={(event) => setForm((previous) => ({ ...previous, zip_code: maskCEP(event.target.value) }))} />
+                        <div className="relative">
+                          <Input
+                            value={form.zip_code}
+                            maxLength={9}
+                            onChange={async (event) => {
+                              const masked = maskCEP(event.target.value);
+                              setForm((previous) => ({ ...previous, zip_code: masked }));
+                              const filled = await cepLookup.lookup(masked);
+                              if (filled) {
+                                setForm((previous) => ({
+                                  ...previous,
+                                  neighborhood: filled.neighborhood || previous.neighborhood,
+                                  city: filled.city || previous.city,
+                                  state: filled.state || previous.state,
+                                }));
+                              }
+                            }}
+                          />
+                          {cepLookup.loading && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          )}
+                        </div>
                       </div>
                       <div>
                         <Label>Estado</Label>
