@@ -452,3 +452,8 @@ export const useTimeEntriesPaged = (
 export const useCreateTimeEntry = () => useCreate<any>('time-entries');
 export const useUpdateTimeEntry = () => useUpdate<any>('time-entries');
 export const useDeleteTimeEntry = () => useDelete('time-entries');
+
+// Internal Chat
+export const useChatMessages = (processId?: string) =>
+  useList<any>('chat-messages', { filters: processId ? { process: processId } : undefined });
+export const useCreateChatMessage = () => useCreate<any>('chat-messages');

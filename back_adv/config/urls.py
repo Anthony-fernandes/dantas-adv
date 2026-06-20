@@ -75,6 +75,7 @@ from apps.finance.api import (
     PaymentViewSet,
     ReceivableInstallmentViewSet,
 )
+from apps.chat.api import ChatMessageViewSet
 from apps.notifications.api import NotificationViewSet
 from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessViewSet, TaskViewSet, TimeEntryViewSet
 
@@ -101,6 +102,7 @@ router.register(r"receivable-installments", ReceivableInstallmentViewSet, basena
 router.register(r"accounts-payable", AccountsPayableViewSet, basename="accountspayable")
 router.register(r"invoices", InvoiceViewSet, basename="invoice")
 router.register(r"payments", PaymentViewSet, basename="payment")
+router.register(r"chat-messages", ChatMessageViewSet, basename="chat-message")
 router.register(r"notifications", NotificationViewSet, basename="notification")
 router.register(r"documents", DocumentViewSet, basename="document")
 router.register(r"editor-documents", ProcessRichDocumentViewSet, basename="editor-document")

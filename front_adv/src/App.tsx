@@ -37,6 +37,7 @@ import DeadlinesPage from "@/pages/app/DeadlinesPage";
 import HonorariosPage from "@/pages/app/HonorariosPage";
 import TasksPage from "@/pages/app/TasksPage";
 import TimesheetPage from "@/pages/app/TimesheetPage";
+import ChatPage from "@/pages/app/ChatPage";
 import PortalLogin from "@/pages/portal/PortalLogin";
 import PortalHome from "@/pages/portal/PortalHome";
 import PortalProcesses from "@/pages/portal/PortalProcesses";
@@ -251,6 +252,7 @@ const App = () => (
                 <Route path="prazos" element={<RequireRole roles={RoleGroups.LEGAL}><DeadlinesPage /></RequireRole>} />
                 <Route path="tarefas" element={<RequireRole roles={RoleGroups.LEGAL}><TasksPage /></RequireRole>} />
                 <Route path="horas" element={<RequireRole roles={RoleGroups.LEGAL}><TimesheetPage /></RequireRole>} />
+                <Route path="chat" element={<RequireRole roles={RoleGroups.LEGAL}><ChatPage /></RequireRole>} />
                 <Route path="agenda" element={<RequireRole roles={RoleGroups.LEGAL}><AgendaPage /></RequireRole>} />
                 <Route path="financeiro/*" element={<RequireRole roles={RoleGroups.FINANCE}><Financial /></RequireRole>} />
                 <Route path="funcionarios" element={<RequireRole roles={RoleGroups.ADMIN}><Employees /></RequireRole>} />

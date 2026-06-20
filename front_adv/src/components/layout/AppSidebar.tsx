@@ -23,6 +23,7 @@ import {
   Banknote,
   CheckSquare,
   Clock,
+  MessageSquare,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -58,6 +59,7 @@ const navSections: NavSection[] = [
       { label: "Prazos", icon: Timer, path: "/app/prazos", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Tarefas", icon: CheckSquare, path: "/app/tarefas", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Horas", icon: Clock, path: "/app/horas", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
+      { label: "Chat", icon: MessageSquare, path: "/app/chat", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Agenda", icon: CalendarDays, path: "/app/agenda", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
     ],
   },
