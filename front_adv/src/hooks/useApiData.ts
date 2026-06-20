@@ -307,6 +307,7 @@ export const usePayments = (filters?: Record<string, any>) => useList<any>('paym
 export const useNotifications = (filters?: Record<string, any>, enabled: boolean = true) =>
   useList<any>('notifications', { filters, enabled });
 export const useCreateNotification = () => useCreate<any>('notifications');
+export const useUpdateNotification = () => useUpdate<any>('notifications');
 
 // Audit Logs (paged)
 export const useAuditEventsPaged = (

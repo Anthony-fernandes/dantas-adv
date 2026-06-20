@@ -7,7 +7,8 @@ import { useTenant } from '@/contexts/TenantContext';
 import { TenantSwitcher } from '@/components/shared/TenantSwitcher';
 import { GlobalSearch } from '@/components/shared/GlobalSearch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useNotifications } from '@/hooks/useApiData';
+import { useNotifications, useUpdateNotification } from '@/hooks/useApiData';
+import { useQueryClient } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   DropdownMenu,
@@ -98,8 +99,19 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   const { profile, roles, isSuperuser, logout } = useAuth();
   const { tenants } = useTenant();
   const { theme, setTheme } = useTheme();
+  const queryClient = useQueryClient();
   const { data: notifications } = useNotifications(undefined, !isSuperuser);
+  const updateNotification = useUpdateNotification();
   const unreadCount = notifications?.filter((n) => !n.read).length || 0;
+
+  async function markRead(id: string) {
+    await updateNotification.mutateAsync({ id, read: true });
+  }
+
+  async function markAllRead() {
+    const unread = (notifications ?? []).filter((n) => !n.read);
+    await Promise.all(unread.map((n) => updateNotification.mutateAsync({ id: n.id, read: true })));
+  }
 
   const initials = (profile?.full_name || 'U')
     .split(' ')
@@ -162,23 +174,44 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 border-border p-0 shadow-elevated" align="end">
-              <div className="border-b border-border px-4 py-3">
-                <p className="eyebrow mb-0.5">Central interna</p>
-                <p className="font-medium text-foreground">Notificações</p>
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <div>
+                  <p className="eyebrow mb-0.5">Central interna</p>
+                  <p className="font-medium text-foreground">Notificações</p>
+                </div>
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllRead}
+                    className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                  >
+                    Marcar todas lidas
+                  </button>
+                )}
               </div>
               <div className="max-h-72 overflow-y-auto">
                 {notifications && notifications.length > 0 ? (
                   notifications.slice(0, 10).map((n) => (
-                    <div
+                    <button
                       key={n.id}
-                      className={cn('border-b border-border px-4 py-3 text-sm last:border-0', n.read ? 'opacity-55' : '')}
+                      type="button"
+                      onClick={() => !n.read && markRead(n.id)}
+                      className={cn(
+                        'block w-full border-b border-border px-4 py-3 text-left text-sm last:border-0 transition-colors',
+                        n.read ? 'opacity-55' : 'hover:bg-muted/40 cursor-pointer',
+                      )}
                     >
-                      <p className="font-medium text-foreground">{n.title}</p>
-                      {n.message ? <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p> : null}
-                      <p className="mt-1.5 font-mono-ui text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                        {new Date(n.created_at).toLocaleString('pt-BR')}
-                      </p>
-                    </div>
+                      <div className="flex items-start gap-2">
+                        {!n.read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+                        <div className={cn('min-w-0', n.read && 'ml-3.5')}>
+                          <p className="font-medium text-foreground">{n.title}</p>
+                          {n.message ? <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p> : null}
+                          <p className="mt-1.5 font-mono-ui text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                            {new Date(n.created_at).toLocaleString('pt-BR')}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
                   ))
                 ) : (
                   <div className="px-4 py-8 text-center">
