@@ -24,6 +24,7 @@ import {
   CheckSquare,
   Clock,
   MessageSquare,
+  Shield,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -80,6 +81,7 @@ const navSections: NavSection[] = [
       { label: "Empresas", icon: Building2, path: "/app/empresas", roles: ["OWNER", "ADMIN"] },
       { label: "Site institucional", icon: Globe2, path: "/app/landing", roles: ["OWNER", "ADMIN"] },
       { label: "Blog", icon: BookOpenText, path: "/app/blog", roles: ["OWNER", "ADMIN"] },
+      { label: "Auditoria", icon: Shield, path: "/app/auditoria", roles: ["OWNER", "ADMIN"] },
     ],
   },
 ];

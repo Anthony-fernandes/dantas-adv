@@ -42,6 +42,7 @@ function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/empresas')) return 'Empresas';
   if (pathname.startsWith('/app/landing')) return 'Site institucional';
   if (pathname.startsWith('/app/blog')) return 'Blog';
+  if (pathname.startsWith('/app/auditoria')) return 'Log de Auditoria';
   return 'Painel';
 }
 
@@ -70,6 +71,7 @@ function resolvePageSection(pathname: string) {
     return 'Cadastros';
   }
   if (pathname.startsWith('/app/landing') || pathname.startsWith('/app/blog')) return 'Conteúdo';
+  if (pathname.startsWith('/app/auditoria')) return 'Cadastros';
   return 'Painel';
 }
 
