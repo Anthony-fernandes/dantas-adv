@@ -16,9 +16,28 @@ from apps.documents.models import Document
 
 
 class PlanSerializer(serializers.ModelSerializer):
+    max_users = serializers.SerializerMethodField()
+    max_processes = serializers.SerializerMethodField()
+    max_storage_gb = serializers.SerializerMethodField()
+
     class Meta:
         model = Plan
-        fields = ['id', 'code', 'name', 'description', 'limits', 'modules', 'is_active']
+        fields = ['id', 'code', 'name', 'description', 'limits', 'modules', 'is_active', 'max_users', 'max_processes', 'max_storage_gb']
+
+    def get_max_users(self, obj):
+        return obj.limits.get('users') or obj.limits.get('max_users')
+
+    def get_max_processes(self, obj):
+        return obj.limits.get('processes') or obj.limits.get('max_processes')
+
+    def get_max_storage_gb(self, obj):
+        mb = obj.limits.get('storage_mb') or obj.limits.get('max_storage_mb')
+        gb = obj.limits.get('storage_gb') or obj.limits.get('max_storage_gb')
+        if gb:
+            return gb
+        if mb:
+            return round(mb / 1024, 1)
+        return None
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
