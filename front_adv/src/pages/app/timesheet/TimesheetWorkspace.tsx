@@ -414,8 +414,8 @@ export default function TimesheetWorkspace() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-lg border border-border bg-card">
-        <table className="table-editorial w-full">
+      <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <table className="table-editorial min-w-[700px] w-full">
           <thead>
             <tr>
               <th>Data</th>

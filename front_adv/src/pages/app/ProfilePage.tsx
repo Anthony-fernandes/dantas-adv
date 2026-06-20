@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { User, Lock, Phone, Award, FileText, Save, CheckCircle2, Bell } from 'lucide-react';
@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { maskOAB, maskPhoneBR } from '@/lib/masks';
 
 const profileSchema = z.object({
   full_name: z.string().min(2, 'Nome deve ter ao menos 2 caracteres'),
@@ -106,6 +107,7 @@ export default function ProfilePage() {
   const {
     register: regProfile,
     handleSubmit: handleProfile,
+    control: profileControl,
     formState: { errors: profileErrors },
   } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -220,7 +222,18 @@ export default function ProfilePage() {
                   Telefone
                 </span>
               </Label>
-              <Input id="phone" {...regProfile('phone')} placeholder="(11) 99999-9999" />
+              <Controller
+                name="phone"
+                control={profileControl}
+                render={({ field }) => (
+                  <Input
+                    id="phone"
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(maskPhoneBR(e.target.value))}
+                    placeholder="(11) 99999-9999"
+                  />
+                )}
+              />
             </div>
 
             <div className="space-y-1.5">
@@ -230,7 +243,18 @@ export default function ProfilePage() {
                   OAB
                 </span>
               </Label>
-              <Input id="oab" {...regProfile('oab')} placeholder="SP 123456" />
+              <Controller
+                name="oab"
+                control={profileControl}
+                render={({ field }) => (
+                  <Input
+                    id="oab"
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(maskOAB(e.target.value))}
+                    placeholder="SP 123456"
+                  />
+                )}
+              />
             </div>
           </div>
 

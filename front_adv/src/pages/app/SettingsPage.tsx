@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { maskCEP } from '@/lib/masks';
+import { maskCEP, maskCNPJ, maskPhoneBR } from '@/lib/masks';
 import { useCepLookup } from '@/hooks/useCepLookup';
 
 type TenantDetails = {
@@ -289,7 +289,7 @@ export default function SettingsPage() {
               <Input
                 id="office-cnpj"
                 value={form.cnpj}
-                onChange={(e) => setField('cnpj', e.target.value)}
+                onChange={(e) => setField('cnpj', maskCNPJ(e.target.value))}
                 disabled={!canEdit}
                 placeholder="00.000.000/0001-00"
               />
@@ -305,7 +305,7 @@ export default function SettingsPage() {
               <Input
                 id="office-phone"
                 value={form.phone}
-                onChange={(e) => setField('phone', e.target.value)}
+                onChange={(e) => setField('phone', maskPhoneBR(e.target.value))}
                 disabled={!canEdit}
                 placeholder="(11) 3333-4444"
               />

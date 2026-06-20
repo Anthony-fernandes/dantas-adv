@@ -694,8 +694,8 @@ export default function HonorariosWorkspace() {
           action={{ label: 'Novo honorário', onClick: openCreate }}
         />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <table className="w-full">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+          <table className="min-w-[800px] w-full">
             <thead className="border-b border-border bg-muted/30">
               <tr>
                 <th className="w-10 py-3 pl-4" />

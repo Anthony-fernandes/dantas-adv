@@ -126,8 +126,8 @@ export default function AuditLogPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-lg border border-border bg-card">
-        <table className="table-editorial w-full">
+      <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <table className="table-editorial min-w-[720px] w-full">
           <thead>
             <tr>
               <th>Data / Hora</th>

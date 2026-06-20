@@ -520,8 +520,8 @@ export default function DeadlinesWorkspace() {
         {items.length === 0 ? (
           <p className="px-4 py-3 text-sm text-muted-foreground">{emptyMsg}</p>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
-            <table className="w-full">
+          <div className="overflow-x-auto rounded-lg border border-border bg-card">
+            <table className="min-w-[560px] w-full">
               <tbody>
                 {items.map((item) => (
                   <DeadlineRow
