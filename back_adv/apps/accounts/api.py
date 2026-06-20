@@ -350,7 +350,7 @@ class EmployeeViewSet(TenantScopedModelViewSet):
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request):
+    def _build_response(self, request):
         u: User = request.user
         tenant = getattr(request, 'tenant', None) or getattr(getattr(u, 'profile', None), 'tenant', None)
         roles = list(UserRole.objects.filter(user=u, tenant=tenant).values_list('role', flat=True)) if tenant else []
@@ -358,10 +358,44 @@ class MeView(APIView):
             'id': str(u.id),
             'email': u.email,
             'full_name': getattr(getattr(u, 'profile', None), 'full_name', ''),
+            'phone': getattr(getattr(u, 'profile', None), 'phone', '') or '',
+            'oab': getattr(getattr(u, 'profile', None), 'oab', '') or '',
+            'bio': getattr(getattr(u, 'profile', None), 'bio', '') or '',
             'tenant': {'id': str(tenant.id), 'name': tenant.name, 'slug': tenant.slug, 'owner_id': str(tenant.owner_id) if tenant.owner_id else None} if tenant else None,
             'roles': roles,
             'is_superuser': bool(u.is_superuser),
         })
+
+    def get(self, request):
+        return self._build_response(request)
+
+    def patch(self, request):
+        u: User = request.user
+        data = request.data
+
+        full_name = data.get('full_name')
+        if full_name is not None:
+            profile = getattr(u, 'profile', None)
+            if profile:
+                profile.full_name = str(full_name).strip()
+                update_fields = ['full_name']
+                for field in ('phone', 'oab', 'bio'):
+                    if field in data:
+                        setattr(profile, field, str(data[field]).strip())
+                        update_fields.append(field)
+                profile.save(update_fields=update_fields)
+
+        if 'password' in data and data['password']:
+            new_password = str(data['password']).strip()
+            current_password = str(data.get('current_password', '')).strip()
+            if not u.check_password(current_password):
+                return Response({'detail': 'Senha atual incorreta.'}, status=400)
+            if len(new_password) < 8:
+                return Response({'detail': 'A nova senha deve ter ao menos 8 caracteres.'}, status=400)
+            u.set_password(new_password)
+            u.save(update_fields=['password'])
+
+        return self._build_response(request)
 
 
 class AcceptLGPDView(APIView):
