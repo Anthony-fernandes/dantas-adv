@@ -16,7 +16,7 @@ type ProcessDetail = {
   status?: string | null;
   phase?: string | null;
   area?: string | null;
-  description?: string | null;
+  notes?: string | null;
   client?: { id: string; name: string } | null;
 };
 
@@ -127,8 +127,8 @@ export default function PortalProcessDetail() {
             </span>
           )}
         </div>
-        {process?.description && (
-          <p className="mt-3 text-sm text-muted-foreground">{process.description}</p>
+        {process?.notes && (
+          <p className="mt-3 text-sm text-muted-foreground">{process.notes}</p>
         )}
       </div>
 

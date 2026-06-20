@@ -127,7 +127,7 @@ class PortalProcessDetailSerializer(serializers.ModelSerializer):
             'status',
             'phase',
             'area',
-            'description',
+            'notes',
             'created_at',
             'updated_at',
             'client',
