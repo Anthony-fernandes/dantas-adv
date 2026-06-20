@@ -207,7 +207,7 @@ export default function AdminUsers() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("LAWYER");
-  const [inviteResult, setInviteResult] = useState<{ invite_url?: string } | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ invite_url?: string; token?: string } | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [originalLinks, setOriginalLinks] = useState<LinkSnapshot>({ employeeId: "", employeeTenantId: "", clientId: "", clientTenantId: "" });
   const [accessSnapshot, setAccessSnapshot] = useState<AccessSnapshot>({ roles: [], permissions: [] });
@@ -882,15 +882,21 @@ export default function AdminUsers() {
                   O link foi enviado para <strong>{inviteEmail}</strong>.
                 </p>
               </div>
-              {inviteResult.invite_url && (
+              {(inviteResult.invite_url || inviteResult.token) && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Link do convite (copie se precisar enviar manualmente)</Label>
+                  <Label className="text-xs text-muted-foreground">
+                    {inviteResult.invite_url ? 'Link do convite (copie se precisar enviar manualmente)' : 'Token do convite'}
+                  </Label>
                   <div className="flex gap-2">
-                    <Input value={inviteResult.invite_url} readOnly className="font-mono text-xs" />
+                    <Input
+                      value={inviteResult.invite_url || inviteResult.token || ''}
+                      readOnly
+                      className="font-mono text-xs"
+                    />
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => navigator.clipboard.writeText(inviteResult!.invite_url!)}
+                      onClick={() => navigator.clipboard.writeText(inviteResult!.invite_url || inviteResult!.token || '')}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>

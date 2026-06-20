@@ -801,12 +801,14 @@ class TenantInviteView(APIView):
 
         return Response(
             {
+                'invite_url': invite_url,
+                'token': invite.token,
                 'invite': {
                     'email': invite.email,
                     'role': invite.role,
                     'token': invite.token,
                     'expires_at': invite.expires_at,
-                }
+                },
             },
             status=201,
         )
