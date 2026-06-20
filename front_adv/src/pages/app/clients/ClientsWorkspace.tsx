@@ -37,6 +37,7 @@ import { type DbClient } from '@/hooks/useApiData';
 import { api, apiGetAllPages } from '@/integrations/api/client';
 import { cn } from '@/lib/utils';
 import { maskCEP, maskCpfCnpj, maskPhoneBR, maskUF } from '@/lib/masks';
+import { useCepLookup } from '@/hooks/useCepLookup';
 import {
   normalizeClientText,
   parseClientNotes,
@@ -374,6 +375,7 @@ export default function ClientsWorkspace() {
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [form, setForm] = useState<ClientFormState>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
+  const cepLookup = useCepLookup();
 
   const clientsQuery = useQuery({
     queryKey: ['clients-crm', activeTenantId],
@@ -799,7 +801,29 @@ export default function ClientsWorkspace() {
                       <div className="grid gap-4 md:grid-cols-6">
                         <div className="space-y-2 md:col-span-2">
                           <Label>CEP</Label>
-                          <Input value={form.cep} onChange={(event) => setForm((previous) => ({ ...previous, cep: maskCEP(event.target.value) }))} />
+                          <div className="relative">
+                            <Input
+                              value={form.cep}
+                              maxLength={9}
+                              onChange={async (event) => {
+                                const masked = maskCEP(event.target.value);
+                                setForm((previous) => ({ ...previous, cep: masked }));
+                                const filled = await cepLookup.lookup(masked);
+                                if (filled) {
+                                  setForm((previous) => ({
+                                    ...previous,
+                                    street: filled.street || previous.street,
+                                    neighborhood: filled.neighborhood || previous.neighborhood,
+                                    city: filled.city || previous.city,
+                                    state: filled.state || previous.state,
+                                  }));
+                                }
+                              }}
+                            />
+                            {cepLookup.loading && (
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            )}
+                          </div>
                         </div>
                         <div className="space-y-2 md:col-span-3">
                           <Label>Rua</Label>

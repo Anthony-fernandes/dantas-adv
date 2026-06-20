@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Building2, Bell, Save, CheckCircle2, Globe, Phone, Mail, FileText } from 'lucide-react';
+import { Building2, Bell, Save, CheckCircle2, Globe, Phone, Mail, FileText, Loader2 } from 'lucide-react';
 import { api } from '@/integrations/api/client';
 import { useTenant } from '@/contexts/TenantContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { maskCEP } from '@/lib/masks';
+import { useCepLookup } from '@/hooks/useCepLookup';
 
 type TenantDetails = {
   id: string;
@@ -115,6 +117,8 @@ export default function SettingsPage() {
   const [form, setForm] = useState<OfficeForm>(DEFAULT_FORM);
   const [notif, setNotif] = useState<NotifSettings>(DEFAULT_NOTIF);
 
+  const cepLookup = useCepLookup();
+
   const [officeSaved, setOfficeSaved] = useState(false);
   const [officeError, setOfficeError] = useState('');
   const [officeLoading, setOfficeLoading] = useState(false);
@@ -154,6 +158,22 @@ export default function SettingsPage() {
 
   function setField(field: keyof OfficeForm, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  async function handleCepChange(value: string) {
+    const masked = maskCEP(value);
+    setField('address_zip', masked);
+    const filled = await cepLookup.lookup(masked);
+    if (filled) {
+      setForm((f) => ({
+        ...f,
+        address_street: filled.street || f.address_street,
+        address_complement: filled.complement || f.address_complement,
+        address_neighborhood: filled.neighborhood || f.address_neighborhood,
+        address_city: filled.city || f.address_city,
+        address_state: filled.state || f.address_state,
+      }));
+    }
   }
 
   async function saveOffice(e: React.FormEvent) {
@@ -352,7 +372,21 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-1.5">
               <Label>CEP</Label>
-              <Input value={form.address_zip} onChange={(e) => setField('address_zip', e.target.value)} disabled={!canEdit} placeholder="00000-000" />
+              <div className="relative">
+                <Input
+                  value={form.address_zip}
+                  onChange={(e) => handleCepChange(e.target.value)}
+                  disabled={!canEdit}
+                  placeholder="00000-000"
+                  maxLength={9}
+                />
+                {cepLookup.loading && (
+                  <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                )}
+              </div>
+              {cepLookup.error && (
+                <p className="text-xs text-destructive">{cepLookup.error}</p>
+              )}
             </div>
           </div>
 
