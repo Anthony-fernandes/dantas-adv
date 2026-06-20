@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import {
   DollarSign,
   FileText,
@@ -8,7 +9,9 @@ import {
   LogOut,
   Menu,
   MessageSquare,
+  Moon,
   Scale,
+  Sun,
   X,
 } from "lucide-react";
 
@@ -30,6 +33,8 @@ export function PortalLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logout, user } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === 'dark';
   const publicSiteQuery = useQuery({
     queryKey: ["portal-layout-brand"],
     queryFn: async () => await leadService.getPublicSite(),
@@ -112,14 +117,24 @@ export function PortalLayout() {
               <p className="truncate text-xs font-medium text-foreground">{user?.email || "Cliente"}</p>
               <p className="text-[10px] text-muted-foreground">Conta ativa</p>
             </div>
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-              title="Sair"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                title={isDark ? 'Modo claro' : 'Modo escuro'}
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={logout}
+                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                title="Sair"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -136,13 +151,22 @@ export function PortalLayout() {
           )}
           <p className="text-sm font-semibold text-foreground">{brand.companyName}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setMobileOpen((p) => !p)}
-          className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-        >
-          {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          >
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileOpen((p) => !p)}
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          >
+            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+        </div>
       </header>
 
       {/* Mobile overlay */}
