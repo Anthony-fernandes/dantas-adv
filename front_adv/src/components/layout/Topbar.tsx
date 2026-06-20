@@ -47,6 +47,7 @@ function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/auditoria')) return 'Log de Auditoria';
   if (pathname.startsWith('/app/modelos')) return 'Modelos de documentos';
   if (pathname.startsWith('/app/perfil')) return 'Meu perfil';
+  if (pathname.startsWith('/app/configuracoes')) return 'Configurações do escritório';
   return 'Painel';
 }
 
@@ -78,6 +79,7 @@ function resolvePageSection(pathname: string) {
   if (pathname.startsWith('/app/landing') || pathname.startsWith('/app/blog')) return 'Conteúdo';
   if (pathname.startsWith('/app/auditoria')) return 'Cadastros';
   if (pathname.startsWith('/app/perfil')) return 'Configurações';
+  if (pathname.startsWith('/app/configuracoes')) return 'Administração';
   return 'Painel';
 }
 

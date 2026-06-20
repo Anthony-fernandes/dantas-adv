@@ -26,6 +26,7 @@ import {
   MessageSquare,
   Shield,
   FileText,
+  Settings,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -84,6 +85,7 @@ const navSections: NavSection[] = [
       { label: "Site institucional", icon: Globe2, path: "/app/landing", roles: ["OWNER", "ADMIN"] },
       { label: "Blog", icon: BookOpenText, path: "/app/blog", roles: ["OWNER", "ADMIN"] },
       { label: "Auditoria", icon: Shield, path: "/app/auditoria", roles: ["OWNER", "ADMIN"] },
+      { label: "Configurações", icon: Settings, path: "/app/configuracoes", roles: ["OWNER", "ADMIN"] },
     ],
   },
 ];
