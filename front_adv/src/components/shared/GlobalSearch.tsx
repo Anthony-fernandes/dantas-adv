@@ -11,6 +11,8 @@ import {
   DollarSign,
   BarChart3,
   Settings,
+  FileSignature,
+  FolderOpen,
 } from 'lucide-react';
 import {
   CommandDialog,
@@ -22,7 +24,7 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@/components/ui/command';
-import { useProcesses, useClients, useTasks } from '@/hooks/useApiData';
+import { useProcesses, useClients, useTasks, useDocuments } from '@/hooks/useApiData';
 
 type Result = {
   id: string;
@@ -45,7 +47,9 @@ const NAV_COMMANDS: Result[] = [
   { id: 'nav-financeiro', label: 'Financeiro', sub: 'Contas e pagamentos', path: '/app/financeiro', group: 'Navegação', icon: DollarSign },
   { id: 'nav-honorarios', label: 'Honorários', sub: 'Honorários advocatícios', path: '/app/honorarios', group: 'Navegação', icon: DollarSign },
   { id: 'nav-relatorios', label: 'Relatórios', sub: 'Análises e indicadores', path: '/app/relatorios', group: 'Navegação', icon: BarChart3 },
+  { id: 'nav-contratos', label: 'Contratos', sub: 'Contratos de honorários', path: '/app/contratos', group: 'Navegação', icon: FileSignature },
   { id: 'nav-modelos', label: 'Modelos', sub: 'Templates de documentos', path: '/app/modelos', group: 'Navegação', icon: FileText },
+  { id: 'nav-audiencias-list', label: 'Audiências', sub: 'Agenda de audiências', path: '/app/audiencias', group: 'Navegação', icon: FolderOpen },
   { id: 'nav-usuarios', label: 'Usuários', sub: 'Gestão de usuários', path: '/app/usuarios', group: 'Configurações', icon: Settings },
   { id: 'nav-auditoria', label: 'Auditoria', sub: 'Log de auditoria', path: '/app/auditoria', group: 'Configurações', icon: Settings },
 ];
@@ -57,10 +61,12 @@ export function GlobalSearch() {
   const { data: processesRaw } = useProcesses();
   const { data: clientsRaw } = useClients();
   const { data: tasksRaw } = useTasks();
+  const { data: documentsRaw } = useDocuments();
 
   const processes: any[] = Array.isArray(processesRaw) ? processesRaw : [];
   const clients: any[] = Array.isArray(clientsRaw) ? clientsRaw : [];
   const tasks: any[] = Array.isArray(tasksRaw) ? tasksRaw : [];
+  const documents: any[] = Array.isArray(documentsRaw) ? documentsRaw : (documentsRaw as any)?.results ?? [];
 
   useEffect(() => {
     function down(e: KeyboardEvent) {
@@ -109,6 +115,17 @@ export function GlobalSearch() {
     })),
   [tasks]);
 
+  const documentResults = useMemo<Result[]>(() =>
+    documents.slice(0, 30).map((d) => ({
+      id: `doc-${d.id}`,
+      label: d.title || d.filename || d.name || 'Documento',
+      sub: [d.category, d.process_cnj || d.process_number].filter(Boolean).join(' · '),
+      path: d.process ? `/app/processos/${d.process}?tab=documents` : '/app/documentos',
+      group: 'Documentos',
+      icon: FileText,
+    })),
+  [documents]);
+
   function run(path: string) {
     navigate(path);
     setOpen(false);
@@ -138,7 +155,7 @@ export function GlobalSearch() {
     ));
   }
 
-  const allDataResults = [...processResults, ...clientResults, ...taskResults];
+  const allDataResults = [...processResults, ...clientResults, ...taskResults, ...documentResults];
 
   return (
     <>

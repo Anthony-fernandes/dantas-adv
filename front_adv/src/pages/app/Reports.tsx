@@ -32,6 +32,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,6 +40,7 @@ import { apiGetAllPages, getAccessToken } from '@/integrations/api/client';
 import { useTimeEntries } from '@/hooks/useApiData';
 import { useTenant } from '@/contexts/TenantContext';
 import { cn } from '@/lib/utils';
+import { exportToCsv, formatCsvCurrency, formatCsvDate } from '@/lib/csvExport';
 
 type PeriodOption = '30d' | '90d' | '6m' | '12m';
 
@@ -446,6 +448,96 @@ export default function Reports() {
       .sort((a, b) => b.total - a.total);
   }, [timeEntries]);
 
+  function exportFinanceiroCsv() {
+    exportToCsv(`financeiro_${period}_${new Date().toISOString().slice(0,10)}`, [
+      { key: 'description', label: 'Descrição' },
+      { key: 'type', label: 'Tipo' },
+      { key: 'amount_fmt', label: 'Valor (R$)' },
+      { key: 'status', label: 'Status' },
+      { key: 'due_date_fmt', label: 'Vencimento' },
+      { key: 'created_at_fmt', label: 'Criado em' },
+    ], [
+      ...filteredReceivables.map((r: any) => ({
+        description: r.description || '',
+        type: 'Recebível',
+        amount_fmt: formatCsvCurrency(r.amount),
+        status: r.status || '',
+        due_date_fmt: formatCsvDate(r.due_date),
+        created_at_fmt: formatCsvDate(r.created_at),
+      })),
+      ...filteredPayables.map((p: any) => ({
+        description: p.description || '',
+        type: 'Pagável',
+        amount_fmt: formatCsvCurrency(p.amount),
+        status: p.status || '',
+        due_date_fmt: formatCsvDate(p.due_date),
+        created_at_fmt: formatCsvDate(p.created_at),
+      })),
+    ]);
+  }
+
+  function exportProcessosCsv() {
+    exportToCsv(`processos_${new Date().toISOString().slice(0,10)}`, [
+      { key: 'cnj', label: 'CNJ' },
+      { key: 'title', label: 'Assunto' },
+      { key: 'client_name', label: 'Cliente' },
+      { key: 'status', label: 'Status' },
+      { key: 'area', label: 'Área' },
+      { key: 'phase', label: 'Fase' },
+      { key: 'created_at_fmt', label: 'Cadastrado em' },
+      { key: 'updated_at_fmt', label: 'Atualizado em' },
+    ], processes.map((p: any) => ({
+      cnj: p.cnj || p.number || '',
+      title: p.title || p.subject || '',
+      client_name: p.client_name || p.cliente_nome || '',
+      status: p.status || '',
+      area: p.area || '',
+      phase: p.phase || '',
+      created_at_fmt: formatCsvDate(p.created_at),
+      updated_at_fmt: formatCsvDate(p.updated_at),
+    })));
+  }
+
+  function exportClientesCsv() {
+    exportToCsv(`clientes_${new Date().toISOString().slice(0,10)}`, [
+      { key: 'name', label: 'Nome' },
+      { key: 'type', label: 'Tipo' },
+      { key: 'cpf_cnpj', label: 'CPF/CNPJ' },
+      { key: 'email', label: 'E-mail' },
+      { key: 'phone', label: 'Telefone' },
+      { key: 'city', label: 'Cidade' },
+      { key: 'state', label: 'UF' },
+      { key: 'created_at_fmt', label: 'Cadastrado em' },
+    ], clients.map((c: any) => ({
+      name: c.name || c.full_name || c.razao_social || '',
+      type: c.type === 'pj' ? 'PJ' : 'PF',
+      cpf_cnpj: c.cpf || c.cnpj || '',
+      email: c.email || '',
+      phone: c.phone || c.phone_number || '',
+      city: c.address_city || c.city || '',
+      state: c.address_state || c.state || '',
+      created_at_fmt: formatCsvDate(c.created_at),
+    })));
+  }
+
+  function exportHorasCsv() {
+    exportToCsv(`horas_${period}_${new Date().toISOString().slice(0,10)}`, [
+      { key: 'date_fmt', label: 'Data' },
+      { key: 'user', label: 'Usuário' },
+      { key: 'activity_type', label: 'Atividade' },
+      { key: 'hours', label: 'Horas' },
+      { key: 'billable', label: 'Faturável' },
+      { key: 'description', label: 'Descrição' },
+    ], timeEntries.map((e: any) => ({
+      date_fmt: formatCsvDate(e.date),
+      user: e.user_email || e.user || '',
+      activity_type: e.activity_type || '',
+      hours: e.hours || 0,
+      billable: e.billable ? 'Sim' : 'Não',
+      description: e.description || '',
+    })));
+  }
+
   return (
     <div className="page-container animate-fade-in">
       {/* Header */}
@@ -470,10 +562,40 @@ export default function Reports() {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" className="h-9 gap-2" onClick={handleExport} disabled={exporting}>
-            <Download className="h-4 w-4" />
-            {exporting ? 'Exportando...' : 'Exportar LGPD'}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2">
+                <Download className="h-4 w-4" />
+                Exportar
+                <ChevronDown className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel>Exportar CSV</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={exportFinanceiroCsv}>
+                <FileText className="mr-2 h-4 w-4" />
+                Financeiro do período
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportProcessosCsv}>
+                <Gavel className="mr-2 h-4 w-4" />
+                Lista de processos
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportClientesCsv}>
+                <Users className="mr-2 h-4 w-4" />
+                Lista de clientes
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportHorasCsv}>
+                <Calendar className="mr-2 h-4 w-4" />
+                Controle de horas
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleExport} disabled={exporting}>
+                <Download className="mr-2 h-4 w-4" />
+                {exporting ? 'Exportando...' : 'Exportação LGPD'}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
