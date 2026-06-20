@@ -13,9 +13,9 @@ import { toast } from "sonner";
 import type { LandingPublicPayload } from "@/types/landing";
 
 const MASTER_POINTS = [
-  "Gestao global de empresas, usuarios e permissoes do ecossistema.",
-  "Ambiente reservado para operacoes sensiveis e suporte administrativo.",
-  "Acompanhamento centralizado da estrutura multiempresa em um unico painel.",
+  "Gestão global de empresas, usuários e permissões do ecossistema.",
+  "Ambiente reservado para operações sensíveis e suporte administrativo.",
+  "Acompanhamento centralizado da estrutura multiempresa em um único painel.",
 ] as const;
 
 export default function MasterLogin() {
@@ -44,7 +44,7 @@ export default function MasterLogin() {
     const companyTagline = firstText(
       settings?.brand_tagline,
       company.tagline,
-      "Governanca central para operacoes administrativas",
+      "Governança central para operações administrativas",
     );
 
     return {
