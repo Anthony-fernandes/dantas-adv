@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { leadService } from "@/services/api";
 
 const portalNav = [
-  { label: "Inicio", icon: Home, path: "/portal" },
+  { label: "Início", icon: Home, path: "/portal" },
   { label: "Processos", icon: Scale, path: "/portal/processos" },
   { label: "Documentos", icon: FileText, path: "/portal/documentos" },
   { label: "Financeiro", icon: DollarSign, path: "/portal/financeiro" },
@@ -95,13 +95,13 @@ export function PortalLayout() {
             <div className="mt-6 rounded-lg border border-border bg-accent/40 px-4 py-4">
               <p className="text-sm font-medium text-foreground">Clareza sobre cada etapa</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Consulte prazos, comunicados e arquivos com uma navegacao mais sobria e organizada.
+                Consulte prazos, comunicados e arquivos com uma navegação sóbria e organizada.
               </p>
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-5">
-            <p className="px-3 pb-3 font-mono-ui text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Navegacao</p>
+            <p className="px-3 pb-3 font-mono-ui text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Navegação</p>
             {renderNav()}
           </div>
 

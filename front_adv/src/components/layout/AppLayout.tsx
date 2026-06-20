@@ -5,8 +5,13 @@ import { Topbar } from './Topbar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 
+const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
+
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'; } catch { return false; }
+  });
   const { isLoading, isSuperuser } = useAuth();
   const { activeTenantId, tenants, isLoadingTenants, setActiveTenant } = useTenant();
 
@@ -15,6 +20,14 @@ export function AppLayout() {
       setActiveTenant(tenants[0].id);
     }
   }, [isLoading, isLoadingTenants, activeTenantId, tenants, setActiveTenant]);
+
+  function handleToggleCollapse() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next)); } catch {}
+      return next;
+    });
+  }
 
   if (isLoading || isLoadingTenants) {
     return (
@@ -36,7 +49,12 @@ export function AppLayout() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-paper text-foreground">
-      <AppSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <AppSidebar
+        mobileOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={handleToggleCollapse}
+      />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-paper">
         <Topbar onOpenMenu={() => setMobileOpen(true)} />

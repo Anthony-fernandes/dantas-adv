@@ -1,3 +1,4 @@
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +32,7 @@ import AdminUsers from "@/pages/app/AdminUsers";
 import Companies from "@/pages/app/Companies";
 import LandingCms from "@/pages/app/LandingCms";
 import LandingBlog from "@/pages/app/LandingBlog";
+import Reports from "@/pages/app/Reports";
 import PortalLogin from "@/pages/portal/PortalLogin";
 import PortalHome from "@/pages/portal/PortalHome";
 import PortalProcesses from "@/pages/portal/PortalProcesses";
@@ -208,6 +210,7 @@ function AuthenticatedShell() {
 }
 
 const App = () => (
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -246,6 +249,7 @@ const App = () => (
                 <Route path="cargos" element={<RequireRole roles={RoleGroups.ADMIN}><Positions /></RequireRole>} />
                 <Route path="usuarios" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
                 <Route path="empresas" element={<RequireRole roles={RoleGroups.ADMIN}><Companies /></RequireRole>} />
+                <Route path="relatorios" element={<RequireRole roles={RoleGroups.FINANCE}><Reports /></RequireRole>} />
                 <Route path="landing" element={<RequireRole roles={RoleGroups.ADMIN}><LandingCms /></RequireRole>} />
                 <Route path="blog" element={<RequireRole roles={RoleGroups.ADMIN}><LandingBlog /></RequireRole>} />
                 <Route path="admin" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
@@ -271,6 +275,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
