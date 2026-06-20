@@ -45,6 +45,7 @@ function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/landing')) return 'Site institucional';
   if (pathname.startsWith('/app/blog')) return 'Blog';
   if (pathname.startsWith('/app/auditoria')) return 'Log de Auditoria';
+  if (pathname.startsWith('/app/contratos')) return 'Contratos';
   if (pathname.startsWith('/app/modelos')) return 'Modelos de documentos';
   if (pathname.startsWith('/app/perfil')) return 'Meu perfil';
   if (pathname.startsWith('/app/configuracoes')) return 'Configurações do escritório';
@@ -63,6 +64,7 @@ function resolvePageSection(pathname: string) {
     pathname.startsWith('/app/horas') ||
     pathname.startsWith('/app/chat') ||
     pathname.startsWith('/app/agenda') ||
+    pathname.startsWith('/app/contratos') ||
     pathname.startsWith('/app/modelos')
   ) {
     return 'Jurídico';

@@ -55,6 +55,7 @@ import NotFound from "@/pages/NotFound";
 import SetupTenant from "@/pages/app/SetupTenant";
 import SelectTenant from "@/pages/app/SelectTenant";
 import AcceptInvite from "@/pages/AcceptInvite";
+import ContractsPage from "@/pages/app/ContractsPage";
 import LGPD from "@/pages/app/LGPD";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalApiErrorListener } from "@/components/GlobalApiErrorListener";
@@ -269,6 +270,7 @@ const App = () => (
                 <Route path="landing" element={<RequireRole roles={RoleGroups.ADMIN}><LandingCms /></RequireRole>} />
                 <Route path="blog" element={<RequireRole roles={RoleGroups.ADMIN}><LandingBlog /></RequireRole>} />
                 <Route path="auditoria" element={<RequireRole roles={RoleGroups.ADMIN}><AuditLogPage /></RequireRole>} />
+                <Route path="contratos" element={<RequireRole roles={RoleGroups.LEGAL}><ContractsPage /></RequireRole>} />
                 <Route path="modelos" element={<RequireRole roles={RoleGroups.LEGAL}><TemplatesPage /></RequireRole>} />
                 <Route path="perfil" element={<ProfilePage />} />
                 <Route path="configuracoes" element={<RequireRole roles={RoleGroups.ADMIN}><SettingsPage /></RequireRole>} />
