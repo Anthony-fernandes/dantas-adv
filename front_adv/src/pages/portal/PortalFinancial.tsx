@@ -15,8 +15,6 @@ type InvoiceItem = {
   status?: string | null;
 };
 
-type Paginated<T> = { results?: T[] };
-
 function toArray(payload: any): any[] {
   if (Array.isArray(payload?.results)) return payload.results;
   if (Array.isArray(payload)) return payload;
@@ -61,16 +59,7 @@ function statusClass(status?: string | null, due_date?: string | null) {
 export default function PortalFinancial() {
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['portal-financial'],
-    queryFn: async () => {
-      const [invoicesRes, receivablesRes] = await Promise.allSettled([
-        api.get<Paginated<InvoiceItem>>('/invoices/'),
-        api.get<Paginated<InvoiceItem>>('/accounts-receivable/'),
-      ]);
-      return {
-        invoices: invoicesRes.status === 'fulfilled' ? toArray(invoicesRes.value) : [],
-        receivables: receivablesRes.status === 'fulfilled' ? toArray(receivablesRes.value) : [],
-      };
-    },
+    queryFn: () => api.get<{ invoices: InvoiceItem[]; receivables: InvoiceItem[] }>('/portal/financial/'),
   });
 
   const rows: InvoiceItem[] = useMemo(

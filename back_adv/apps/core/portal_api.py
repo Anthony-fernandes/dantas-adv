@@ -230,6 +230,41 @@ class PortalDocumentsView(PortalProcessBase, generics.ListAPIView):
         )
 
 
+class PortalFinancialView(generics.GenericAPIView):
+    """Returns invoices/receivables scoped to the authenticated portal client."""
+    permission_classes = [permissions.IsAuthenticated, IsClient]
+
+    def get(self, request, *args, **kwargs):
+        from apps.finance.models import AccountsReceivable, Invoice
+
+        tenant = request.tenant
+        client = Client.objects.filter(tenant=tenant, portal_user=request.user).first()
+        if client is None:
+            return Response({'invoices': [], 'receivables': []})
+
+        invoices = list(
+            Invoice.objects
+            .filter(tenant=tenant, client=client)
+            .order_by('-due_date')
+            .values('id', 'description', 'amount', 'due_date', 'status', 'issue_date', 'paid_at')
+        )
+        receivables = list(
+            AccountsReceivable.objects
+            .filter(tenant=tenant, client=client)
+            .order_by('-due_date')
+            .values('id', 'description', 'amount', 'due_date', 'status', 'paid_date', 'category')
+        )
+
+        def str_id(row):
+            row['id'] = str(row['id'])
+            return row
+
+        return Response({
+            'invoices': [str_id(r) for r in invoices],
+            'receivables': [str_id(r) for r in receivables],
+        })
+
+
 class PortalMessageSerializer(serializers.ModelSerializer):
     sender = serializers.SerializerMethodField()
     sender_name = serializers.SerializerMethodField()
