@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Building2, Bell, Save, CheckCircle2, Globe, Phone, Mail, FileText, Loader2 } from 'lucide-react';
+import { Building2, Bell, Save, CheckCircle2, Globe, Phone, Mail, FileText, Loader2, CreditCard, Users, FolderOpen, HardDrive } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '@/integrations/api/client';
 import { useTenant } from '@/contexts/TenantContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -124,6 +125,13 @@ export default function SettingsPage() {
   const [officeLoading, setOfficeLoading] = useState(false);
 
   const [notifSaved, setNotifSaved] = useState(false);
+
+  const billingQuery = useQuery({
+    queryKey: ['billing-status'],
+    queryFn: () => api.get<any>('/billing/status/'),
+    enabled: canEdit,
+    retry: false,
+  });
   const [notifLoading, setNotifLoading] = useState(false);
 
   useEffect(() => {
@@ -466,22 +474,85 @@ export default function SettingsPage() {
         )}
       </Section>
 
-      {/* Tenant info (readonly) */}
+      {/* Subscription & usage */}
       <Section
-        icon={Building2}
-        title="Informações do plano"
-        description="Dados técnicos do ambiente contratado"
+        icon={CreditCard}
+        title="Plano e uso"
+        description="Limites de uso e informações do ambiente contratado"
       >
-        <div className="grid gap-3 sm:grid-cols-2 text-sm">
-          <div>
-            <p className="text-muted-foreground">ID do tenant</p>
-            <p className="font-mono text-foreground">{activeTenantId ?? '—'}</p>
+        {billingQuery.data ? (() => {
+          const sub = billingQuery.data.subscription ?? {};
+          const usage = billingQuery.data.usage ?? {};
+          const plan = sub.plan ?? {};
+          return (
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card">
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{plan.name ?? 'Plano atual'}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{sub.status ?? 'Ativo'}</p>
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Users className="h-3.5 w-3.5" />
+                    Usuários
+                  </div>
+                  <p className="text-sm font-medium">
+                    {usage.users_count ?? '—'}
+                    {plan.max_users ? ` / ${plan.max_users}` : ''}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <FolderOpen className="h-3.5 w-3.5" />
+                    Processos
+                  </div>
+                  <p className="text-sm font-medium">
+                    {usage.processes_count ?? '—'}
+                    {plan.max_processes ? ` / ${plan.max_processes}` : ''}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <HardDrive className="h-3.5 w-3.5" />
+                    Armazenamento
+                  </div>
+                  <p className="text-sm font-medium">
+                    {usage.storage_bytes
+                      ? `${(usage.storage_bytes / 1024 / 1024).toFixed(1)} MB`
+                      : '0 MB'}
+                    {plan.max_storage_gb ? ` / ${plan.max_storage_gb} GB` : ''}
+                  </p>
+                </div>
+              </div>
+              <div className="grid gap-3 border-t border-border pt-4 sm:grid-cols-2 text-sm">
+                <div>
+                  <p className="text-muted-foreground">ID do tenant</p>
+                  <p className="font-mono text-xs text-foreground">{activeTenantId ?? '—'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Slug</p>
+                  <p className="font-mono text-xs text-foreground">{tenant?.slug ?? '—'}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })() : (
+          <div className="grid gap-3 sm:grid-cols-2 text-sm">
+            <div>
+              <p className="text-muted-foreground">ID do tenant</p>
+              <p className="font-mono text-foreground">{activeTenantId ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Slug</p>
+              <p className="font-mono text-foreground">{tenant?.slug ?? '—'}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-muted-foreground">Slug</p>
-            <p className="font-mono text-foreground">{tenant?.slug ?? '—'}</p>
-          </div>
-        </div>
+        )}
       </Section>
     </div>
   );
