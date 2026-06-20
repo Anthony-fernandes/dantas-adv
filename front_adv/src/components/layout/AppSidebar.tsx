@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   BarChart3,
+  Timer,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ const navSections: NavSection[] = [
       { label: "Áreas de atuação", icon: FolderKanban, path: "/app/areas", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Documentos", icon: FileStack, path: "/app/documentos", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Audiências", icon: FolderOpen, path: "/app/audiencias", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
+      { label: "Prazos", icon: Timer, path: "/app/prazos", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Agenda", icon: CalendarDays, path: "/app/agenda", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
     ],
   },

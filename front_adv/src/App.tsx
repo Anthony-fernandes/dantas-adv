@@ -33,6 +33,7 @@ import Companies from "@/pages/app/Companies";
 import LandingCms from "@/pages/app/LandingCms";
 import LandingBlog from "@/pages/app/LandingBlog";
 import Reports from "@/pages/app/Reports";
+import DeadlinesPage from "@/pages/app/DeadlinesPage";
 import PortalLogin from "@/pages/portal/PortalLogin";
 import PortalHome from "@/pages/portal/PortalHome";
 import PortalProcesses from "@/pages/portal/PortalProcesses";
@@ -243,6 +244,7 @@ const App = () => (
                 <Route path="financeiro" element={<RequireRole roles={RoleGroups.FINANCE}><Financial /></RequireRole>} />
                 <Route path="documentos" element={<RequireRole roles={RoleGroups.LEGAL}><DocumentsModule /></RequireRole>} />
                 <Route path="audiencias" element={<RequireRole roles={RoleGroups.LEGAL}><HearingsPage /></RequireRole>} />
+                <Route path="prazos" element={<RequireRole roles={RoleGroups.LEGAL}><DeadlinesPage /></RequireRole>} />
                 <Route path="agenda" element={<RequireRole roles={RoleGroups.LEGAL}><AgendaPage /></RequireRole>} />
                 <Route path="financeiro/*" element={<RequireRole roles={RoleGroups.FINANCE}><Financial /></RequireRole>} />
                 <Route path="funcionarios" element={<RequireRole roles={RoleGroups.ADMIN}><Employees /></RequireRole>} />

@@ -277,7 +277,21 @@ export const useMovements = (processId?: string) =>
 
 // Deadlines
 export const useDeadlines = (filters?: Record<string, any>) => useList<any>('deadlines', { filters });
+export const useDeadlinesPaged = (
+  filters?: Record<string, any>,
+  search?: string,
+  page: number = 1,
+  orderBy?: { column: string; ascending?: boolean },
+) =>
+  usePaginatedList<any>('deadlines', {
+    page,
+    filters,
+    search: search ? [{ column: 'search', value: search }] : undefined,
+    orderBy,
+  });
 export const useCreateDeadline = () => useCreate<any>('deadlines');
+export const useUpdateDeadline = () => useUpdate<any>('deadlines');
+export const useDeleteDeadline = () => useDelete('deadlines');
 
 // Hearings
 export const useHearings = (filters?: Record<string, any>) => useList<any>('hearings', { filters });
