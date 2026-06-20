@@ -1,27 +1,21 @@
 import { type FormEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, CheckCircle2, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Building2, Loader2, Shield } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { colorToRgba, buildBrandThemeStyle, firstText } from "@/lib/brandTheme";
+import { firstText } from "@/lib/brandTheme";
 import { leadService } from "@/services/api";
-import { toast } from "sonner";
 import type { LandingPublicPayload } from "@/types/landing";
-
-const MASTER_POINTS = [
-  "Gestão global de empresas, usuários e permissões do ecossistema.",
-  "Ambiente reservado para operações sensíveis e suporte administrativo.",
-  "Acompanhamento centralizado da estrutura multiempresa em um único painel.",
-] as const;
 
 export default function MasterLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldError, setFieldError] = useState("");
 
   const navigate = useNavigate();
   const { login, logout } = useAuth();
@@ -34,197 +28,158 @@ export default function MasterLogin() {
   const company = payload.company || {};
   const settings = payload.settings;
 
-  const themeStyle = useMemo(() => buildBrandThemeStyle(settings), [settings]);
-
   const brand = useMemo(() => {
     const companyName = firstText(settings?.brand_name, company.name, "JurisFlow") || "JurisFlow";
     const logoUrl = firstText(company.logo_url);
-    const heroImage = firstText(settings?.hero_background_image_url, settings?.hero_background_image);
-    const heroOverlay = colorToRgba(settings?.hero_overlay_color, Number(settings?.hero_overlay_opacity ?? 0.82));
-    const companyTagline = firstText(
-      settings?.brand_tagline,
-      company.tagline,
-      "Governança central para operações administrativas",
-    );
-
-    return {
-      companyName,
-      logoUrl,
-      heroImage,
-      heroOverlay,
-      companyTagline,
-    };
-  }, [company.logo_url, company.name, company.tagline, settings]);
+    return { companyName, logoUrl };
+  }, [company.logo_url, company.name, settings?.brand_name]);
 
   const canSubmit = email.trim().length > 0 && password.trim().length > 0 && !loading;
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit) return;
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setFieldError("Preencha e-mail e senha para continuar.");
+      return;
+    }
 
     setLoading(true);
+    setFieldError("");
+
     try {
-      const result = await login(email, password);
+      await logout();
+      const result = await login(trimmedEmail, trimmedPassword);
       if (!result.isSuperuser) {
-        logout();
-        throw new Error("Acesso exclusivo para superusuario.");
+        setFieldError("Acesso negado. Esta área é restrita a superusuários.");
+        return;
       }
       navigate("/master/companies", { replace: true });
     } catch (err: any) {
-      toast.error(err?.message || "Erro ao fazer login");
+      const msg: string = err?.message || "";
+      if (/email.*obrig|obrig.*email|invalid.*credential|no active account|credenciais/i.test(msg)) {
+        setFieldError("E-mail ou senha incorretos.");
+      } else if (msg) {
+        setFieldError(msg);
+      } else {
+        setFieldError("Não foi possível fazer login. Tente novamente.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="landing-theme min-h-screen text-white" style={themeStyle}>
-      <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,var(--landing-hero-start),var(--landing-hero-mid),var(--landing-hero-end))]">
-        {brand.heroImage ? (
-          <div
-            className="absolute inset-0 opacity-[0.14]"
-            style={{
-              backgroundImage: `linear-gradient(${brand.heroOverlay}, ${brand.heroOverlay}), url(${brand.heroImage})`,
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
-            }}
-          />
-        ) : null}
+    <div className="flex min-h-screen bg-zinc-950">
+      {/* Left panel */}
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-zinc-900 p-10 lg:flex lg:w-[42%]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.03),transparent_60%)]" />
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(201,171,118,0.14),transparent_24%),linear-gradient(180deg,rgba(6,13,36,0.18),rgba(6,13,36,0.58))]" />
+        <div className="relative flex items-center gap-3">
+          {brand.logoUrl ? (
+            <img src={brand.logoUrl} alt={brand.companyName} className="h-9 w-9 rounded-lg object-cover" />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <Building2 className="h-5 w-5 text-white/40" />
+            </div>
+          )}
+          <span className="text-sm font-semibold text-white/70">{brand.companyName}</span>
+        </div>
 
-        <div className="relative mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
-          <div className="grid w-full items-center gap-10 lg:grid-cols-2 lg:gap-16">
-            <section className="hidden lg:block">
-              <div className="max-w-xl">
-                <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/80">
-                  <ShieldCheck className="h-4 w-4" style={{ color: "var(--landing-accent)" }} />
-                  Painel master
-                </div>
+        <div className="relative">
+          <div className="mb-6 h-px w-8 bg-white/20" />
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/30">
+            Administração central
+          </p>
+          <h2 className="mt-3 font-display text-3xl font-semibold leading-snug tracking-tight text-white">
+            Controle<br />
+            multiempresa<br />
+            centralizado.
+          </h2>
+        </div>
 
-                <p
-                  className="mt-8 text-sm font-semibold uppercase tracking-[0.24em]"
-                  style={{ color: "var(--landing-accent-strong)" }}
-                >
-                  {brand.companyName}
-                </p>
-                <h1 className="mt-4 font-display text-5xl font-bold leading-[1.02] tracking-[-0.04em] text-white">
-                  Controle global com contexto e seguranca.
-                </h1>
-                <p className="mt-5 text-lg leading-8 text-white/72">
-                  Acesse a area administrativa para estruturar empresas, usuarios e regras de acesso a partir de um
-                  unico ambiente central.
-                </p>
+        <p className="relative text-xs text-white/20">Acesso restrito a superusuários.</p>
+      </div>
 
-                <div className="mt-10 space-y-4">
-                  {MASTER_POINTS.map((item) => (
-                    <div key={item} className="flex items-start gap-3 text-white/82">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" style={{ color: "var(--landing-accent)" }} />
-                      <span className="text-base leading-7">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
+      {/* Right panel — form */}
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
+        <div className="mb-8 flex items-center gap-3 lg:hidden">
+          <Building2 className="h-5 w-5 text-white/40" />
+          <span className="text-sm font-semibold text-white/70">{brand.companyName}</span>
+        </div>
 
-            <section className="w-full">
-              <div className="mx-auto w-full max-w-md overflow-hidden rounded-[30px] border border-white/10 bg-white text-slate-900 shadow-[0_32px_100px_-34px_rgba(2,6,23,0.9)]">
-                <div className="p-6 sm:p-8">
-                  <div className="text-center">
-                    {brand.logoUrl ? (
-                      <div className="mx-auto flex h-24 w-24 items-center justify-center overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-                        <img
-                          src={brand.logoUrl}
-                          alt={`Logo do escritorio ${brand.companyName}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className="mx-auto flex h-24 w-24 items-center justify-center rounded-[28px] border border-slate-200 bg-slate-50"
-                        style={{ color: "var(--landing-dark-base)" }}
-                      >
-                        <Building2 className="h-10 w-10" />
-                      </div>
-                    )}
-
-                    <p
-                      className="mt-6 text-[0.72rem] font-semibold uppercase tracking-[0.22em]"
-                      style={{ color: "var(--landing-accent)" }}
-                    >
-                      Acesso administrativo global
-                    </p>
-                    <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-slate-950">
-                      {brand.companyName}
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-500">{brand.companyTagline}</p>
-                  </div>
-
-                  <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-                    <div className="space-y-2.5">
-                      <Label htmlFor="master-email" className="text-sm font-medium text-slate-700">
-                        E-mail
-                      </Label>
-                      <div className="relative">
-                        <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <Input
-                          id="master-email"
-                          type="email"
-                          autoComplete="email"
-                          autoFocus
-                          placeholder="master@empresa.com"
-                          value={email}
-                          onChange={(event) => setEmail(event.target.value)}
-                          className="h-[52px] rounded-2xl border-slate-200 bg-slate-50 pl-11 text-[15px] text-slate-900 placeholder:text-slate-400 focus-visible:ring-slate-300 focus-visible:ring-offset-0"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2.5">
-                      <Label htmlFor="master-password" className="text-sm font-medium text-slate-700">
-                        Senha
-                      </Label>
-                      <div className="relative">
-                        <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <Input
-                          id="master-password"
-                          type="password"
-                          autoComplete="current-password"
-                          placeholder="Digite sua senha"
-                          value={password}
-                          onChange={(event) => setPassword(event.target.value)}
-                          className="h-[52px] rounded-2xl border-slate-200 bg-slate-50 pl-11 text-[15px] text-slate-900 placeholder:text-slate-400 focus-visible:ring-slate-300 focus-visible:ring-offset-0"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                      Acesso permitido apenas para usuarios com permissao global de administracao.
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="h-[52px] w-full rounded-2xl text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-white shadow-[0_20px_40px_-22px_rgba(8,29,54,0.8)] transition-all hover:opacity-95"
-                      style={{ background: "linear-gradient(135deg, var(--landing-hero-mid), var(--landing-hero-end))" }}
-                      disabled={!canSubmit}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Entrando...
-                        </>
-                      ) : (
-                        "Acessar painel master"
-                      )}
-                    </Button>
-                  </form>
-                </div>
-              </div>
-            </section>
+        <div className="w-full max-w-[360px]">
+          <div className="mb-8">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <Shield className="h-5 w-5 text-white/40" />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight text-white">
+              Admin central
+            </h1>
+            <p className="mt-1.5 text-sm text-zinc-500">
+              Área restrita — apenas superusuários
+            </p>
           </div>
+
+          <form onSubmit={handleLogin} noValidate className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium text-zinc-400">
+                E-mail
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                autoFocus
+                placeholder="admin@sistema.com.br"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); if (fieldError) setFieldError(""); }}
+                className="h-10 border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:ring-offset-0"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-sm font-medium text-zinc-400">
+                Senha
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); if (fieldError) setFieldError(""); }}
+                className="h-10 border-zinc-800 bg-zinc-900 text-white placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-zinc-600 focus-visible:ring-offset-0"
+              />
+            </div>
+
+            {fieldError && (
+              <p className="rounded-md border border-red-900/40 bg-red-950/30 px-3 py-2.5 text-sm text-red-400">
+                {fieldError}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={!canSubmit}
+              className="mt-1 h-10 w-full bg-zinc-700 text-sm font-medium text-white hover:bg-zinc-600 disabled:opacity-40"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Verificando...
+                </span>
+              ) : (
+                "Entrar"
+              )}
+            </Button>
+          </form>
+
+          <p className="mt-8 text-center text-xs text-zinc-700">
+            Acesso monitorado. Todas as ações são registradas.
+          </p>
         </div>
       </div>
     </div>
