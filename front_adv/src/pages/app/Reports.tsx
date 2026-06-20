@@ -775,6 +775,7 @@ export default function Reports() {
                   <Skeleton className="h-24 w-full" />
                 ) : (
                   <HearingRate hearings={hearings} />
+                )}
               </CardContent>
             </Card>
           </div>
