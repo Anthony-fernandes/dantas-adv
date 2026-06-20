@@ -77,6 +77,7 @@ from apps.finance.api import (
     ReceivableInstallmentViewSet,
 )
 from apps.billing.api import BillingViewSet
+from apps.core.audit_api import AuditEventViewSet
 from apps.chat.api import ChatMessageViewSet
 from apps.notifications.api import NotificationViewSet
 from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessViewSet, TaskViewSet, TimeEntryViewSet
@@ -112,6 +113,7 @@ router.register(r"contracts", ContractViewSet, basename="contract")
 router.register(r"job-positions", JobPositionViewSet, basename="jobposition")
 router.register(r"legal-templates", LegalTemplateViewSet, basename="legal-template")
 router.register(r"billing", BillingViewSet, basename="billing")
+router.register(r"audit-events", AuditEventViewSet, basename="audit-event")
 router.register(r"calendar/events", CalendarEventViewSet, basename="calendar-event")
 router.register(r"admin/landing/differentials", LandingDifferentialViewSet, basename="landing-differential")
 router.register(r"admin/landing/process-steps", LandingProcessStepViewSet, basename="landing-process-step")
