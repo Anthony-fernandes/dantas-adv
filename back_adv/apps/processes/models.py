@@ -236,3 +236,45 @@ class DeadlineAlert(models.Model):
 
     def __str__(self) -> str:
         return f"{self.deadline_id} @ {self.window_hours}h"
+
+
+class TaskPriority(models.TextChoices):
+    BAIXA = "baixa", "Baixa"
+    MEDIA = "media", "Media"
+    ALTA = "alta", "Alta"
+    URGENTE = "urgente", "Urgente"
+
+
+class TaskStatus(models.TextChoices):
+    PENDENTE = "pendente", "Pendente"
+    EM_ANDAMENTO = "em_andamento", "Em andamento"
+    CONCLUIDA = "concluida", "Concluida"
+    CANCELADA = "cancelada", "Cancelada"
+
+
+class Task(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="tasks")
+    process = models.ForeignKey(Process, on_delete=models.CASCADE, related_name="tasks", blank=True, null=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    priority = models.CharField(max_length=10, choices=TaskPriority.choices, default=TaskPriority.MEDIA)
+    status = models.CharField(max_length=12, choices=TaskStatus.choices, default=TaskStatus.PENDENTE)
+    due_date = models.DateField(blank=True, null=True)
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="assigned_tasks")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="created_tasks")
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="updated_tasks")
+    completed_at = models.DateTimeField(blank=True, null=True)
+    deleted_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["tenant", "status", "due_date"]),
+            models.Index(fields=["tenant", "process", "status"]),
+            models.Index(fields=["tenant", "created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return self.title

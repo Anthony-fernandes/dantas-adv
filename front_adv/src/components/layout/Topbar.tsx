@@ -29,6 +29,7 @@ function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/documentos')) return 'Documentos';
   if (pathname.startsWith('/app/audiencias')) return 'Audiências';
   if (pathname.startsWith('/app/prazos')) return 'Prazos';
+  if (pathname.startsWith('/app/tarefas')) return 'Tarefas';
   if (pathname.startsWith('/app/agenda')) return 'Agenda';
   if (pathname.startsWith('/app/financeiro')) return 'Financeiro';
   if (pathname.startsWith('/app/honorarios')) return 'Honorários';
@@ -50,6 +51,7 @@ function resolvePageSection(pathname: string) {
     pathname.startsWith('/app/documentos') ||
     pathname.startsWith('/app/audiencias') ||
     pathname.startsWith('/app/prazos') ||
+    pathname.startsWith('/app/tarefas') ||
     pathname.startsWith('/app/agenda')
   ) {
     return 'Jurídico';

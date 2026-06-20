@@ -416,3 +416,21 @@ export const usePaymentsPaged = (
   });
 
 export const useCreatePayment = () => useCreate<any>('payments');
+
+// Tasks
+export const useTasks = (filters?: Record<string, any>) => useList<any>('tasks', { filters });
+export const useTasksPaged = (
+  filters?: Record<string, any>,
+  search?: string,
+  page: number = 1,
+  orderBy?: { column: string; ascending?: boolean },
+) =>
+  usePaginatedList<any>('tasks', {
+    page,
+    filters,
+    search: search ? [{ column: 'search', value: search }] : undefined,
+    orderBy,
+  });
+export const useCreateTask = () => useCreate<any>('tasks');
+export const useUpdateTask = () => useUpdate<any>('tasks');
+export const useDeleteTask = () => useDelete('tasks');
