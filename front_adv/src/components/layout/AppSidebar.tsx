@@ -20,6 +20,7 @@ import {
   ChevronRight,
   BarChart3,
   Timer,
+  Banknote,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -60,6 +61,7 @@ const navSections: NavSection[] = [
     title: "Financeiro",
     items: [
       { label: "Financeiro", icon: DollarSign, path: "/app/financeiro", roles: ["OWNER", "ADMIN", "FINANCE"] },
+      { label: "Honorários", icon: Banknote, path: "/app/honorarios", roles: ["OWNER", "ADMIN", "FINANCE", "LAWYER"] },
       { label: "Relatórios", icon: BarChart3, path: "/app/relatorios", roles: ["OWNER", "ADMIN", "FINANCE"] },
     ],
   },

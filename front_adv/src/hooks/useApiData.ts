@@ -367,6 +367,11 @@ export const useUpdateReceivable = () => useUpdate<any>('accounts-receivable');
 export const useDeleteReceivable = () => useDelete('accounts-receivable');
 
 // Receivable installments
+export const useInstallments = (filters?: Record<string, any>) =>
+  useList<any>('receivable-installments', { filters });
+export const useUpdateInstallment = () => useUpdate<any>('receivable-installments');
+export const useCreateInstallment = () => useCreate<any>('receivable-installments');
+
 export const useInstallmentsPaged = (
   filters?: Record<string, any>,
   search?: string,

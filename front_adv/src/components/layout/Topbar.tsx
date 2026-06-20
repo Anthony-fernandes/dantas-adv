@@ -31,6 +31,7 @@ function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/prazos')) return 'Prazos';
   if (pathname.startsWith('/app/agenda')) return 'Agenda';
   if (pathname.startsWith('/app/financeiro')) return 'Financeiro';
+  if (pathname.startsWith('/app/honorarios')) return 'Honorários';
   if (pathname.startsWith('/app/relatorios')) return 'Relatórios';
   if (pathname.startsWith('/app/funcionarios')) return 'Funcionários';
   if (pathname.startsWith('/app/cargos')) return 'Cargos';
@@ -53,7 +54,7 @@ function resolvePageSection(pathname: string) {
   ) {
     return 'Jurídico';
   }
-  if (pathname.startsWith('/app/financeiro') || pathname.startsWith('/app/relatorios')) return 'Financeiro';
+  if (pathname.startsWith('/app/financeiro') || pathname.startsWith('/app/honorarios') || pathname.startsWith('/app/relatorios')) return 'Financeiro';
   if (
     pathname.startsWith('/app/funcionarios') ||
     pathname.startsWith('/app/cargos') ||
