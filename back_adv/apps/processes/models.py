@@ -81,6 +81,10 @@ class Process(models.Model):
             models.Index(fields=["tenant", "cause"]),
         ]
 
+    @property
+    def title(self) -> str:
+        return self.subject or self.cnj or str(self.id)
+
     def __str__(self) -> str:
         return self.cnj or str(self.id)
 

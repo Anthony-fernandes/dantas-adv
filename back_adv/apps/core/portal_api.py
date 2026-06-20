@@ -96,6 +96,7 @@ class PortalDashboardView(generics.GenericAPIView):
 
 class PortalProcessListSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.name', read_only=True)
+    title = serializers.CharField(read_only=True)
 
     class Meta:
         model = Process
@@ -115,6 +116,7 @@ class PortalProcessListSerializer(serializers.ModelSerializer):
 
 class PortalProcessDetailSerializer(serializers.ModelSerializer):
     client = serializers.SerializerMethodField()
+    title = serializers.CharField(read_only=True)
 
     class Meta:
         model = Process
@@ -159,8 +161,8 @@ class PortalProcessBase:
 class PortalProcessListView(PortalProcessBase, generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated, IsClient]
     serializer_class = PortalProcessListSerializer
-    search_fields = ['title', 'cnj', 'client__name']
-    ordering_fields = ['updated_at', 'created_at', 'status', 'title']
+    search_fields = ['subject', 'cnj', 'client__name']
+    ordering_fields = ['updated_at', 'created_at', 'status', 'subject']
     ordering = ['-updated_at']
 
 
