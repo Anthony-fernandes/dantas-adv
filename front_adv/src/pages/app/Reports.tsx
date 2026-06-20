@@ -432,6 +432,20 @@ export default function Reports() {
       .map(([key, hours]) => ({ month: monthLabel(key), hours: Math.round(hours * 100) / 100 }));
   }, [timeEntries]);
 
+  const hoursByUser = useMemo(() => {
+    const map: Record<string, { name: string; total: number; billable: number; entries: number }> = {};
+    for (const e of timeEntries) {
+      const key = e.user_email || e.user || 'Desconhecido';
+      if (!map[key]) map[key] = { name: key, total: 0, billable: 0, entries: 0 };
+      map[key].total += Number(e.hours || 0);
+      if (e.billable) map[key].billable += Number(e.hours || 0);
+      map[key].entries += 1;
+    }
+    return Object.values(map)
+      .map((u) => ({ ...u, total: Math.round(u.total * 100) / 100, billable: Math.round(u.billable * 100) / 100 }))
+      .sort((a, b) => b.total - a.total);
+  }, [timeEntries]);
+
   return (
     <div className="page-container animate-fade-in">
       {/* Header */}
@@ -530,6 +544,7 @@ export default function Reports() {
           <TabsTrigger value="audiencias">Audiências</TabsTrigger>
           <TabsTrigger value="honorarios">Honorários</TabsTrigger>
           <TabsTrigger value="horas">Horas</TabsTrigger>
+          <TabsTrigger value="equipe">Equipe</TabsTrigger>
         </TabsList>
 
         {/* FINANCEIRO */}
@@ -1011,6 +1026,104 @@ export default function Reports() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+        {/* EQUIPE */}
+        <TabsContent value="equipe" className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="kpi">
+              <p className="kpi-label">Membros com lançamentos</p>
+              <p className="kpi-value">{hoursByUser.length}</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Total de horas (equipe)</p>
+              <p className="kpi-value">{hoursByUser.reduce((a, u) => a + u.total, 0).toFixed(1)}h</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Média por membro</p>
+              <p className="kpi-value">
+                {hoursByUser.length > 0 ? (hoursByUser.reduce((a, u) => a + u.total, 0) / hoursByUser.length).toFixed(1) : '0'}h
+              </p>
+            </div>
+          </div>
+
+          <Card className="shadow-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Horas por membro da equipe</CardTitle>
+              <CardDescription className="text-xs">Total de horas lançadas, cobráveis e quantidade de lançamentos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingTimeEntries ? (
+                <Skeleton className="h-48 w-full" />
+              ) : hoursByUser.length === 0 ? (
+                <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">Sem lançamentos registrados</div>
+              ) : (
+                <div className="overflow-auto">
+                  <table className="table-editorial w-full">
+                    <thead>
+                      <tr>
+                        <th className="w-6">#</th>
+                        <th>Membro</th>
+                        <th className="text-right">Total</th>
+                        <th className="text-right">Cobráveis</th>
+                        <th className="text-right">% Cobrável</th>
+                        <th className="text-right">Lançamentos</th>
+                        <th className="w-36">Distribuição</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {hoursByUser.map((u, i) => {
+                        const maxHours = hoursByUser[0]?.total || 1;
+                        const pctBillable = u.total > 0 ? Math.round((u.billable / u.total) * 100) : 0;
+                        return (
+                          <tr key={u.name}>
+                            <td className="text-xs text-muted-foreground">{i + 1}</td>
+                            <td className="font-medium text-foreground">{u.name}</td>
+                            <td className="text-right font-mono-ui text-sm">{u.total.toFixed(1)}h</td>
+                            <td className="text-right font-mono-ui text-sm text-success">{u.billable.toFixed(1)}h</td>
+                            <td className="text-right text-sm text-muted-foreground">{pctBillable}%</td>
+                            <td className="text-right text-sm text-muted-foreground">{u.entries}</td>
+                            <td>
+                              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className="h-full rounded-full bg-foreground transition-all"
+                                  style={{ width: `${Math.round((u.total / maxHours) * 100)}%` }}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {hoursByUser.length > 0 && (
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Top contribuidores</CardTitle>
+                <CardDescription className="text-xs">Ranking visual por total de horas</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={Math.max(200, hoursByUser.length * 38)}>
+                  <BarChart data={hoursByUser.slice(0, 10)} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} unit="h" />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={140} />
+                    <RechartsTooltip
+                      contentStyle={{ fontSize: 12, border: '1px solid hsl(var(--border))', borderRadius: 8, background: 'hsl(var(--card))' }}
+                      formatter={(v: number, name: string) => [`${v}h`, name === 'total' ? 'Total' : 'Cobráveis']}
+                    />
+                    <Bar dataKey="total" name="total" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="billable" name="billable" fill={CHART_COLORS.success} radius={[0, 4, 4, 0]} />
+                    <Legend formatter={(v) => (v === 'total' ? 'Total' : 'Cobráveis')} wrapperStyle={{ fontSize: 12 }} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
