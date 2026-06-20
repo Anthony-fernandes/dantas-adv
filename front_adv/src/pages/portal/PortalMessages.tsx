@@ -55,7 +55,15 @@ export default function PortalMessages() {
 
   return (
     <div className="page-container animate-fade-in max-w-3xl">
-      <h1 className="page-title">Mensagens</h1>
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Portal do cliente</p>
+          <h1 className="page-title">Mensagens</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Comunique-se diretamente com o escritório.
+          </p>
+        </div>
+      </div>
       <Card className="shadow-card">
         <CardContent className="p-0">
           <div className="h-[400px] overflow-y-auto p-4 space-y-4">

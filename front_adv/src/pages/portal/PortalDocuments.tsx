@@ -1,24 +1,39 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Download, FileText, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { FileText } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/integrations/api/client';
 
 type PortalProcess = { id: string; title?: string | null; cnj?: string | null };
-type Doc = { id: string; title?: string | null; filename?: string | null; download_url?: string | null; file_download_url?: string | null };
+type Doc = {
+  id: string;
+  title?: string | null;
+  filename?: string | null;
+  category?: string | null;
+  created_at?: string;
+  download_url?: string | null;
+  file_download_url?: string | null;
+};
 type Paginated<T> = { results: T[]; count: number; next: string | null; previous: string | null };
 
-async function loadDocuments() {
+type DocWithProcess = Doc & { processId: string; processTitle: string };
+
+async function loadDocuments(): Promise<DocWithProcess[]> {
   const processes = await api.get<Paginated<PortalProcess>>('/portal/processes/');
   const base = processes?.results ?? [];
-  const first = base.slice(0, 12);
   const docsByProcess = await Promise.all(
-    first.map(async (p) => {
+    base.slice(0, 12).map(async (p) => {
       try {
         const docs = await api.get<Paginated<Doc>>(`/portal/processes/${p.id}/documents/`);
-        return (docs?.results ?? []).map((d) => ({ ...d, processId: p.id, processTitle: p.title || p.cnj || 'Processo' }));
+        return (docs?.results ?? []).map((d) => ({
+          ...d,
+          processId: p.id,
+          processTitle: p.title || p.cnj || 'Processo',
+        }));
       } catch {
         return [];
       }
@@ -27,50 +42,122 @@ async function loadDocuments() {
   return docsByProcess.flat();
 }
 
+function formatDate(iso?: string) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 export default function PortalDocuments() {
+  const [search, setSearch] = useState('');
+
   const { data, isLoading } = useQuery({
     queryKey: ['portal-documents'],
     queryFn: loadDocuments,
   });
 
-  const docs = useMemo(() => data ?? [], [data]);
+  const docs = useMemo(() => {
+    const all = data ?? [];
+    if (!search.trim()) return all;
+    const q = search.toLowerCase();
+    return all.filter(
+      (d) =>
+        (d.title || d.filename || '').toLowerCase().includes(q) ||
+        d.processTitle.toLowerCase().includes(q) ||
+        (d.category || '').toLowerCase().includes(q),
+    );
+  }, [data, search]);
 
   return (
     <div className="page-container animate-fade-in">
       <div className="page-header">
-        <h1 className="page-title">Documentos</h1>
+        <div>
+          <p className="eyebrow">Portal do cliente</p>
+          <h1 className="page-title">Documentos</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Arquivos disponibilizados pelo escritório para consulta e download.
+          </p>
+        </div>
       </div>
-      <Card className="shadow-card">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Documentos disponiveis</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {isLoading ? <p className="text-sm text-muted-foreground">Carregando...</p> : null}
-          {!isLoading && docs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum documento disponível no momento.</p>
-          ) : null}
-          {docs.map((d: any) => (
-            <div key={d.id} className="flex items-center justify-between rounded-lg border p-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{d.title || d.filename || 'Documento'}</p>
-                  <Link to={`/portal/processos/${d.processId}`} className="text-xs text-muted-foreground hover:underline">
+
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Buscar documentos..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+        </div>
+      ) : docs.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <FileText className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="font-medium text-foreground">Nenhum documento encontrado</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {search ? 'Tente buscar por outro termo.' : 'O escritório ainda não disponibilizou documentos.'}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+          {docs.map((d, i) => (
+            <div
+              key={d.id}
+              className={`flex items-center gap-4 px-5 py-4 ${i !== 0 ? 'border-t border-border' : ''}`}
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {d.title || d.filename || 'Documento'}
+                </p>
+                <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                  <Link
+                    to={`/portal/processos/${d.processId}`}
+                    className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {d.processTitle}
                   </Link>
+                  {d.category && (
+                    <Badge variant="outline" className="text-[10px] capitalize">
+                      {d.category}
+                    </Badge>
+                  )}
+                  {d.created_at && (
+                    <span className="text-[10px] text-muted-foreground">{formatDate(d.created_at)}</span>
+                  )}
                 </div>
               </div>
-              {(d.download_url || d.file_download_url) ? (
-                <a href={d.download_url || d.file_download_url} target="_blank" rel="noreferrer">
-                  <Button size="sm" variant="outline">Baixar</Button>
+              {d.download_url || d.file_download_url ? (
+                <a
+                  href={d.download_url || d.file_download_url || '#'}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Button size="sm" variant="outline" className="gap-1.5 shrink-0">
+                    <Download className="h-3.5 w-3.5" />
+                    Baixar
+                  </Button>
                 </a>
               ) : (
-                <Button size="sm" variant="outline" disabled>Indisponivel</Button>
+                <Button size="sm" variant="outline" disabled className="shrink-0">
+                  Indisponível
+                </Button>
               )}
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }
