@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Lock, Phone, Award, FileText, Save, CheckCircle2, Bell } from 'lucide-react';
+import { User, Lock, Phone, Award, FileText, Save, CheckCircle2, Bell, Camera } from 'lucide-react';
 import { api } from '@/integrations/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -67,6 +67,11 @@ export default function ProfilePage() {
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
+  const localAvatarKey = `avatar_${user?.id ?? 'me'}`;
+  const [avatarPreview, setAvatarPreview] = useState<string>(() => {
+    try { return localStorage.getItem(localAvatarKey) || (profile as any)?.avatar_url || ''; } catch { return ''; }
+  });
+  const [avatarError, setAvatarError] = useState(false);
 
   const [pwSaved, setPwSaved] = useState(false);
   const [pwError, setPwError] = useState('');
@@ -175,11 +180,47 @@ export default function ProfilePage() {
 
       {/* Identity card */}
       <div className="mb-8 flex items-center gap-5 rounded-xl border border-border bg-card p-5 shadow-card">
-        <Avatar className="h-16 w-16 border-2 border-border">
-          <AvatarFallback className="bg-foreground text-xl font-bold text-background">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
+        <div className="relative shrink-0">
+          <Avatar className="h-16 w-16 border-2 border-border">
+            {avatarPreview && !avatarError ? (
+              <img
+                src={avatarPreview}
+                alt="Avatar"
+                className="h-full w-full rounded-full object-cover"
+                onError={() => setAvatarError(true)}
+              />
+            ) : (
+              <AvatarFallback className="bg-foreground text-xl font-bold text-background">
+                {initials}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          <label
+            htmlFor="avatar-file-input"
+            className="absolute -bottom-1 -right-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-border bg-card shadow-sm transition-colors hover:bg-muted"
+            title="Alterar foto"
+          >
+            <Camera className="h-3 w-3 text-muted-foreground" />
+          </label>
+          <input
+            id="avatar-file-input"
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = () => {
+                const result = reader.result as string;
+                setAvatarPreview(result);
+                setAvatarError(false);
+                try { localStorage.setItem(localAvatarKey, result); } catch {}
+              };
+              reader.readAsDataURL(file);
+            }}
+          />
+        </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-semibold text-foreground">{profile?.full_name || 'Usuário'}</p>
           <p className="truncate text-sm text-muted-foreground">{user?.email || ''}</p>

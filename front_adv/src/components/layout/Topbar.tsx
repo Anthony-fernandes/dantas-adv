@@ -6,7 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { TenantSwitcher } from '@/components/shared/TenantSwitcher';
 import { GlobalSearch } from '@/components/shared/GlobalSearch';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useLocalAvatar } from '@/hooks/useLocalAvatar';
 import { useNotifications, useUpdateNotification } from '@/hooks/useApiData';
 import { useQueryClient } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -126,6 +127,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
     .map((p) => p[0]?.toUpperCase() || '')
     .join('');
 
+  const localAvatar = useLocalAvatar();
   const pageTitle = resolvePageTitle(location.pathname);
   const pageSection = resolvePageSection(location.pathname);
   const userMeta = resolveRoleLabel(roles, isSuperuser);
@@ -234,6 +236,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2.5 rounded-md border border-border bg-card px-2.5 py-1.5 shadow-card transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <Avatar className="h-7 w-7 border border-border">
+                  {localAvatar && <AvatarImage src={localAvatar} alt={profile?.full_name || ''} className="object-cover" />}
                   <AvatarFallback className="bg-foreground text-[11px] font-semibold text-background">
                     {initials}
                   </AvatarFallback>
