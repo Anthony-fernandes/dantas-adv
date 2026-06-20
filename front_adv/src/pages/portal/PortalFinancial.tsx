@@ -89,16 +89,19 @@ export default function PortalFinancial() {
   );
 
   return (
-    <div className="page-container animate-fade-in">
-      <div className="page-header">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
           <p className="eyebrow">Portal do cliente</p>
-          <h1 className="page-title">Financeiro</h1>
+          <h1 className="mt-1 font-display text-2xl font-semibold text-foreground sm:text-3xl">
+            Financeiro
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Consulte cobranças, vencimentos e histórico de pagamentos.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-2">
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-2 shrink-0 mt-1">
           <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
           Atualizar
         </Button>
@@ -106,18 +109,24 @@ export default function PortalFinancial() {
 
       {/* KPIs */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="kpi">
-          <p className="kpi-label">Em aberto</p>
-          <p className="kpi-value">{isLoading ? '—' : currency(totalOpen)}</p>
-        </div>
-        <div className="kpi">
-          <p className="kpi-label">Pago</p>
-          <p className="kpi-value">{isLoading ? '—' : currency(totalPaid)}</p>
-        </div>
-        <div className={cn('kpi', overdue.length > 0 && 'border-destructive/30 bg-destructive/5')}>
-          <p className="kpi-label">Vencidos</p>
-          <p className={cn('kpi-value', overdue.length > 0 && 'text-destructive')}>{isLoading ? '—' : overdue.length}</p>
-        </div>
+        {[
+          { label: 'Em aberto', value: isLoading ? '—' : currency(totalOpen), alert: false },
+          { label: 'Pago', value: isLoading ? '—' : currency(totalPaid), alert: false },
+          { label: 'Vencidos', value: isLoading ? '—' : String(overdue.length), alert: overdue.length > 0 },
+        ].map((kpi) => (
+          <div
+            key={kpi.label}
+            className={cn(
+              'rounded-xl border bg-card p-5 shadow-card',
+              kpi.alert ? 'border-red-200 bg-red-50/50 dark:border-red-900/40 dark:bg-red-950/10' : 'border-border',
+            )}
+          >
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{kpi.label}</p>
+            <p className={cn('mt-1.5 text-2xl font-bold', kpi.alert ? 'text-red-600 dark:text-red-400' : 'text-foreground')}>
+              {kpi.value}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* List */}

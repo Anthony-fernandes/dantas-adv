@@ -68,15 +68,16 @@ export default function PortalDocuments() {
   }, [data, search]);
 
   return (
-    <div className="page-container animate-fade-in">
-      <div className="page-header">
-        <div>
-          <p className="eyebrow">Portal do cliente</p>
-          <h1 className="page-title">Documentos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Arquivos disponibilizados pelo escritório para consulta e download.
-          </p>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <p className="eyebrow">Portal do cliente</p>
+        <h1 className="mt-1 font-display text-2xl font-semibold text-foreground sm:text-3xl">
+          Documentos
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Arquivos disponibilizados pelo escritório para consulta e download.
+        </p>
       </div>
 
       <div className="relative max-w-md">
