@@ -25,6 +25,7 @@ import {
   Clock,
   MessageSquare,
   Shield,
+  FileText,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -56,6 +57,7 @@ const navSections: NavSection[] = [
       { label: "Processos", icon: Gavel, path: "/app/processos", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Áreas de atuação", icon: FolderKanban, path: "/app/areas", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Documentos", icon: FileStack, path: "/app/documentos", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
+      { label: "Modelos", icon: FileText, path: "/app/modelos", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Audiências", icon: FolderOpen, path: "/app/audiencias", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Prazos", icon: Timer, path: "/app/prazos", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },
       { label: "Tarefas", icon: CheckSquare, path: "/app/tarefas", roles: ["OWNER", "ADMIN", "LAWYER", "ASSISTANT"] },

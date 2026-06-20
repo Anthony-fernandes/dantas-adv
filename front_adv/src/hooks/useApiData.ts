@@ -457,3 +457,22 @@ export const useDeleteTimeEntry = () => useDelete('time-entries');
 export const useChatMessages = (processId?: string) =>
   useList<any>('chat-messages', { filters: processId ? { process: processId } : undefined });
 export const useCreateChatMessage = () => useCreate<any>('chat-messages');
+
+// Legal Templates
+export const useLegalTemplates = (filters?: Record<string, any>) =>
+  useList<any>('legal-templates', { filters });
+export const useLegalTemplatesPaged = (
+  filters?: Record<string, any>,
+  search?: string,
+  page: number = 1,
+  orderBy?: { column: string; ascending?: boolean },
+) =>
+  usePaginatedList<any>('legal-templates', {
+    page,
+    filters,
+    search: search ? [{ column: 'search', value: search }] : undefined,
+    orderBy,
+  });
+export const useCreateLegalTemplate = () => useCreate<any>('legal-templates');
+export const useUpdateLegalTemplate = () => useUpdate<any>('legal-templates');
+export const useDeleteLegalTemplate = () => useDelete('legal-templates');

@@ -268,6 +268,57 @@ class LegalTemplateCreateSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class LegalTemplateViewSet(TenantScopedModelViewSet):
+    serializer_class = LegalTemplateSerializer
+    permission_classes = [IsTenantMember, IsLegal]
+    filterset_fields = ['category', 'format', 'is_latest', 'access_level']
+    search_fields = ['name', 'description', 'category', 'content']
+    ordering_fields = ['created_at', 'updated_at', 'name', 'category', 'version']
+
+    def get_queryset(self):
+        qs = LegalTemplate.objects.filter(
+            tenant=self.request.tenant,
+            deleted_at__isnull=True,
+        )
+        latest_param = self.request.query_params.get('latest')
+        if latest_param is None:
+            qs = qs.filter(is_latest=True)
+        elif str(latest_param).strip().lower() in {'1', 'true', 't', 'yes'}:
+            qs = qs.filter(is_latest=True)
+        return qs.order_by('-created_at')
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return LegalTemplateCreateSerializer
+        return LegalTemplateSerializer
+
+    def perform_create(self, serializer):
+        data = serializer.validated_data
+        group_id = data.get('group_id') or None
+        existing_version = 0
+        if group_id:
+            existing_version = LegalTemplate.objects.filter(
+                tenant=self.request.tenant, group_id=group_id
+            ).aggregate(models.Max('version')).get('version__max') or 0
+        serializer.save(
+            tenant=self.request.tenant,
+            created_by=self.request.user,
+            updated_by=self.request.user,
+            is_latest=True,
+            version=int(existing_version) + 1,
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        import django.utils.timezone as tz
+        obj = self.get_object()
+        obj.deleted_at = tz.now()
+        obj.save(update_fields=['deleted_at'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class TemplateGenerateSerializer(serializers.Serializer):
     process_id = serializers.UUIDField(required=False, allow_null=True)
     client_id = serializers.UUIDField(required=False, allow_null=True)

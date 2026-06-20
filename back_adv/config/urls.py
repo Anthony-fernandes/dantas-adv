@@ -66,7 +66,7 @@ from apps.core.portal_api import (
     PortalTimelineView,
 )
 from apps.core.workspace_state_api import WorkspaceStateRecordView, WorkspaceStateView
-from apps.documents.api import ContractViewSet, DocumentViewSet, JobPositionViewSet, ProcessRichDocumentViewSet
+from apps.documents.api import ContractViewSet, DocumentViewSet, JobPositionViewSet, LegalTemplateViewSet, ProcessRichDocumentViewSet
 from apps.finance.api import (
     AccountsPayableViewSet,
     AccountsReceivableViewSet,
@@ -108,6 +108,7 @@ router.register(r"documents", DocumentViewSet, basename="document")
 router.register(r"editor-documents", ProcessRichDocumentViewSet, basename="editor-document")
 router.register(r"contracts", ContractViewSet, basename="contract")
 router.register(r"job-positions", JobPositionViewSet, basename="jobposition")
+router.register(r"legal-templates", LegalTemplateViewSet, basename="legal-template")
 router.register(r"calendar/events", CalendarEventViewSet, basename="calendar-event")
 router.register(r"admin/landing/differentials", LandingDifferentialViewSet, basename="landing-differential")
 router.register(r"admin/landing/process-steps", LandingProcessStepViewSet, basename="landing-process-step")
