@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import serializers
+from rest_framework import filters, serializers
 
 from apps.core.models import AuditEvent
 from apps.core.permissions import IsOwnerOrAdmin, IsTenantMember
@@ -35,7 +35,10 @@ class AuditEventViewSet(TenantAuditedModelViewSet):
     http_method_names = ['get', 'head', 'options']
     audit_enabled = False
 
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['summary', 'event_type', 'entity_type', 'actor__email']
+    ordering_fields = ['created_at', 'event_type', 'entity_type']
+    ordering = ['-created_at']
     filterset_fields = {
         'event_type': ['exact', 'icontains'],
         'entity_type': ['exact'],
