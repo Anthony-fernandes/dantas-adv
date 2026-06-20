@@ -10,7 +10,7 @@ from apps.core.viewsets import TenantAuditedModelViewSet
 from apps.core.models import AuditEvent
 from apps.core.services.audit import audit_event
 from apps.accounts.models import UserRole
-from .models import Process, Movement, Deadline, Hearing, LegalCause, Task
+from .models import Process, Movement, Deadline, Hearing, LegalCause, Task, TimeEntry
 from apps.documents.models import Document
 from apps.documents.api import DocumentSerializer, DocumentUploadSerializer
 from apps.billing.limits import assert_can_create_process
@@ -448,3 +448,49 @@ class TaskViewSet(TenantAuditedModelViewSet):
         if extra:
             serializer.validated_data.update(extra)
         super().perform_update(serializer)
+
+
+class TimeEntrySerializer(TenantScopedSerializerMixin, serializers.ModelSerializer):
+    user_email = serializers.SerializerMethodField()
+    process_label = serializers.SerializerMethodField()
+
+    def get_user_email(self, obj):
+        return getattr(obj.user, 'email', None)
+
+    def get_process_label(self, obj):
+        if not obj.process:
+            return None
+        return obj.process.cnj or obj.process.subject or str(obj.process.id)[:8]
+
+    def validate(self, attrs):
+        if attrs.get('process'):
+            self._validate_process(attrs['process'])
+        return attrs
+
+    class Meta:
+        model = TimeEntry
+        fields = '__all__'
+        read_only_fields = ('id', 'tenant', 'user', 'created_at', 'updated_at', 'user_email', 'process_label')
+
+
+class TimeEntryViewSet(TenantAuditedModelViewSet):
+    queryset = TimeEntry.objects.select_related('process', 'user').all().order_by('-date', '-created_at')
+    serializer_class = TimeEntrySerializer
+    permission_classes = [IsTenantMember, IsLegal]
+
+    audit_enabled = True
+    audit_entity_type = 'TimeEntry'
+
+    filterset_fields = {
+        'process': ['exact'],
+        'user': ['exact'],
+        'billable': ['exact'],
+        'activity_type': ['exact'],
+        'date': ['gte', 'lte', 'exact'],
+    }
+    search_fields = ['description', 'process__cnj', 'process__subject']
+    ordering_fields = ['date', 'created_at', 'hours']
+    ordering = ['-date', '-created_at']
+
+    def perform_create(self, serializer):
+        serializer.save(tenant=self.request.tenant, user=self.request.user)

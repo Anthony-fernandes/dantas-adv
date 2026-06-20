@@ -434,3 +434,21 @@ export const useTasksPaged = (
 export const useCreateTask = () => useCreate<any>('tasks');
 export const useUpdateTask = () => useUpdate<any>('tasks');
 export const useDeleteTask = () => useDelete('tasks');
+
+// Time Entries
+export const useTimeEntries = (filters?: Record<string, any>) => useList<any>('time-entries', { filters });
+export const useTimeEntriesPaged = (
+  filters?: Record<string, any>,
+  search?: string,
+  page: number = 1,
+  orderBy?: { column: string; ascending?: boolean },
+) =>
+  usePaginatedList<any>('time-entries', {
+    page,
+    filters,
+    search: search ? [{ column: 'search', value: search }] : undefined,
+    orderBy,
+  });
+export const useCreateTimeEntry = () => useCreate<any>('time-entries');
+export const useUpdateTimeEntry = () => useUpdate<any>('time-entries');
+export const useDeleteTimeEntry = () => useDelete('time-entries');

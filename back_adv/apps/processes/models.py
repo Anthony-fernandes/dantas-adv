@@ -278,3 +278,39 @@ class Task(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+
+class ActivityType(models.TextChoices):
+    DILIGENCIA = "diligencia", "Diligência"
+    PESQUISA = "pesquisa", "Pesquisa"
+    REUNIAO = "reuniao", "Reunião"
+    AUDIENCIA = "audiencia", "Audiência"
+    PETICAO = "peticao", "Petição"
+    CONSULTA = "consulta", "Consulta"
+    OUTROS = "outros", "Outros"
+
+
+class TimeEntry(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="time_entries")
+    process = models.ForeignKey(Process, on_delete=models.CASCADE, related_name="time_entries", blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="time_entries")
+    description = models.TextField(blank=True, null=True)
+    activity_type = models.CharField(max_length=20, choices=ActivityType.choices, default=ActivityType.OUTROS)
+    date = models.DateField()
+    hours = models.DecimalField(max_digits=5, decimal_places=2)
+    billable = models.BooleanField(default=True)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    deleted_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["tenant", "user", "date"]),
+            models.Index(fields=["tenant", "process", "date"]),
+            models.Index(fields=["tenant", "created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user_id} — {self.hours}h em {self.date}"

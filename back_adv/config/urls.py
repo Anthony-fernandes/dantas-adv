@@ -76,7 +76,7 @@ from apps.finance.api import (
     ReceivableInstallmentViewSet,
 )
 from apps.notifications.api import NotificationViewSet
-from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessViewSet, TaskViewSet
+from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessViewSet, TaskViewSet, TimeEntryViewSet
 
 
 class EmailOrUsernameTokenView(TokenObtainPairView):
@@ -95,6 +95,7 @@ router.register(r"movements", MovementViewSet, basename="movement")
 router.register(r"deadlines", DeadlineViewSet, basename="deadline")
 router.register(r"hearings", HearingViewSet, basename="hearing")
 router.register(r"tasks", TaskViewSet, basename="task")
+router.register(r"time-entries", TimeEntryViewSet, basename="time-entry")
 router.register(r"accounts-receivable", AccountsReceivableViewSet, basename="accountsreceivable")
 router.register(r"receivable-installments", ReceivableInstallmentViewSet, basename="receivableinstallment")
 router.register(r"accounts-payable", AccountsPayableViewSet, basename="accountspayable")
