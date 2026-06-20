@@ -55,6 +55,7 @@ import NotFound from "@/pages/NotFound";
 import SetupTenant from "@/pages/app/SetupTenant";
 import SelectTenant from "@/pages/app/SelectTenant";
 import AcceptInvite from "@/pages/AcceptInvite";
+import LGPD from "@/pages/app/LGPD";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalApiErrorListener } from "@/components/GlobalApiErrorListener";
 import Forbidden from "@/pages/errors/Forbidden";
@@ -236,6 +237,7 @@ const App = () => (
 
             <Route element={<AuthenticatedShell />}>
               <Route path="/accept-invite" element={<AcceptInvite />} />
+              <Route path="/app/lgpd" element={<ProtectedRoute><LGPD /></ProtectedRoute>} />
               <Route path="/app/login" element={<AppLogin />} />
               <Route path="/master/login" element={<MasterLogin />} />
               <Route path="/app/setup" element={<ProtectedRoute><SetupTenant /></ProtectedRoute>} />
