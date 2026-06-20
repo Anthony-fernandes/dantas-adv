@@ -36,6 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiGetAllPages } from '@/integrations/api/client';
+import { useTimeEntries } from '@/hooks/useApiData';
 import { cn } from '@/lib/utils';
 
 type PeriodOption = '30d' | '90d' | '6m' | '12m';
@@ -215,6 +216,14 @@ export default function Reports() {
     staleTime: 60_000,
   });
 
+  const { data: honorariosRaw, isLoading: loadingHonorarios } = useQuery({
+    queryKey: ['reports-honorarios'],
+    queryFn: () => apiGetAllPages<any>('/accounts-receivable/?category=honorarios'),
+    staleTime: 60_000,
+  });
+
+  const { data: timeEntriesRaw, isLoading: loadingTimeEntries } = useTimeEntries();
+
   const isLoading = loadingProcesses || loadingReceivables || loadingPayables || loadingClients;
 
   const processes = useMemo(() => (Array.isArray(processesRaw) ? processesRaw : []), [processesRaw]);
@@ -343,6 +352,55 @@ export default function Reports() {
       .map(([key, count]) => ({ month: monthLabel(key), count }));
   }, [hearings]);
 
+  const honorarios = useMemo(() => (Array.isArray(honorariosRaw) ? honorariosRaw : []), [honorariosRaw]);
+  const timeEntries = useMemo(() => (Array.isArray(timeEntriesRaw) ? timeEntriesRaw : []), [timeEntriesRaw]);
+
+  const honorariosTotal = useMemo(() => honorarios.reduce((a, h) => a + Number(h.amount || 0), 0), [honorarios]);
+  const honorariosPago = useMemo(
+    () => honorarios.filter((h) => h.status === 'pago' || h.status === 'paid').reduce((a, h) => a + Number(h.amount || 0), 0),
+    [honorarios],
+  );
+  const honorariosVencidos = useMemo(
+    () => honorarios.filter((h) => h.status === 'vencido' || h.status === 'overdue').length,
+    [honorarios],
+  );
+  const honorariosByStatus = useMemo(() => {
+    const labels: Record<string, string> = { pago: 'Pago', paid: 'Pago', aberto: 'A receber', open: 'A receber', vencido: 'Vencido', overdue: 'Vencido' };
+    const map: Record<string, number> = {};
+    for (const h of honorarios) {
+      const s = labels[h.status] || h.status || 'Outro';
+      map[s] = (map[s] || 0) + Number(h.amount || 0);
+    }
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [honorarios]);
+
+  const totalHours = useMemo(() => timeEntries.reduce((a, e) => a + Number(e.hours || 0), 0), [timeEntries]);
+  const billableHours = useMemo(
+    () => timeEntries.filter((e) => e.billable).reduce((a, e) => a + Number(e.hours || 0), 0),
+    [timeEntries],
+  );
+  const hoursByActivity = useMemo(() => {
+    const labels: Record<string, string> = { diligencia: 'Diligência', pesquisa: 'Pesquisa', reuniao: 'Reunião', audiencia: 'Audiência', peticao: 'Petição', consulta: 'Consulta', outros: 'Outros' };
+    const map: Record<string, number> = {};
+    for (const e of timeEntries) {
+      const a = labels[e.activity_type] || e.activity_type || 'Outros';
+      map[a] = (map[a] || 0) + Number(e.hours || 0);
+    }
+    return Object.entries(map).map(([name, value]) => ({ name, value: Math.round(value * 100) / 100 }));
+  }, [timeEntries]);
+  const hoursByMonth = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of timeEntries) {
+      const k = monthKey(e.date);
+      if (!k) continue;
+      map[k] = (map[k] || 0) + Number(e.hours || 0);
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-12)
+      .map(([key, hours]) => ({ month: monthLabel(key), hours: Math.round(hours * 100) / 100 }));
+  }, [timeEntries]);
+
   return (
     <div className="page-container animate-fade-in">
       {/* Header */}
@@ -439,6 +497,8 @@ export default function Reports() {
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
           <TabsTrigger value="juridico">Jurídico</TabsTrigger>
           <TabsTrigger value="audiencias">Audiências</TabsTrigger>
+          <TabsTrigger value="honorarios">Honorários</TabsTrigger>
+          <TabsTrigger value="horas">Horas</TabsTrigger>
         </TabsList>
 
         {/* FINANCEIRO */}
@@ -775,6 +835,147 @@ export default function Reports() {
                   <Skeleton className="h-24 w-full" />
                 ) : (
                   <HearingRate hearings={hearings} />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* HONORÁRIOS */}
+        <TabsContent value="honorarios" className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="kpi">
+              <p className="kpi-label">Total contratado</p>
+              <p className="kpi-value">{loadingHonorarios ? '—' : formatCompact(honorariosTotal)}</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Recebido</p>
+              <p className="kpi-value text-success">{loadingHonorarios ? '—' : formatCompact(honorariosPago)}</p>
+            </div>
+            <div className={cn('kpi', honorariosVencidos > 0 ? 'border-destructive/30 bg-destructive/5' : '')}>
+              <p className="kpi-label">Vencidos</p>
+              <p className={cn('kpi-value', honorariosVencidos > 0 ? 'text-destructive' : '')}>{honorariosVencidos}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Honorários por status</CardTitle>
+                <CardDescription className="text-xs">Distribuição por valor</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingHonorarios ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : honorariosByStatus.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">Sem dados</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={224}>
+                    <PieChart>
+                      <Pie data={honorariosByStatus} cx="50%" cy="50%" outerRadius={80} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        {honorariosByStatus.map((_, i) => (
+                          <Cell key={i} fill={PIE_PALETTE[i % PIE_PALETTE.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip formatter={(v: any) => formatCurrency(v)} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Resumo de honorários</CardTitle>
+                <CardDescription className="text-xs">Valores totais</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingHonorarios ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : (
+                  <div className="space-y-4 pt-2">
+                    {[
+                      { label: 'Total contratado', value: honorariosTotal, cls: '' },
+                      { label: 'Recebido', value: honorariosPago, cls: 'text-success' },
+                      { label: 'A receber', value: honorariosTotal - honorariosPago, cls: 'text-warning' },
+                    ].map(({ label, value, cls }) => (
+                      <div key={label} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0">
+                        <span className="text-sm text-muted-foreground">{label}</span>
+                        <span className={cn('font-mono-ui text-sm font-medium', cls || 'text-foreground')}>{formatCurrency(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* HORAS */}
+        <TabsContent value="horas" className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="kpi">
+              <p className="kpi-label">Total de horas</p>
+              <p className="kpi-value">{loadingTimeEntries ? '—' : `${totalHours.toFixed(1)}h`}</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Horas cobráveis</p>
+              <p className="kpi-value">{loadingTimeEntries ? '—' : `${billableHours.toFixed(1)}h`}</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Lançamentos</p>
+              <p className="kpi-value">{timeEntries.length}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Horas por mês</CardTitle>
+                <CardDescription className="text-xs">Últimos 12 meses</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingTimeEntries ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : hoursByMonth.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">Sem lançamentos</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={224}>
+                    <BarChart data={hoursByMonth}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} unit="h" />
+                      <RechartsTooltip formatter={(v: any) => [`${v}h`, 'Horas']} />
+                      <Bar dataKey="hours" fill={CHART_COLORS.primary} radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Horas por atividade</CardTitle>
+                <CardDescription className="text-xs">Distribuição por tipo</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingTimeEntries ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : hoursByActivity.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">Sem dados</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={224}>
+                    <PieChart>
+                      <Pie data={hoursByActivity} cx="50%" cy="50%" outerRadius={80} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        {hoursByActivity.map((_, i) => (
+                          <Cell key={i} fill={PIE_PALETTE[i % PIE_PALETTE.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip formatter={(v: any) => [`${v}h`, 'Horas']} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
                 )}
               </CardContent>
             </Card>
