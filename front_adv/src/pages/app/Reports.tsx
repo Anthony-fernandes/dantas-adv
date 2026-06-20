@@ -35,8 +35,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { apiGetAllPages } from '@/integrations/api/client';
+import { apiGetAllPages, getAccessToken } from '@/integrations/api/client';
 import { useTimeEntries } from '@/hooks/useApiData';
+import { useTenant } from '@/contexts/TenantContext';
 import { cn } from '@/lib/utils';
 
 type PeriodOption = '30d' | '90d' | '6m' | '12m';
@@ -178,7 +179,37 @@ function KpiCard({
 
 export default function Reports() {
   const [period, setPeriod] = useState<PeriodOption>('30d');
+  const [exporting, setExporting] = useState(false);
+  const { activeTenantId } = useTenant();
   const days = periodToDays(period);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const token = getAccessToken();
+      const RAW_BASE = String((import.meta as any).env?.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
+      const url = `${RAW_BASE}/api/tenant/export/`;
+      const resp = await fetch(url, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(activeTenantId ? { 'X-Tenant-Id': activeTenantId } : {}),
+        },
+      });
+      if (!resp.ok) throw new Error('Falha ao exportar dados');
+      const blob = await resp.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const cd = resp.headers.get('Content-Disposition') || '';
+      const match = cd.match(/filename="(.+?)"/);
+      a.download = match ? match[1] : 'export.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      // toast already shown by fetch error
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const cutoffDate = useMemo(() => {
     const d = new Date();
@@ -425,9 +456,9 @@ export default function Reports() {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" className="h-9 gap-2">
+          <Button variant="outline" size="sm" className="h-9 gap-2" onClick={handleExport} disabled={exporting}>
             <Download className="h-4 w-4" />
-            Exportar
+            {exporting ? 'Exportando...' : 'Exportar LGPD'}
           </Button>
         </div>
       </div>
