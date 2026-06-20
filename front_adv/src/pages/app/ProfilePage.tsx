@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Lock, Phone, Award, FileText, Save, CheckCircle2 } from 'lucide-react';
+import { User, Lock, Phone, Award, FileText, Save, CheckCircle2, Bell } from 'lucide-react';
 import { api } from '@/integrations/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
@@ -69,6 +70,31 @@ export default function ProfilePage() {
   const [pwSaved, setPwSaved] = useState(false);
   const [pwError, setPwError] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
+
+  const defaultNotifPrefs = (profile as any)?.notification_prefs || {};
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({
+    email_deadline_alert: defaultNotifPrefs.email_deadline_alert ?? true,
+    email_hearing_alert: defaultNotifPrefs.email_hearing_alert ?? true,
+    email_process_update: defaultNotifPrefs.email_process_update ?? false,
+    inapp_deadline_alert: defaultNotifPrefs.inapp_deadline_alert ?? true,
+    inapp_hearing_alert: defaultNotifPrefs.inapp_hearing_alert ?? true,
+    inapp_process_update: defaultNotifPrefs.inapp_process_update ?? true,
+  });
+  const [notifSaved, setNotifSaved] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  async function onSaveNotifPrefs() {
+    setNotifLoading(true);
+    setNotifSaved(false);
+    try {
+      await api.patch('/me/', { notification_prefs: notifPrefs });
+      await refreshMe();
+      setNotifSaved(true);
+      setTimeout(() => setNotifSaved(false), 3000);
+    } finally {
+      setNotifLoading(false);
+    }
+  }
 
   const initials = (profile?.full_name || 'U')
     .split(' ')
@@ -321,6 +347,75 @@ export default function ProfilePage() {
             )}
           </div>
         </form>
+      </section>
+
+      {/* Notification preferences */}
+      <section className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+        <div className="flex items-center gap-3 border-b border-border px-6 py-4">
+          <Bell className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-base font-semibold text-foreground">Preferências de notificação</h2>
+        </div>
+
+        <div className="divide-y divide-border">
+          {/* Email notifications */}
+          <div className="px-6 py-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">E-mail</p>
+            <div className="space-y-4">
+              {[
+                { key: 'email_deadline_alert', label: 'Alertas de prazo', description: 'Receba e-mail quando um prazo estiver próximo do vencimento' },
+                { key: 'email_hearing_alert', label: 'Audiências agendadas', description: 'Receba e-mail ao agendar uma nova audiência' },
+                { key: 'email_process_update', label: 'Atualizações de processo', description: 'Receba e-mail ao atualizar status ou fase do processo' },
+              ].map(({ key, label, description }) => (
+                <div key={key} className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">{description}</p>
+                  </div>
+                  <Switch
+                    checked={notifPrefs[key] ?? false}
+                    onCheckedChange={(v) => setNotifPrefs((p) => ({ ...p, [key]: v }))}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* In-app notifications */}
+          <div className="px-6 py-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">No sistema</p>
+            <div className="space-y-4">
+              {[
+                { key: 'inapp_deadline_alert', label: 'Alertas de prazo', description: 'Notificação no sistema para prazos próximos' },
+                { key: 'inapp_hearing_alert', label: 'Audiências agendadas', description: 'Notificação no sistema ao agendar audiência' },
+                { key: 'inapp_process_update', label: 'Atualizações de processo', description: 'Notificação no sistema ao atualizar processo' },
+              ].map(({ key, label, description }) => (
+                <div key={key} className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">{description}</p>
+                  </div>
+                  <Switch
+                    checked={notifPrefs[key] ?? false}
+                    onCheckedChange={(v) => setNotifPrefs((p) => ({ ...p, [key]: v }))}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 border-t border-border px-6 py-4">
+          <Button onClick={onSaveNotifPrefs} disabled={notifLoading} variant="outline" className="gap-2">
+            <Save className="h-4 w-4" />
+            {notifLoading ? 'Salvando...' : 'Salvar preferências'}
+          </Button>
+          {notifSaved && (
+            <span className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+              <CheckCircle2 className="h-4 w-4" />
+              Preferências salvas
+            </span>
+          )}
+        </div>
       </section>
     </div>
   );

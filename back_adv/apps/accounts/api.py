@@ -354,13 +354,15 @@ class MeView(APIView):
         u: User = request.user
         tenant = getattr(request, 'tenant', None) or getattr(getattr(u, 'profile', None), 'tenant', None)
         roles = list(UserRole.objects.filter(user=u, tenant=tenant).values_list('role', flat=True)) if tenant else []
+        profile = getattr(u, 'profile', None)
         return Response({
             'id': str(u.id),
             'email': u.email,
-            'full_name': getattr(getattr(u, 'profile', None), 'full_name', ''),
-            'phone': getattr(getattr(u, 'profile', None), 'phone', '') or '',
-            'oab': getattr(getattr(u, 'profile', None), 'oab', '') or '',
-            'bio': getattr(getattr(u, 'profile', None), 'bio', '') or '',
+            'full_name': getattr(profile, 'full_name', '') or '',
+            'phone': getattr(profile, 'phone', '') or '',
+            'oab': getattr(profile, 'oab', '') or '',
+            'bio': getattr(profile, 'bio', '') or '',
+            'notification_prefs': getattr(profile, 'notification_prefs', {}) or {},
             'tenant': {'id': str(tenant.id), 'name': tenant.name, 'slug': tenant.slug, 'owner_id': str(tenant.owner_id) if tenant.owner_id else None} if tenant else None,
             'roles': roles,
             'is_superuser': bool(u.is_superuser),
@@ -373,16 +375,17 @@ class MeView(APIView):
         u: User = request.user
         data = request.data
 
-        full_name = data.get('full_name')
-        if full_name is not None:
-            profile = getattr(u, 'profile', None)
-            if profile:
-                profile.full_name = str(full_name).strip()
-                update_fields = ['full_name']
-                for field in ('phone', 'oab', 'bio'):
-                    if field in data:
-                        setattr(profile, field, str(data[field]).strip())
-                        update_fields.append(field)
+        profile = getattr(u, 'profile', None)
+        if profile:
+            update_fields = []
+            for field in ('full_name', 'phone', 'oab', 'bio'):
+                if field in data:
+                    setattr(profile, field, str(data[field]).strip())
+                    update_fields.append(field)
+            if 'notification_prefs' in data and isinstance(data['notification_prefs'], dict):
+                profile.notification_prefs = data['notification_prefs']
+                update_fields.append('notification_prefs')
+            if update_fields:
                 profile.save(update_fields=update_fields)
 
         if 'password' in data and data['password']:
