@@ -44,12 +44,14 @@ import { useTenant } from "@/contexts/TenantContext";
 import { cn } from "@/lib/utils";
 import { resolvePracticeAreaByCode, type PracticeAreaUiMeta } from "@/lib/practice-area";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { OnboardingChecklist } from "@/components/shared/OnboardingChecklist";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { apiRequest } from "@/integrations/api/client";
 import {
   type DashboardDeadlineRecord,
   type DashboardProcessRecord,
@@ -431,6 +433,9 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [customFrom, setCustomFrom] = useState(() => new Date().toISOString().slice(0, 10));
   const [customTo, setCustomTo] = useState(() => addDays(new Date(), 6).toISOString().slice(0, 10));
+  const [checklistDismissed, setChecklistDismissed] = useState(() => {
+    try { return localStorage.getItem('onboarding_checklist_dismissed') === '1'; } catch { return false; }
+  });
   const [responsibleFilter, setResponsibleFilter] = useState("all");
   const [areaFilter, setAreaFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -448,6 +453,28 @@ export default function Dashboard() {
     enabled: !!activeTenantId,
     queryFn: () => loadWorkspaceStateMap<PracticeAreaUiMeta>("practice_area_ui"),
   });
+
+  const contractsCheckQuery = useQuery({
+    queryKey: ["onboarding-check", "contracts", activeTenantId],
+    enabled: !checklistDismissed && (isSuperuser || !!activeTenantId),
+    queryFn: () => apiRequest<{ count?: number; results?: unknown[] } | unknown[]>("/contracts/?limit=1"),
+    staleTime: 60_000,
+  });
+
+  const settingsCheckQuery = useQuery({
+    queryKey: ["onboarding-check", "settings", activeTenantId],
+    enabled: !checklistDismissed && (isSuperuser || !!activeTenantId),
+    queryFn: () => apiRequest<{ logo?: string | null; address?: string | null }>("/office-settings/"),
+    staleTime: 60_000,
+  });
+
+  const hasContracts = (() => {
+    const d = contractsCheckQuery.data as any;
+    if (!d) return false;
+    if (Array.isArray(d)) return d.length > 0;
+    return (d.count ?? (d.results?.length ?? 0)) > 0;
+  })();
+  const hasSettings = !!((settingsCheckQuery.data as any)?.logo || (settingsCheckQuery.data as any)?.address);
 
   const data = dashboardQuery.data;
   const range = useMemo(() => resolveRange(period, customFrom, customTo), [customFrom, customTo, period]);
@@ -1033,6 +1060,22 @@ export default function Dashboard() {
   return (
     <TooltipProvider delayDuration={120}>
       <div className="page-container space-y-8 animate-fade-in">
+
+        {/* Onboarding checklist */}
+        {!checklistDismissed && (
+          <OnboardingChecklist
+            hasClients={(data?.clients ?? []).length > 0}
+            hasProcesses={(data?.processes ?? []).length > 0}
+            hasContracts={hasContracts}
+            hasAgenda={(data?.hearings ?? []).length > 0}
+            hasFinancial={(data?.receivables ?? []).length > 0}
+            hasSettings={hasSettings}
+            onDismiss={() => {
+              setChecklistDismissed(true);
+              try { localStorage.setItem('onboarding_checklist_dismissed', '1'); } catch {}
+            }}
+          />
+        )}
 
         {/* Quick actions */}
         <section>
