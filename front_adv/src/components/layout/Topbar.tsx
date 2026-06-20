@@ -1,10 +1,11 @@
-import { Bell, LogOut, Menu, Moon, Sun, User } from 'lucide-react';
+import { Bell, LogOut, Menu, Moon, Sun, User, Search } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { TenantSwitcher } from '@/components/shared/TenantSwitcher';
+import { GlobalSearch } from '@/components/shared/GlobalSearch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useNotifications } from '@/hooks/useApiData';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -139,6 +140,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         </div>
 
         <div className="hidden min-w-0 items-center justify-end gap-3 lg:flex">
+          <GlobalSearch />
           {tenants.length > 0 ? <TenantSwitcher /> : null}
         </div>
 
