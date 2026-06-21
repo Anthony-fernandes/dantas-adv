@@ -67,6 +67,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 
 type AreaItem = PracticeAreaCore & {
@@ -244,7 +245,7 @@ export default function PracticeAreasWorkspace() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [responsibleFilter, setResponsibleFilter] = useState("all");
-  const [layout, setLayout] = useState<"cards" | "list">("cards");
+  const [layout, setLayout] = useState<"cards" | "list">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [areaPendingDelete, setAreaPendingDelete] = useState<AreaInsight | null>(null);
@@ -783,26 +784,33 @@ export default function PracticeAreasWorkspace() {
             ))}
           </div>
         ) : (
-          <Card className="overflow-hidden shadow-card">
-            <CardHeader className="border-b border-border/60">
-              <CardTitle className="text-lg">Mapa das áreas do escritório</CardTitle>
-              <CardDescription>
-                Veja rapidamente especialidade, responsável, uso em processos e carga de audiências e prazos.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="divide-y divide-border/60 p-0">
-              {filteredAreas.map((area) => (
-                <AreaRow
-                  key={area.id}
-                  area={area}
-                  onOpen={() => setSelectedAreaId(area.id)}
-                  onEdit={() => startEdit(area)}
-                  onDelete={() => setAreaPendingDelete(area)}
-                  onToggleStatus={() => toggleStatusMutation.mutate(area)}
-                  onViewProcesses={() => navigate("/app/processos")}
-                />
-              ))}
-            </CardContent>
+          <Card className="overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">Área</TableHead>
+                  <TableHead className="w-[100px]">Status</TableHead>
+                  <TableHead className="w-[180px]">Responsável</TableHead>
+                  <TableHead className="w-[110px] text-center">Processos</TableHead>
+                  <TableHead className="w-[110px] text-center">Audiências</TableHead>
+                  <TableHead className="w-[110px] text-center">Prazos</TableHead>
+                  <TableHead className="w-[80px] text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAreas.map((area) => (
+                  <AreaRow
+                    key={area.id}
+                    area={area}
+                    onOpen={() => setSelectedAreaId(area.id)}
+                    onEdit={() => startEdit(area)}
+                    onDelete={() => setAreaPendingDelete(area)}
+                    onToggleStatus={() => toggleStatusMutation.mutate(area)}
+                    onViewProcesses={() => navigate("/app/processos")}
+                  />
+                ))}
+              </TableBody>
+            </Table>
           </Card>
         )
       ) : null}
@@ -1293,61 +1301,61 @@ function AreaRow({
   const Icon = getPracticeAreaIcon(area.icon);
 
   return (
-    <div className="grid gap-4 p-5 lg:grid-cols-[minmax(0,2.1fr)_1fr_1fr_1fr_auto] lg:items-center">
-      <button type="button" onClick={onOpen} className="flex items-start gap-4 text-left">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={practiceAreaSolidStyle(area.color)}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-foreground">{area.label}</p>
-            <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold" style={practiceAreaPillStyle(area.color)}>
-              {area.code}
-            </span>
-            <Badge variant={area.isActive ? "default" : "secondary"}>{statusLabel(area.isActive)}</Badge>
+    <TableRow className="cursor-pointer" onClick={onOpen}>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={practiceAreaSolidStyle(area.color)}>
+            <Icon className="h-4 w-4" />
           </div>
-          <p className="line-clamp-2 text-sm text-muted-foreground">{area.description}</p>
-          <p className="text-xs text-muted-foreground">
-            Responsável: <span className="font-medium text-foreground">{area.responsibleName || "Não definido"}</span>
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-foreground">{area.label}</span>
+              <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold" style={practiceAreaPillStyle(area.color)}>
+                {area.code}
+              </span>
+            </div>
+            <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{area.description}</p>
+          </div>
         </div>
-      </button>
-
-      <RowMetric label="Processos" value={area.processCount} />
-      <RowMetric label="Audiências" value={area.hearingCount} />
-      <RowMetric label="Prazos" value={area.deadlineCount} />
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="justify-self-end">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={onOpen}>
-            <Eye className="mr-2 h-4 w-4" />
-            Ver detalhes
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={onViewProcesses}>
-            <FolderKanban className="mr-2 h-4 w-4" />
-            Ver processos
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={onEdit}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Editar
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={onToggleStatus}>
-            {area.isActive ? <PowerOff className="mr-2 h-4 w-4" /> : <Power className="mr-2 h-4 w-4" />}
-            {area.isActive ? "Desativar" : "Ativar"}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={onDelete}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Excluir
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+      </TableCell>
+      <TableCell>
+        <Badge variant={area.isActive ? "default" : "secondary"}>{statusLabel(area.isActive)}</Badge>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {area.responsibleName || <span className="text-muted-foreground/50 italic">Não definido</span>}
+      </TableCell>
+      <TableCell className="text-center font-semibold">{area.processCount}</TableCell>
+      <TableCell className="text-center font-semibold">{area.hearingCount}</TableCell>
+      <TableCell className="text-center font-semibold">{area.deadlineCount}</TableCell>
+      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={onOpen}>
+              <Eye className="mr-2 h-4 w-4" />Ver detalhes
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onViewProcesses}>
+              <FolderKanban className="mr-2 h-4 w-4" />Ver processos
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onEdit}>
+              <Pencil className="mr-2 h-4 w-4" />Editar
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={onToggleStatus}>
+              {area.isActive ? <PowerOff className="mr-2 h-4 w-4" /> : <Power className="mr-2 h-4 w-4" />}
+              {area.isActive ? "Desativar" : "Ativar"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={onDelete}>
+              <Trash2 className="mr-2 h-4 w-4" />Excluir
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
   );
 }
 
