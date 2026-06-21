@@ -12,18 +12,12 @@ import { useNotifications, useUpdateNotification } from '@/hooks/useApiData';
 import { useQueryClient } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
-type TopbarProps = {
-  onOpenMenu: () => void;
-};
+type TopbarProps = { onOpenMenu: () => void };
 
 function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/processos')) return 'Processos';
@@ -47,57 +41,19 @@ function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/blog')) return 'Blog';
   if (pathname.startsWith('/app/auditoria')) return 'Log de Auditoria';
   if (pathname.startsWith('/app/contratos')) return 'Contratos';
-  if (pathname.startsWith('/app/modelos')) return 'Modelos de documentos';
+  if (pathname.startsWith('/app/modelos')) return 'Modelos';
   if (pathname.startsWith('/app/perfil')) return 'Meu perfil';
-  if (pathname.startsWith('/app/configuracoes')) return 'Configurações do escritório';
-  return 'Painel';
-}
-
-function resolvePageSection(pathname: string) {
-  if (
-    pathname.startsWith('/app/processos') ||
-    pathname.startsWith('/app/clientes') ||
-    pathname.startsWith('/app/areas') ||
-    pathname.startsWith('/app/documentos') ||
-    pathname.startsWith('/app/audiencias') ||
-    pathname.startsWith('/app/prazos') ||
-    pathname.startsWith('/app/tarefas') ||
-    pathname.startsWith('/app/horas') ||
-    pathname.startsWith('/app/chat') ||
-    pathname.startsWith('/app/agenda') ||
-    pathname.startsWith('/app/contratos') ||
-    pathname.startsWith('/app/modelos')
-  ) {
-    return 'Jurídico';
-  }
-  if (pathname.startsWith('/app/financeiro') || pathname.startsWith('/app/honorarios') || pathname.startsWith('/app/relatorios')) return 'Financeiro';
-  if (
-    pathname.startsWith('/app/funcionarios') ||
-    pathname.startsWith('/app/cargos') ||
-    pathname.startsWith('/app/usuarios') ||
-    pathname.startsWith('/app/empresas')
-  ) {
-    return 'Cadastros';
-  }
-  if (pathname.startsWith('/app/landing') || pathname.startsWith('/app/blog')) return 'Conteúdo';
-  if (pathname.startsWith('/app/auditoria')) return 'Cadastros';
-  if (pathname.startsWith('/app/perfil')) return 'Configurações';
-  if (pathname.startsWith('/app/configuracoes')) return 'Administração';
+  if (pathname.startsWith('/app/configuracoes')) return 'Configurações';
   return 'Painel';
 }
 
 function resolveRoleLabel(roles: string[], isSuperuser: boolean) {
   if (isSuperuser) return 'Superusuário';
-  const primaryRole = roles[0] || '';
   const roleLabels: Record<string, string> = {
-    OWNER: 'Proprietário',
-    ADMIN: 'Administrador',
-    LAWYER: 'Advogado(a)',
-    ASSISTANT: 'Assistente',
-    FINANCE: 'Financeiro',
-    CLIENT: 'Cliente',
+    OWNER: 'Proprietário', ADMIN: 'Administrador', LAWYER: 'Advogado(a)',
+    ASSISTANT: 'Assistente', FINANCE: 'Financeiro', CLIENT: 'Cliente',
   };
-  return roleLabels[primaryRole] || 'Equipe interna';
+  return roleLabels[roles[0] || ''] || 'Equipe interna';
 }
 
 export function Topbar({ onOpenMenu }: TopbarProps) {
@@ -110,28 +66,19 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   const { data: notifications } = useNotifications(undefined, !isSuperuser);
   const updateNotification = useUpdateNotification();
   const unreadCount = notifications?.filter((n) => !n.read).length || 0;
+  const isDark = theme === 'dark';
 
   async function markRead(id: string) {
     await updateNotification.mutateAsync({ id, read: true });
   }
-
   async function markAllRead() {
-    const unread = (notifications ?? []).filter((n) => !n.read);
-    await Promise.all(unread.map((n) => updateNotification.mutateAsync({ id: n.id, read: true })));
+    await Promise.all((notifications ?? []).filter((n) => !n.read).map((n) => updateNotification.mutateAsync({ id: n.id, read: true })));
   }
 
-  const initials = (profile?.full_name || 'U')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() || '')
-    .join('');
-
+  const initials = (profile?.full_name || 'U').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() || '').join('');
   const localAvatar = useLocalAvatar();
   const pageTitle = resolvePageTitle(location.pathname);
-  const pageSection = resolvePageSection(location.pathname);
   const userMeta = resolveRoleLabel(roles, isSuperuser);
-  const isDark = theme === 'dark';
 
   function handleLogout() {
     logout();
@@ -139,149 +86,136 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur-sm">
-      <div className="flex min-h-[64px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <div className="flex min-w-0 flex-1 items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-md border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground lg:hidden"
-            onClick={onOpenMenu}
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-border/60 bg-background/95 backdrop-blur-md px-4 sm:px-6 gap-3">
+      {/* Hamburger (mobile) */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 shrink-0 rounded-lg border border-border/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground lg:hidden"
+        onClick={onOpenMenu}
+      >
+        <Menu className="h-4 w-4" />
+      </Button>
 
-          <div className="min-w-0">
-            <p className="eyebrow">{pageSection}</p>
-            <h1 className="truncate font-display text-[1.35rem] font-semibold leading-none text-foreground sm:text-[1.55rem]">
-              {pageTitle}
-            </h1>
-          </div>
-        </div>
+      {/* Page title */}
+      <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground">
+        {pageTitle}
+      </h1>
 
-        <div className="hidden min-w-0 items-center justify-end gap-3 lg:flex">
+      {/* Right group */}
+      <div className="flex shrink-0 items-center gap-2">
+        {/* Search + tenant switcher — desktop */}
+        <div className="hidden items-center gap-2 lg:flex">
           <GlobalSearch />
-          {tenants.length > 0 ? <TenantSwitcher /> : null}
+          {tenants.length > 0 && <TenantSwitcher />}
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Notification bell */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="relative h-9 w-9 rounded-md border border-border px-0 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-              >
-                <Bell className="h-4 w-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 border-border p-0 shadow-elevated" align="end">
-              <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <div>
-                  <p className="eyebrow mb-0.5">Central interna</p>
-                  <p className="font-medium text-foreground">Notificações</p>
-                </div>
-                {unreadCount > 0 && (
+        {/* Theme toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-lg border border-border/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          onClick={() => setTheme(isDark ? 'light' : 'dark')}
+        >
+          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
+
+        {/* Notification bell */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-8 w-8 rounded-lg border border-border/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+            >
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0 shadow-lg border-border/60" align="end">
+            <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+              <p className="text-[13px] font-semibold text-foreground">Notificações</p>
+              {unreadCount > 0 && (
+                <button type="button" onClick={markAllRead} className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
+                  Marcar todas lidas
+                </button>
+              )}
+            </div>
+            <div className="max-h-72 overflow-y-auto">
+              {notifications && notifications.length > 0 ? (
+                notifications.slice(0, 10).map((n) => (
                   <button
+                    key={n.id}
                     type="button"
-                    onClick={markAllRead}
-                    className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    onClick={() => !n.read && markRead(n.id)}
+                    className={cn(
+                      'block w-full border-b border-border/40 px-4 py-3 text-left last:border-0 transition-colors',
+                      n.read ? 'opacity-50' : 'hover:bg-muted/40 cursor-pointer',
+                    )}
                   >
-                    Marcar todas lidas
-                  </button>
-                )}
-              </div>
-              <div className="max-h-72 overflow-y-auto">
-                {notifications && notifications.length > 0 ? (
-                  notifications.slice(0, 10).map((n) => (
-                    <button
-                      key={n.id}
-                      type="button"
-                      onClick={() => !n.read && markRead(n.id)}
-                      className={cn(
-                        'block w-full border-b border-border px-4 py-3 text-left text-sm last:border-0 transition-colors',
-                        n.read ? 'opacity-55' : 'hover:bg-muted/40 cursor-pointer',
-                      )}
-                    >
-                      <div className="flex items-start gap-2">
-                        {!n.read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
-                        <div className={cn('min-w-0', n.read && 'ml-3.5')}>
-                          <p className="font-medium text-foreground">{n.title}</p>
-                          {n.message ? <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p> : null}
-                          <p className="mt-1.5 font-mono-ui text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                            {new Date(n.created_at).toLocaleString('pt-BR')}
-                          </p>
-                        </div>
+                    <div className="flex items-start gap-2">
+                      {!n.read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />}
+                      <div className={cn('min-w-0', n.read && 'ml-3.5')}>
+                        <p className="text-[13px] font-medium text-foreground">{n.title}</p>
+                        {n.message && <p className="mt-0.5 text-[12px] text-muted-foreground">{n.message}</p>}
+                        <p className="mt-1 text-[10px] text-muted-foreground/60">
+                          {new Date(n.created_at).toLocaleString('pt-BR')}
+                        </p>
                       </div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-4 py-8 text-center">
-                    <Bell className="mx-auto mb-2 h-6 w-6 text-muted-foreground/40" />
-                    <p className="text-sm text-muted-foreground">Nenhuma notificação</p>
-                  </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          {/* User dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2.5 rounded-md border border-border bg-card px-2.5 py-1.5 shadow-card transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <Avatar className="h-7 w-7 border border-border">
-                  {localAvatar && <AvatarImage src={localAvatar} alt={profile?.full_name || ''} className="object-cover" />}
-                  <AvatarFallback className="bg-foreground text-[11px] font-semibold text-background">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden min-w-0 text-left md:block">
-                  <p className="truncate text-[13px] font-medium leading-tight text-foreground">
-                    {profile?.full_name || 'Usuário'}
-                  </p>
-                  <p className="truncate text-[11px] text-muted-foreground">{userMeta}</p>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center">
+                  <Bell className="mx-auto mb-2 h-6 w-6 text-muted-foreground/30" />
+                  <p className="text-[13px] text-muted-foreground">Nenhuma notificação</p>
                 </div>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 shadow-elevated" align="end" sideOffset={8}>
-              <DropdownMenuLabel className="pb-1">
-                <p className="text-sm font-medium text-foreground">{profile?.full_name || 'Usuário'}</p>
-                <p className="text-xs font-normal text-muted-foreground">{profile?.email || ''}</p>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="gap-2 text-sm" onClick={() => navigate('/app/perfil')}>
-                <User className="h-4 w-4" />
-                Meu perfil
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="gap-2 text-sm"
-                onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              >
-                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                {isDark ? 'Modo claro' : 'Modo escuro'}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="gap-2 text-sm text-destructive focus:text-destructive"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-4 w-4" />
-                Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* User menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-2.5 py-1.5 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <Avatar className="h-6 w-6 border border-border/60">
+                {localAvatar && <AvatarImage src={localAvatar} alt={profile?.full_name || ''} className="object-cover" />}
+                <AvatarFallback className="bg-violet-600 text-[10px] font-semibold text-white">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="hidden min-w-0 text-left md:block">
+                <p className="truncate text-[12.5px] font-medium leading-tight text-foreground">{profile?.full_name || 'Usuário'}</p>
+                <p className="truncate text-[10px] text-muted-foreground">{userMeta}</p>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-52 shadow-lg border-border/60" align="end" sideOffset={8}>
+            <DropdownMenuLabel className="pb-1">
+              <p className="text-[13px] font-medium text-foreground">{profile?.full_name || 'Usuário'}</p>
+              <p className="text-[11px] font-normal text-muted-foreground">{profile?.email || ''}</p>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="gap-2 text-[13px]" onClick={() => navigate('/app/perfil')}>
+              <User className="h-3.5 w-3.5" />Meu perfil
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="gap-2 text-[13px] text-destructive focus:text-destructive" onClick={handleLogout}>
+              <LogOut className="h-3.5 w-3.5" />Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      <div className="border-t border-border px-4 py-2.5 lg:hidden">
-        {tenants.length > 0 ? <TenantSwitcher /> : null}
-      </div>
+      {/* Mobile: tenant switcher below */}
+      {tenants.length > 0 && (
+        <div className="absolute left-0 right-0 top-14 border-b border-border/60 bg-background/95 px-4 py-2 lg:hidden">
+          <TenantSwitcher />
+        </div>
+      )}
     </header>
   );
 }

@@ -31,10 +31,10 @@ export function AppLayout() {
 
   if (isLoading || isLoadingTenants) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-paper text-foreground">
-        <div className="flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 shadow-card">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-foreground" />
-          <span className="text-sm text-muted-foreground">Carregando ambiente interno...</span>
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card px-5 py-3.5 shadow-sm">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-violet-500" />
+          <span className="text-[13px] text-muted-foreground">Carregando ambiente interno...</span>
         </div>
       </div>
     );
