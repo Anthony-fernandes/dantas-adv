@@ -268,6 +268,67 @@ class LegalTemplateCreateSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class LegalTemplateViewSet(TenantScopedModelViewSet):
+    serializer_class = LegalTemplateSerializer
+    permission_classes = [IsTenantMember, IsLegal]
+    filterset_fields = ['category', 'format', 'is_latest', 'access_level']
+    search_fields = ['name', 'description', 'category', 'content']
+    ordering_fields = ['created_at', 'updated_at', 'name', 'category', 'version']
+
+    def get_queryset(self):
+        qs = LegalTemplate.objects.filter(
+            tenant=self.request.tenant,
+            deleted_at__isnull=True,
+        )
+        latest_param = self.request.query_params.get('latest')
+        if latest_param is None:
+            qs = qs.filter(is_latest=True)
+        elif str(latest_param).strip().lower() in {'1', 'true', 't', 'yes'}:
+            qs = qs.filter(is_latest=True)
+        return qs.order_by('-created_at')
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return LegalTemplateCreateSerializer
+        return LegalTemplateSerializer
+
+    def perform_create(self, serializer):
+        data = serializer.validated_data
+        group_id = data.get('group_id') or None
+        existing_version = 0
+        if group_id:
+            existing_version = LegalTemplate.objects.filter(
+                tenant=self.request.tenant, group_id=group_id
+            ).aggregate(models.Max('version')).get('version__max') or 0
+        serializer.save(
+            tenant=self.request.tenant,
+            created_by=self.request.user,
+            updated_by=self.request.user,
+            is_latest=True,
+            version=int(existing_version) + 1,
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        import django.utils.timezone as tz
+        obj = self.get_object()
+        obj.deleted_at = tz.now()
+        obj.save(update_fields=['deleted_at'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['get'], url_path='versions')
+    def versions(self, request, *args, **kwargs):
+        obj = self.get_object()
+        qs = LegalTemplate.objects.filter(
+            tenant=request.tenant,
+            group_id=obj.group_id,
+            deleted_at__isnull=True,
+        ).order_by('-version')
+        return Response(LegalTemplateSerializer(qs, many=True).data)
+
+
 class TemplateGenerateSerializer(serializers.Serializer):
     process_id = serializers.UUIDField(required=False, allow_null=True)
     client_id = serializers.UUIDField(required=False, allow_null=True)
@@ -473,6 +534,10 @@ class ProcessRichDocumentViewSet(TenantScopedModelViewSet):
             return Response({'detail': f'Falha ao exportar PDF: {exc}'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+
+
+
 class SignatureRequestSignerSerializer(serializers.Serializer):
     name = serializers.CharField()
     email = serializers.EmailField()
@@ -484,15 +549,15 @@ class SignatureRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SignatureRequest
-        fields = ('id', 'document', 'provider', 'deadline', 'status', 'signing_url', 'external_id', 'signers', 'created_at')
-        read_only_fields = ('id', 'status', 'signing_url', 'external_id', 'created_at')
+        fields = ('id', 'document', 'provider', 'deadline', 'status', 'signing_url', 'signers', 'created_at')
+        read_only_fields = ('id', 'status', 'signing_url', 'created_at')
 
     def create(self, validated_data):
         signers = validated_data.pop('signers')
         return SignatureRequest.objects.create(
             **validated_data,
             signers=signers,
-            status=SignatureRequest.Status.PENDING,
+            status=SignatureRequest.Status.SENT,
         )
 
 

@@ -59,14 +59,16 @@ from apps.core.landing_cms_api import (
 from apps.core.portal_api import (
     PortalDashboardView,
     PortalDocumentsView,
+    PortalFinancialView,
     PortalMeView,
     PortalMessagesView,
+    PortalMovementsView,
     PortalProcessDetailView,
     PortalProcessListView,
     PortalTimelineView,
 )
 from apps.core.workspace_state_api import WorkspaceStateRecordView, WorkspaceStateView
-from apps.documents.api import ContractViewSet, DocumentViewSet, JobPositionViewSet, ProcessRichDocumentViewSet, SignatureRequestViewSet
+from apps.documents.api import ContractViewSet, DocumentViewSet, JobPositionViewSet, LegalTemplateViewSet, ProcessRichDocumentViewSet, SignatureRequestViewSet
 from apps.finance.api import (
     AccountsPayableViewSet,
     AccountsReceivableViewSet,
@@ -78,8 +80,11 @@ from apps.finance.api import (
     LancamentoContabilViewSet,
     ReceivableInstallmentViewSet,
 )
-from apps.notifications.api import NotificationViewSet
-from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessViewSet, TribunalSyncViewSet
+from apps.billing.api import BillingViewSet
+from apps.core.audit_api import AuditEventViewSet
+from apps.chat.api import ChatMessageViewSet
+from apps.notifications.api import NotificationViewSet, PushSubscriptionViewSet
+from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessViewSet, TaskViewSet, TimeEntryViewSet, TribunalSyncViewSet
 
 
 class EmailOrUsernameTokenView(TokenObtainPairView):
@@ -97,12 +102,16 @@ router.register(r"causes", LegalCauseViewSet, basename="cause")
 router.register(r"movements", MovementViewSet, basename="movement")
 router.register(r"deadlines", DeadlineViewSet, basename="deadline")
 router.register(r"hearings", HearingViewSet, basename="hearing")
+router.register(r"tasks", TaskViewSet, basename="task")
+router.register(r"time-entries", TimeEntryViewSet, basename="time-entry")
 router.register(r"accounts-receivable", AccountsReceivableViewSet, basename="accountsreceivable")
 router.register(r"receivable-installments", ReceivableInstallmentViewSet, basename="receivableinstallment")
 router.register(r"accounts-payable", AccountsPayableViewSet, basename="accountspayable")
 router.register(r"invoices", InvoiceViewSet, basename="invoice")
 router.register(r"payments", PaymentViewSet, basename="payment")
+router.register(r"chat-messages", ChatMessageViewSet, basename="chat-message")
 router.register(r"notifications", NotificationViewSet, basename="notification")
+router.register(r"push-subscriptions", PushSubscriptionViewSet, basename="push-subscription")
 router.register(r"signature-requests", SignatureRequestViewSet, basename="signature-request")
 router.register(r"nfse", NFSeViewSet, basename="nfse")
 router.register(r"plano-contas", PlanoContasViewSet, basename="plano-contas")
@@ -112,6 +121,9 @@ router.register(r"documents", DocumentViewSet, basename="document")
 router.register(r"editor-documents", ProcessRichDocumentViewSet, basename="editor-document")
 router.register(r"contracts", ContractViewSet, basename="contract")
 router.register(r"job-positions", JobPositionViewSet, basename="jobposition")
+router.register(r"legal-templates", LegalTemplateViewSet, basename="legal-template")
+router.register(r"billing", BillingViewSet, basename="billing")
+router.register(r"audit-events", AuditEventViewSet, basename="audit-event")
 router.register(r"calendar/events", CalendarEventViewSet, basename="calendar-event")
 router.register(r"admin/landing/differentials", LandingDifferentialViewSet, basename="landing-differential")
 router.register(r"admin/landing/process-steps", LandingProcessStepViewSet, basename="landing-process-step")
@@ -171,6 +183,8 @@ urlpatterns = [
     path("api/portal/processes/<uuid:pk>/", PortalProcessDetailView.as_view(), name="portal_process_detail"),
     path("api/portal/processes/<uuid:pk>/timeline/", PortalTimelineView.as_view(), name="portal_process_timeline"),
     path("api/portal/processes/<uuid:pk>/documents/", PortalDocumentsView.as_view(), name="portal_process_documents"),
+    path("api/portal/processes/<uuid:pk>/movements/", PortalMovementsView.as_view(), name="portal_process_movements"),
+    path("api/portal/financial/", PortalFinancialView.as_view(), name="portal_financial"),
     path("api/portal/messages/", PortalMessagesView.as_view(), name="portal_messages"),
     path("api/", include(router.urls)),
 ]

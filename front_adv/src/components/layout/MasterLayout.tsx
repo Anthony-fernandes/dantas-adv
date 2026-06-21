@@ -1,184 +1,164 @@
-import { useMemo, useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Building2, LogOut, Menu, Shield, X } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Outlet, useLocation, useSearchParams } from "react-router-dom";
+import { Building2, LogOut, Menu, Shield, X, UserPlus, Users, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { firstText } from "@/lib/brandTheme";
 import { cn } from "@/lib/utils";
-import { leadService } from "@/services/api";
 
-const navItems = [{ label: "Empresas", icon: Building2, path: "/master/companies" }];
+const companyTabs = [
+  { key: "company",     label: "Empresa",      icon: Building2 },
+  { key: "admin-user",  label: "Usuário admin", icon: UserPlus },
+  { key: "users",       label: "Usuários",      icon: Users },
+  { key: "permissions", label: "Permissões",    icon: Lock },
+];
 
 export function MasterLayout() {
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logout, user } = useAuth();
-  const publicSiteQuery = useQuery({
-    queryKey: ["master-layout-brand"],
-    queryFn: async () => await leadService.getPublicSite(),
-  });
 
-  const payload = publicSiteQuery.data as any;
-  const settings = payload?.settings;
+  const isActive = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  const brand = useMemo(() => {
-    const companyName = firstText(payload?.company?.name, settings?.brand_name, "JurisFlow");
-    const logoUrl = firstText(payload?.company?.logo_url);
+  const onCompanies = isActive("/master/companies");
+  const activeTab = searchParams.get("tab") || "company";
 
-    return {
-      companyName: companyName || "JurisFlow",
-      logoUrl,
-    };
-  }, [payload?.company?.logo_url, payload?.company?.name, settings?.brand_name]);
-
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(`${path}/`);
-
-  function renderNav(onNavigate?: () => void) {
-    return (
-      <nav className="space-y-1.5">
-        {navItems.map((item) => (
-          <Link key={item.path} to={item.path} onClick={onNavigate}>
-            <div
-              className={cn(
-                "flex items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors",
-                isActive(item.path)
-                  ? "border-white/10 bg-white/10 text-white"
-                  : "border-transparent text-white/65 hover:border-white/10 hover:bg-white/5 hover:text-white",
-              )}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              <span>{item.label}</span>
-            </div>
-          </Link>
-        ))}
-      </nav>
-    );
+  function setTab(key: string) {
+    setSearchParams({ tab: key }, { replace: true });
   }
 
-  function renderBrandMark() {
-    if (brand.logoUrl) {
-      return <img src={brand.logoUrl} alt={`Logo de ${brand.companyName}`} className="h-12 w-12 rounded-md border border-white/10 object-cover" />;
-    }
+  const initials = (user?.email || "S").slice(0, 2).toUpperCase();
 
+  function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     return (
-      <div className="flex h-12 w-12 items-center justify-center rounded-md border border-white/10 bg-white/10 text-white">
-        <Shield className="h-5 w-5" />
+      <div className="flex h-full flex-col">
+        {/* Brand */}
+        <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border/70 px-4">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Shield className="h-[14px] w-[14px]" />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Master</p>
+            <p className="text-[13px] font-semibold leading-tight text-foreground">Painel Admin</p>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <div className="flex-1 overflow-y-auto px-2 py-3">
+          {onCompanies && (
+            <div>
+              <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+                Empresas
+              </p>
+              <nav className="space-y-px">
+                {companyTabs.map((t) => {
+                  const active = activeTab === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => { setTab(t.key); onNavigate?.(); }}
+                      className={cn(
+                        "flex w-full items-center gap-2.5 rounded-md px-2.5 py-[6px] text-[13px] transition-all duration-100 text-left",
+                        active
+                          ? "bg-primary/[0.08] text-primary font-semibold"
+                          : "text-foreground/60 hover:bg-muted hover:text-foreground font-medium"
+                      )}
+                    >
+                      <t.icon className={cn(
+                        "h-[15px] w-[15px] shrink-0 transition-colors",
+                        active ? "text-primary" : "text-foreground/40"
+                      )} />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 border-t border-border/70 p-3">
+          <div className="mb-1 flex items-center gap-2.5 rounded-md px-2 py-1.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+              {initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[12px] font-semibold text-foreground">{user?.email || "Superusuário"}</p>
+              <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
+                Administrador master
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sair
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-ink text-white">
-      <div className="flex min-h-screen">
-        <aside className="hidden w-72 shrink-0 flex-col border-r border-white/10 bg-ink lg:flex">
-          <div className="border-b border-white/10 px-6 py-8">
-            <div className="flex items-center gap-4">
-              {renderBrandMark()}
-              <div className="min-w-0">
-                <p className="font-mono-ui text-[10px] uppercase tracking-[0.18em] text-gold">Painel master</p>
-                <p className="truncate font-display text-2xl text-white">{brand.companyName}</p>
-                <p className="mt-1 text-xs text-white/55">Governanca global de empresas, usuarios e acessos.</p>
-              </div>
-            </div>
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      {/* Desktop sidebar */}
+      <aside className="hidden w-[200px] shrink-0 border-r border-border/70 bg-card lg:flex lg:flex-col">
+        <SidebarContent />
+      </aside>
 
-            <div className="mt-6 rounded-lg border border-white/10 bg-white/5 px-4 py-4">
-              <p className="text-sm font-medium text-white">Console administrativo</p>
-              <p className="mt-2 text-sm leading-6 text-white/65">
-                Estrutura enxuta e contrastada para gerenciamento global do ecossistema.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-4 py-5">
-            <p className="px-3 pb-3 font-mono-ui text-[10px] uppercase tracking-[0.18em] text-white/45">Navegacao</p>
-            {renderNav()}
-          </div>
-
-          <div className="border-t border-white/10 px-4 py-4">
-            <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-4">
-              <p className="font-mono-ui text-[10px] uppercase tracking-[0.18em] text-white/45">Sessao atual</p>
-              <p className="mt-2 truncate text-sm font-medium text-white">{user?.email || "Superusuario"}</p>
-            </div>
-
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={logout}
-              className="mt-4 h-11 w-full rounded-md border border-white/10 text-white hover:bg-white/10 hover:text-white"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        </aside>
-
-        <div className="min-w-0 flex-1 bg-paper text-foreground">
-          <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-slate-950/95 px-4 backdrop-blur-sm lg:hidden">
-            <div className="flex min-w-0 items-center gap-3">
-              {renderBrandMark()}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">Painel master</p>
-                <p className="truncate text-xs text-white/55">{brand.companyName}</p>
-              </div>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-md border border-white/10 text-white hover:bg-white/10 hover:text-white"
-              onClick={() => setMobileOpen((prev) => !prev)}
-            >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </header>
-
-          {mobileOpen ? (
-            <div className="fixed inset-0 z-50 bg-slate-950/45 lg:hidden" onClick={() => setMobileOpen(false)}>
-              <aside
-                className="h-full w-[304px] border-r border-white/10 bg-ink px-4 py-4 shadow-elevated"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                  <div className="flex items-center gap-3">
-                    {renderBrandMark()}
-                    <div className="min-w-0">
-                      <p className="truncate font-display text-xl text-white">Painel master</p>
-                      <p className="truncate text-xs text-white/55">{brand.companyName}</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-md border border-white/10 text-white hover:bg-white/10 hover:text-white"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <aside
+            className="absolute left-0 top-0 h-full w-[200px] border-r border-border/70 bg-card shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex h-14 items-center justify-between border-b border-border/70 px-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Shield className="h-3.5 w-3.5" />
                 </div>
-
-                <div className="pt-4">{renderNav(() => setMobileOpen(false))}</div>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={logout}
-                  className="mt-6 h-11 w-full rounded-md border border-white/10 text-white hover:bg-white/10 hover:text-white"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sair
-                </Button>
-              </aside>
+                <span className="text-[13px] font-semibold text-foreground">Painel Admin</span>
+              </div>
+              <button
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+                onClick={() => setMobileOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-          ) : null}
-
-          <main className="px-4 pb-8 pt-20 sm:px-6 lg:px-10 lg:pb-10 lg:pt-10">
-            <div className="mx-auto w-full max-w-[1280px]">
-              <Outlet />
-            </div>
-          </main>
+            <SidebarContent onNavigate={() => setMobileOpen(false)} />
+          </aside>
         </div>
+      )}
+
+      {/* Main */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Topbar */}
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/70 bg-card px-4">
+          <button
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted lg:hidden"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="hidden items-center gap-2 lg:flex">
+            <span className="text-[13px] font-semibold text-foreground">Painel Master</span>
+          </div>
+          <div />
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto bg-background p-4 lg:p-6">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

@@ -96,7 +96,15 @@ export function ProcessEditModal({
   }
 
   async function handleSave() {
-    if (!validateBeforeSave()) return;
+    if (!validateBeforeSave()) {
+      // Scroll to first visible error field
+      setTimeout(() => {
+        const el = document.querySelector('[aria-invalid="true"]') as HTMLElement | null;
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el?.focus({ preventScroll: true });
+      }, 50);
+      return;
+    }
 
     await onSave(
       buildProcessSubmitPayload(values, {

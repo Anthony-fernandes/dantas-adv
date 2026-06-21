@@ -1,21 +1,14 @@
 import { type CSSProperties, type FormEvent, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, FileText, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { leadService } from '@/services/api';
-import { toast } from 'sonner';
 import type { LandingPublicPayload, LandingSettings } from '@/types/landing';
-
-const PORTAL_POINTS = [
-  'Consulta ao andamento processual e movimentações recentes.',
-  'Acesso a documentos, comunicados e orientações enviados pelo escritório.',
-  'Ambiente reservado para clientes e representantes autorizados.',
-] as const;
 
 function firstText(...values: Array<unknown>) {
   for (const value of values) {
@@ -32,47 +25,24 @@ function pickThemeValue(theme: Record<string, any> | undefined, keys: string[], 
   return fallback;
 }
 
-function buildPortalThemeStyle(settings: LandingSettings | undefined) {
+function buildThemeStyle(settings: LandingSettings | undefined) {
   const theme = settings?.theme || {};
-
   return {
-    '--landing-accent': pickThemeValue(theme, ['accent', 'primary_color'], '#c9ab76'),
-    '--landing-accent-strong': pickThemeValue(theme, ['accent_strong', 'secondary_color'], '#f0d7a1'),
-    '--landing-dark-base': pickThemeValue(theme, ['dark_base'], '#081d36'),
-    '--landing-hero-start': pickThemeValue(theme, ['hero_start', 'hero_color_from'], '#081d36'),
-    '--landing-hero-mid': pickThemeValue(theme, ['hero_mid', 'hero_color_mid'], '#0a2649'),
-    '--landing-hero-end': pickThemeValue(theme, ['hero_end', 'hero_color_to'], '#0d355f'),
+    '--accent': pickThemeValue(theme, ['accent', 'primary_color'], '#c9ab76'),
+    '--panel-bg': pickThemeValue(theme, ['dark_base', 'hero_start', 'hero_color_from'], '#0b1e35'),
+    '--panel-mid': pickThemeValue(theme, ['hero_mid', 'hero_color_mid'], '#0d2744'),
   } as CSSProperties;
-}
-
-function colorToRgba(color: string | undefined, opacity: number, fallback = '#081d36') {
-  const input = String(color || fallback).trim() || fallback;
-  const normalized = input.replace('#', '');
-
-  if (/^[0-9a-fA-F]{6}$/.test(normalized)) {
-    const red = Number.parseInt(normalized.slice(0, 2), 16);
-    const green = Number.parseInt(normalized.slice(2, 4), 16);
-    const blue = Number.parseInt(normalized.slice(4, 6), 16);
-    return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
-  }
-
-  if (/^[0-9a-fA-F]{3}$/.test(normalized)) {
-    const red = Number.parseInt(normalized[0] + normalized[0], 16);
-    const green = Number.parseInt(normalized[1] + normalized[1], 16);
-    const blue = Number.parseInt(normalized[2] + normalized[2], 16);
-    return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
-  }
-
-  return input;
 }
 
 export default function PortalLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fieldError, setFieldError] = useState('');
 
   const navigate = useNavigate();
   const { portalLogin } = useAuth();
+
   const publicSiteQuery = useQuery({
     queryKey: ['portal-login-brand'],
     queryFn: async () => await leadService.getPublicSite(),
@@ -82,190 +52,195 @@ export default function PortalLogin() {
   const company = payload.company || {};
   const settings = payload.settings;
 
-  const themeStyle = useMemo(() => buildPortalThemeStyle(settings), [settings]);
+  const themeStyle = useMemo(() => buildThemeStyle(settings), [settings]);
 
   const brand = useMemo(() => {
-    const companyName = firstText(settings?.brand_name, company.name, 'JurisFlow') || 'JurisFlow';
+    const companyName = firstText(settings?.brand_name, company.name, 'Jurídico') || 'Jurídico';
     const logoUrl = firstText(company.logo_url);
-    const heroImage = firstText(settings?.hero_background_image_url, settings?.hero_background_image);
-    const heroOverlay = colorToRgba(settings?.hero_overlay_color, Number(settings?.hero_overlay_opacity ?? 0.78));
     const portalLabel = firstText(settings?.client_portal_label, 'Portal do Cliente');
-    const companyTagline = firstText(
-      settings?.brand_tagline,
-      company.tagline,
-      'Acompanhamento reservado para clientes',
-    );
-
-    return {
-      companyName,
-      logoUrl,
-      heroImage,
-      heroOverlay,
-      portalLabel,
-      companyTagline,
-    };
+    const tagline = firstText(settings?.brand_tagline, company.tagline, 'Acompanhe seu atendimento');
+    return { companyName, logoUrl, portalLabel, tagline };
   }, [company.logo_url, company.name, company.tagline, settings]);
 
   const canSubmit = email.trim().length > 0 && password.trim().length > 0 && !loading;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canSubmit) return;
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setFieldError('Preencha e-mail e senha para continuar.');
+      return;
+    }
 
     setLoading(true);
+    setFieldError('');
 
     try {
-      await portalLogin(email, password);
+      await portalLogin(trimmedEmail, trimmedPassword);
       navigate('/portal', { replace: true });
     } catch (err: any) {
-      toast.error(err?.message || 'Erro ao fazer login');
+      const msg: string = err?.message || '';
+      if (/email.*obrig|obrig.*email/i.test(msg) || /invalid.*credential|no active account|credenciais/i.test(msg)) {
+        setFieldError('E-mail ou senha incorretos.');
+      } else if (msg) {
+        setFieldError(msg);
+      } else {
+        setFieldError('Não foi possível fazer login. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="landing-theme min-h-screen text-white" style={themeStyle}>
-      <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,var(--landing-hero-start),var(--landing-hero-mid),var(--landing-hero-end))]">
-        {brand.heroImage ? (
-          <div
-            className="absolute inset-0 opacity-[0.14]"
-            style={{
-              backgroundImage: `linear-gradient(${brand.heroOverlay}, ${brand.heroOverlay}), url(${brand.heroImage})`,
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              backgroundSize: 'cover',
-            }}
-          />
-        ) : null}
+    <div className="landing-theme min-h-screen" style={themeStyle}>
+      <div className="flex min-h-screen">
+        {/* Left panel — brand */}
+        <div
+          className="relative hidden flex-col justify-between overflow-hidden p-10 lg:flex lg:w-[42%]"
+          style={{
+            background: 'linear-gradient(160deg, var(--panel-bg) 0%, var(--panel-mid) 100%)',
+          }}
+        >
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.05),transparent_60%)]" />
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-white/10" />
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(201,171,118,0.12),transparent_24%),linear-gradient(180deg,rgba(6,13,36,0.18),rgba(6,13,36,0.56))]" />
-
-        <div className="relative mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
-          <div className="grid w-full items-center gap-10 lg:grid-cols-2 lg:gap-16">
-            <section className="hidden lg:block">
-              <div className="max-w-xl">
-                <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/80">
-                  <ShieldCheck className="h-4 w-4" style={{ color: 'var(--landing-accent)' }} />
-                  Área do cliente
+          <div className="relative">
+            <div className="flex items-center gap-3">
+              {brand.logoUrl ? (
+                <img
+                  src={brand.logoUrl}
+                  alt={brand.companyName}
+                  className="h-9 w-9 rounded-lg object-cover"
+                />
+              ) : (
+                <div
+                  className="flex h-9 w-9 items-center justify-center rounded-lg"
+                  style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--accent)' }}
+                >
+                  <FileText className="h-5 w-5" />
                 </div>
+              )}
+              <span className="text-sm font-semibold text-white/90">{brand.companyName}</span>
+            </div>
+          </div>
 
-                <p className="mt-8 text-sm font-semibold uppercase tracking-[0.24em]" style={{ color: 'var(--landing-accent-strong)' }}>
-                  {brand.companyName}
-                </p>
-                <h1 className="mt-4 font-display text-5xl font-bold leading-[1.02] tracking-[-0.04em] text-white">
-                  Acompanhe seu caso com segurança e clareza.
-                </h1>
-                <p className="mt-5 text-lg leading-8 text-white/72">
-                  Entre no portal para consultar atualizações, documentos e informações compartilhadas pelo escritório ao longo do atendimento.
-                </p>
+          <div className="relative">
+            <div className="mb-6 h-px w-10" style={{ background: 'var(--accent)' }} />
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/40">
+              {brand.portalLabel}
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-semibold leading-snug tracking-tight text-white">
+              Acompanhe seu<br />
+              caso com<br />
+              transparência.
+            </h2>
+          </div>
 
-                <div className="mt-10 space-y-4">
-                  {PORTAL_POINTS.map((item) => (
-                    <div key={item} className="flex items-start gap-3 text-white/82">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" style={{ color: 'var(--landing-accent)' }} />
-                      <span className="text-base leading-7">{item}</span>
-                    </div>
-                  ))}
-                </div>
+          <div className="relative">
+            <p className="text-xs text-white/30">
+              Acesso restrito a clientes cadastrados.
+            </p>
+          </div>
+        </div>
+
+        {/* Right panel — form */}
+        <div className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-12 dark:bg-zinc-950">
+          {/* Mobile logo */}
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            {brand.logoUrl ? (
+              <img src={brand.logoUrl} alt={brand.companyName} className="h-8 w-8 rounded-lg object-cover" />
+            ) : (
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-lg"
+                style={{ background: '#f1f5f9', color: 'var(--panel-bg)' }}
+              >
+                <FileText className="h-4 w-4" />
               </div>
-            </section>
+            )}
+            <span className="text-sm font-semibold text-zinc-900 dark:text-white">{brand.companyName}</span>
+          </div>
 
-            <section className="w-full">
-              <div className="mx-auto w-full max-w-md overflow-hidden rounded-[30px] border border-white/10 bg-white text-slate-900 shadow-[0_32px_100px_-34px_rgba(2,6,23,0.9)]">
-                <div className="p-6 sm:p-8">
-                  <div className="text-center">
-                    {brand.logoUrl ? (
-                      <div className="mx-auto flex h-24 w-24 items-center justify-center overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-                        <img
-                          src={brand.logoUrl}
-                          alt={`Logo do escritório ${brand.companyName}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className="mx-auto flex h-24 w-24 items-center justify-center rounded-[28px] border border-slate-200 bg-slate-50"
-                        style={{ color: 'var(--landing-dark-base)' }}
-                      >
-                        <FileText className="h-10 w-10" />
-                      </div>
-                    )}
+          <div className="w-full max-w-[360px]">
+            <div className="mb-8">
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
+                {brand.portalLabel}
+              </h1>
+              <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
+                {brand.tagline}
+              </p>
+            </div>
 
-                    <p className="mt-6 text-[0.72rem] font-semibold uppercase tracking-[0.22em]" style={{ color: 'var(--landing-accent)' }}>
-                      {brand.portalLabel}
-                    </p>
-                    <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-slate-950">
-                      {brand.companyName}
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-500">
-                      {brand.companyTagline}
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-                    <div className="space-y-2.5">
-                      <Label htmlFor="p-email" className="text-sm font-medium text-slate-700">
-                        E-mail
-                      </Label>
-                      <div className="relative">
-                        <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <Input
-                          id="p-email"
-                          type="email"
-                          autoComplete="email"
-                          autoFocus
-                          placeholder="nome@exemplo.com"
-                          value={email}
-                          onChange={(event) => setEmail(event.target.value)}
-                          className="h-[52px] rounded-2xl border-slate-200 bg-slate-50 pl-11 text-[15px] text-slate-900 placeholder:text-slate-400 focus-visible:ring-slate-300 focus-visible:ring-offset-0"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2.5">
-                      <Label htmlFor="p-password" className="text-sm font-medium text-slate-700">
-                        Senha
-                      </Label>
-                      <div className="relative">
-                        <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <Input
-                          id="p-password"
-                          type="password"
-                          autoComplete="current-password"
-                          placeholder="Digite sua senha"
-                          value={password}
-                          onChange={(event) => setPassword(event.target.value)}
-                          className="h-[52px] rounded-2xl border-slate-200 bg-slate-50 pl-11 text-[15px] text-slate-900 placeholder:text-slate-400 focus-visible:ring-slate-300 focus-visible:ring-offset-0"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                      Use os dados informados pelo escritório para acessar o acompanhamento do seu atendimento.
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="h-[52px] w-full rounded-2xl text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-white shadow-[0_20px_40px_-22px_rgba(8,29,54,0.8)] transition-all hover:opacity-95"
-                      style={{ background: 'linear-gradient(135deg, var(--landing-hero-mid), var(--landing-hero-end))' }}
-                      disabled={!canSubmit}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Entrando...
-                        </>
-                      ) : (
-                        'Entrar no portal'
-                      )}
-                    </Button>
-                  </form>
-                </div>
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="p-email" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  E-mail
+                </Label>
+                <Input
+                  id="p-email"
+                  type="email"
+                  autoComplete="email"
+                  autoFocus
+                  placeholder="nome@exemplo.com.br"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (fieldError) setFieldError('');
+                  }}
+                  className="h-10 border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:ring-offset-0 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                />
               </div>
-            </section>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="p-password" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Senha
+                </Label>
+                <Input
+                  id="p-password"
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (fieldError) setFieldError('');
+                  }}
+                  className="h-10 border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:ring-offset-0 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                />
+              </div>
+
+              {fieldError && (
+                <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2.5 text-sm text-red-600 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-400">
+                  {fieldError}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                disabled={!canSubmit}
+                className="mt-1 h-10 w-full text-sm font-medium text-white disabled:opacity-50"
+                style={{
+                  background: loading || !canSubmit
+                    ? undefined
+                    : 'linear-gradient(135deg, var(--panel-bg), var(--panel-mid))',
+                }}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Entrando…
+                  </span>
+                ) : (
+                  'Entrar no portal'
+                )}
+              </Button>
+            </form>
+
+            <p className="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-600">
+              Use os dados informados pelo escritório.
+            </p>
           </div>
         </div>
       </div>

@@ -5,7 +5,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
-from django.core.mail import send_mail
+from apps.notifications.email_templates import invite_email, welcome_email
+from apps.notifications.services import _safe_send_email
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -773,40 +774,37 @@ class TenantInviteView(APIView):
                 invited_by=request.user,
             )
 
-        # Send email (console backend in dev by default).
         invite_url = None
         frontend_base = getattr(settings, 'FRONTEND_BASE_URL', '')
         if frontend_base:
             invite_url = f"{frontend_base.rstrip('/')}/accept-invite?token={invite.token}"
 
-        subject = f"Convite para {request.tenant.name}"
-        lines = [
-            f"Você foi convidado para entrar no escritório '{request.tenant.name}'.",
-            f"Função: {invite.role}",
-            "",
-        ]
-        if invite_url:
-            lines.append(f"Aceite o convite: {invite_url}")
-        else:
-            lines.append(f"Token do convite: {invite.token}")
-        message = "\n".join(lines)
-
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@lawflow.local'),
-            recipient_list=[email],
-            fail_silently=True,
+        expires_days = getattr(settings, 'TENANT_INVITE_EXPIRES_DAYS', 7)
+        role_labels = {
+            'OWNER': 'Proprietário', 'ADMIN': 'Administrador', 'LAWYER': 'Advogado',
+            'ASSISTANT': 'Assistente', 'FINANCE': 'Financeiro', 'CLIENT': 'Cliente',
+        }
+        subject, html_body = invite_email(
+            office_name=request.tenant.name,
+            role_label=role_labels.get(invite.role, invite.role),
+            invite_url=invite_url,
+            token=invite.token,
+            expires_days=expires_days,
         )
+        plain = f"Você foi convidado para {request.tenant.name} como {invite.role}.\n"
+        plain += f"Aceite: {invite_url}" if invite_url else f"Token: {invite.token}"
+        _safe_send_email(to_email=email, subject=subject, message=plain, html_message=html_body)
 
         return Response(
             {
+                'invite_url': invite_url,
+                'token': invite.token,
                 'invite': {
                     'email': invite.email,
                     'role': invite.role,
                     'token': invite.token,
                     'expires_at': invite.expires_at,
-                }
+                },
             },
             status=201,
         )
@@ -865,6 +863,14 @@ class AcceptInviteView(APIView):
 
         invite.accepted_at = now
         invite.save(update_fields=['accepted_at'])
+
+        # Welcome email
+        display_name = full_name or getattr(getattr(user, 'profile', None), 'full_name', None) or user.email
+        frontend_base = getattr(settings, 'FRONTEND_BASE_URL', '')
+        login_url = f"{frontend_base.rstrip('/')}/app" if frontend_base else None
+        _subj, html = welcome_email(user_name=display_name, office_name=invite.tenant.name, login_url=login_url)
+        plain = f"Bem-vindo ao {invite.tenant.name}! Seu acesso foi ativado. Acesse: {login_url or ''}"
+        _safe_send_email(to_email=user.email, subject=_subj, message=plain, html_message=html)
 
         refresh = RefreshToken.for_user(user)
         return Response(

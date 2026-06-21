@@ -6,6 +6,7 @@ import {
   Copy,
   Info,
   KeyRound,
+  MailPlus,
   RefreshCcw,
   ShieldCheck,
   UserCheck,
@@ -203,6 +204,10 @@ export default function AdminUsers() {
   const { toast } = useToast();
 
   const [open, setOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("LAWYER");
+  const [inviteResult, setInviteResult] = useState<{ invite_url?: string; token?: string } | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [originalLinks, setOriginalLinks] = useState<LinkSnapshot>({ employeeId: "", employeeTenantId: "", clientId: "", clientTenantId: "" });
   const [accessSnapshot, setAccessSnapshot] = useState<AccessSnapshot>({ roles: [], permissions: [] });
@@ -384,6 +389,22 @@ export default function AdminUsers() {
     },
     onError: (error: any) => toast({ title: "Erro ao atualizar usuário", description: error?.message, variant: "destructive" }),
   });
+  const inviteMutation = useMutation({
+    mutationFn: async () => {
+      const tenantId = effectiveTenantId;
+      if (!tenantId) throw new Error('Selecione um escritório para enviar o convite.');
+      return api.post<{ invite_url?: string; token?: string }>(`/tenants/${tenantId}/invite/`, {
+        email: inviteEmail.trim(),
+        role: inviteRole,
+      });
+    },
+    onSuccess: (data: any) => {
+      setInviteResult(data ?? {});
+      queryClient.invalidateQueries({ queryKey: ['admin-users-list'] });
+    },
+    onError: (error: any) => toast({ title: 'Erro ao enviar convite', description: error?.message, variant: 'destructive' }),
+  });
+
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
       const target = users.find((user) => user.id === userId);
@@ -555,7 +576,20 @@ export default function AdminUsers() {
         <div className="space-y-4">
           <Card>
             <CardHeader className="space-y-4">
-              <CardTitle>Gestão de usuários</CardTitle>
+              <div className="flex items-center justify-between gap-4">
+                <CardTitle>Gestão de usuários</CardTitle>
+                {(isSuperuser || hasRole('OWNER', 'ADMIN')) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 shrink-0"
+                    onClick={() => { setInviteEmail(''); setInviteRole('LAWYER'); setInviteResult(null); setInviteOpen(true); }}
+                  >
+                    <MailPlus className="h-4 w-4" />
+                    Convidar
+                  </Button>
+                )}
+              </div>
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
                 <Input placeholder="Buscar por nome ou e-mail" value={search} onChange={(event) => setSearch(event.target.value)} />
                 <select className="h-10 rounded-md border bg-background px-3 text-sm" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
@@ -831,6 +865,84 @@ export default function AdminUsers() {
               </div>
             </form>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={(o) => { if (!o) { setInviteOpen(false); setInviteResult(null); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Convidar usuário</DialogTitle>
+          </DialogHeader>
+          {inviteResult ? (
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 dark:border-green-900/40 dark:bg-green-950/20">
+                <p className="text-sm font-medium text-green-800 dark:text-green-300">Convite enviado!</p>
+                <p className="mt-1 text-xs text-green-700 dark:text-green-400">
+                  O link foi enviado para <strong>{inviteEmail}</strong>.
+                </p>
+              </div>
+              {(inviteResult.invite_url || inviteResult.token) && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">
+                    {inviteResult.invite_url ? 'Link do convite (copie se precisar enviar manualmente)' : 'Token do convite'}
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={inviteResult.invite_url || inviteResult.token || ''}
+                      readOnly
+                      className="font-mono text-xs"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => navigator.clipboard.writeText(inviteResult!.invite_url || inviteResult!.token || '')}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-end">
+                <Button onClick={() => { setInviteOpen(false); setInviteResult(null); }}>Fechar</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-2">
+              <div className="grid gap-1.5">
+                <Label>E-mail *</Label>
+                <Input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="usuario@exemplo.com"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Perfil inicial</Label>
+                <select
+                  className="h-10 rounded-md border bg-background px-3 text-sm"
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                >
+                  {roles.map((r) => (
+                    <option key={r.code} value={r.code}>{prettyAccess(r.code)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <Button variant="outline" onClick={() => setInviteOpen(false)}>Cancelar</Button>
+                <Button
+                  onClick={() => inviteMutation.mutate()}
+                  disabled={inviteMutation.isPending || !inviteEmail.trim()}
+                  className="gap-2"
+                >
+                  <MailPlus className="h-4 w-4" />
+                  {inviteMutation.isPending ? 'Enviando...' : 'Enviar convite'}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </OfficeAdminShell>

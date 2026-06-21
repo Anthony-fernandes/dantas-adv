@@ -68,7 +68,7 @@ export const financeService = {
 export const adminService = {
   users: (params?: Params) => api.get<PaginatedResponse<User>>('/admin/users/', params),
   updateUser: (id: string, data: Partial<User>) => api.put<User>(`/admin/users/${id}/`, data),
-  auditLogs: (params?: Params) => api.get<PaginatedResponse<AuditLog>>('/admin/audit-logs/', params),
+  auditLogs: (params?: Params) => api.get<PaginatedResponse<AuditLog>>('/audit-events/', params),
   knowledge: (params?: Params) => api.get<PaginatedResponse<KnowledgeItem>>('/knowledge/', params),
   createKnowledge: (data: Partial<KnowledgeItem>) => api.post<KnowledgeItem>('/knowledge/', data),
 };

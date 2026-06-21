@@ -1,7 +1,8 @@
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -31,6 +32,16 @@ import AdminUsers from "@/pages/app/AdminUsers";
 import Companies from "@/pages/app/Companies";
 import LandingCms from "@/pages/app/LandingCms";
 import LandingBlog from "@/pages/app/LandingBlog";
+import Reports from "@/pages/app/Reports";
+import DeadlinesPage from "@/pages/app/DeadlinesPage";
+import HonorariosPage from "@/pages/app/HonorariosPage";
+import TasksPage from "@/pages/app/TasksPage";
+import TimesheetPage from "@/pages/app/TimesheetPage";
+import ChatPage from "@/pages/app/ChatPage";
+import AuditLogPage from "@/pages/app/AuditLogPage";
+import TemplatesPage from "@/pages/app/TemplatesPage";
+import ProfilePage from "@/pages/app/ProfilePage";
+import SettingsPage from "@/pages/app/SettingsPage";
 import PortalLogin from "@/pages/portal/PortalLogin";
 import PortalHome from "@/pages/portal/PortalHome";
 import PortalProcesses from "@/pages/portal/PortalProcesses";
@@ -44,6 +55,10 @@ import NotFound from "@/pages/NotFound";
 import SetupTenant from "@/pages/app/SetupTenant";
 import SelectTenant from "@/pages/app/SelectTenant";
 import AcceptInvite from "@/pages/AcceptInvite";
+import ContractsPage from "@/pages/app/ContractsPage";
+import ContabilidadePage from "@/pages/app/ContabilidadePage";
+import NFSeWorkspace from "@/pages/app/financial/NFSeWorkspace";
+import LGPD from "@/pages/app/LGPD";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalApiErrorListener } from "@/components/GlobalApiErrorListener";
 import Forbidden from "@/pages/errors/Forbidden";
@@ -68,6 +83,33 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function LandingOrRedirect() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["landing-bootstrap-check"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/landing/");
+        if (!res.ok) return null;
+        return res.json();
+      } catch {
+        return null;
+      }
+    },
+    retry: false,
+    staleTime: 30_000,
+  });
+
+  if (isLoading) return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-950">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+    </div>
+  );
+
+  const hasCompany = !!(data?.company?.name || data?.settings?.brand_name);
+  if (!hasCompany) return <Navigate to="/master/login" replace />;
+  return <Landing />;
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -208,6 +250,7 @@ function AuthenticatedShell() {
 }
 
 const App = () => (
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -215,7 +258,7 @@ const App = () => (
       <BrowserRouter>
           <ErrorBoundary>
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<LandingOrRedirect />} />
             <Route path="/blog/:slug" element={<BlogArticle />} />
             <Route path="/error/403" element={<Forbidden />} />
             <Route path="/error/500" element={<ServerError />} />
@@ -224,6 +267,7 @@ const App = () => (
 
             <Route element={<AuthenticatedShell />}>
               <Route path="/accept-invite" element={<AcceptInvite />} />
+              <Route path="/app/lgpd" element={<ProtectedRoute><LGPD /></ProtectedRoute>} />
               <Route path="/app/login" element={<AppLogin />} />
               <Route path="/master/login" element={<MasterLogin />} />
               <Route path="/app/setup" element={<ProtectedRoute><SetupTenant /></ProtectedRoute>} />
@@ -238,16 +282,29 @@ const App = () => (
                 <Route path="clientes" element={<RequireRole roles={RoleGroups.LEGAL}><ClientList /></RequireRole>} />
                 <Route path="clientes/:id" element={<RequireRole roles={RoleGroups.LEGAL}><ClientDetail /></RequireRole>} />
                 <Route path="financeiro" element={<RequireRole roles={RoleGroups.FINANCE}><Financial /></RequireRole>} />
+                <Route path="honorarios" element={<RequireRole roles={RoleGroups.FINANCE}><HonorariosPage /></RequireRole>} />
                 <Route path="documentos" element={<RequireRole roles={RoleGroups.LEGAL}><DocumentsModule /></RequireRole>} />
                 <Route path="audiencias" element={<RequireRole roles={RoleGroups.LEGAL}><HearingsPage /></RequireRole>} />
+                <Route path="prazos" element={<RequireRole roles={RoleGroups.LEGAL}><DeadlinesPage /></RequireRole>} />
+                <Route path="tarefas" element={<RequireRole roles={RoleGroups.LEGAL}><TasksPage /></RequireRole>} />
+                <Route path="horas" element={<RequireRole roles={RoleGroups.LEGAL}><TimesheetPage /></RequireRole>} />
+                <Route path="chat" element={<RequireRole roles={RoleGroups.LEGAL}><ChatPage /></RequireRole>} />
                 <Route path="agenda" element={<RequireRole roles={RoleGroups.LEGAL}><AgendaPage /></RequireRole>} />
                 <Route path="financeiro/*" element={<RequireRole roles={RoleGroups.FINANCE}><Financial /></RequireRole>} />
                 <Route path="funcionarios" element={<RequireRole roles={RoleGroups.ADMIN}><Employees /></RequireRole>} />
                 <Route path="cargos" element={<RequireRole roles={RoleGroups.ADMIN}><Positions /></RequireRole>} />
                 <Route path="usuarios" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
                 <Route path="empresas" element={<RequireRole roles={RoleGroups.ADMIN}><Companies /></RequireRole>} />
+                <Route path="relatorios" element={<RequireRole roles={RoleGroups.FINANCE}><Reports /></RequireRole>} />
                 <Route path="landing" element={<RequireRole roles={RoleGroups.ADMIN}><LandingCms /></RequireRole>} />
                 <Route path="blog" element={<RequireRole roles={RoleGroups.ADMIN}><LandingBlog /></RequireRole>} />
+                <Route path="auditoria" element={<RequireRole roles={RoleGroups.ADMIN}><AuditLogPage /></RequireRole>} />
+                <Route path="contratos" element={<RequireRole roles={RoleGroups.LEGAL}><ContractsPage /></RequireRole>} />
+                <Route path="modelos" element={<RequireRole roles={RoleGroups.LEGAL}><TemplatesPage /></RequireRole>} />
+                <Route path="perfil" element={<ProfilePage />} />
+                <Route path="configuracoes" element={<RequireRole roles={RoleGroups.ADMIN}><SettingsPage /></RequireRole>} />
+                <Route path="contabilidade" element={<RequireRole roles={RoleGroups.FINANCE}><ContabilidadePage /></RequireRole>} />
+                <Route path="nfse" element={<RequireRole roles={RoleGroups.FINANCE}><div className="page-container max-w-5xl"><NFSeWorkspace /></div></RequireRole>} />
                 <Route path="admin" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
                 <Route path="admin/*" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
               </Route>
@@ -271,6 +328,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

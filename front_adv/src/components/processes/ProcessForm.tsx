@@ -1,9 +1,10 @@
-import type { ReactNode } from 'react';
-import { BriefcaseBusiness, Scale, ShieldCheck } from 'lucide-react';
+import { type ReactNode, useState } from 'react';
+import { BriefcaseBusiness, Loader2, Scale, Search, ShieldCheck } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { ProcessFormSection } from '@/components/processes/ProcessFormSection';
 import { CurrencyInput } from '@/components/processes/CurrencyInput';
 import {
@@ -16,6 +17,7 @@ import {
   type ProcessSelectOption,
   formatCnjValue,
 } from '@/components/processes/ProcessValidation';
+import { useCnjLookup } from '@/hooks/useCnjLookup';
 import { cn } from '@/lib/utils';
 
 type ProcessFormProps = {
@@ -86,6 +88,20 @@ export function ProcessForm({
   onChange,
   onBlur,
 }: ProcessFormProps) {
+  const cnjLookup = useCnjLookup();
+  const [cnjFound, setCnjFound] = useState<string | null>(null);
+
+  async function handleCnjSearch() {
+    setCnjFound(null);
+    const result = await cnjLookup.lookup(values.cnj);
+    if (!result) return;
+    setCnjFound(result.orgaoJulgador || result.tribunal || result.classe || 'Processo encontrado');
+    if (result.tribunal && !values.court) onChange('court', result.tribunal);
+    if (result.orgaoJulgador && !values.courtDivision) onChange('courtDivision', result.orgaoJulgador);
+    if (result.dataAjuizamento && !values.distributionDate) onChange('distributionDate', result.dataAjuizamento);
+    if (!values.subject) onChange('subject', [result.classe, result.assunto].filter(Boolean).join(' — '));
+  }
+
   const clientOptions = ensureLookupSelection(clients, values.clientId, 'Cliente vinculado');
   const employeeOptions = ensureLookupSelection(employees, values.responsibleId, 'Responsavel atual');
   const areaOptions = ensureOptionAvailability(areas, values.area);
@@ -102,15 +118,34 @@ export function ProcessForm({
       >
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Numero CNJ" required error={errors.cnj}>
-            <Input
-              value={values.cnj}
-              disabled={disabled}
-              placeholder="0000000-00.0000.0.00.0000"
-              aria-invalid={Boolean(errors.cnj)}
-              className={fieldClassName(errors.cnj)}
-              onBlur={() => onBlur('cnj')}
-              onChange={(event) => onChange('cnj', formatCnjValue(event.target.value))}
-            />
+            <div className="flex gap-2">
+              <Input
+                value={values.cnj}
+                disabled={disabled}
+                placeholder="0000000-00.0000.0.00.0000"
+                aria-invalid={Boolean(errors.cnj)}
+                className={fieldClassName(errors.cnj)}
+                onBlur={() => onBlur('cnj')}
+                onChange={(event) => { setCnjFound(null); onChange('cnj', formatCnjValue(event.target.value)); }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                disabled={disabled || cnjLookup.loading || !values.cnj || values.cnj.replace(/\D/g, '').length < 20}
+                onClick={handleCnjSearch}
+                title="Buscar no Datajud"
+              >
+                {cnjLookup.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              </Button>
+            </div>
+            {cnjFound && (
+              <p className="mt-1 text-xs text-green-600 dark:text-green-400">✓ {cnjFound}</p>
+            )}
+            {cnjLookup.error && (
+              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">{cnjLookup.error}</p>
+            )}
           </Field>
 
           <Field label="Cliente">

@@ -10,7 +10,7 @@ from apps.core.viewsets import TenantAuditedModelViewSet
 from apps.core.models import AuditEvent
 from apps.core.services.audit import audit_event
 from apps.accounts.models import UserRole
-from .models import Process, Movement, Deadline, Hearing, LegalCause, TribunalSync
+from .models import Process, Movement, Deadline, Hearing, LegalCause, Task, TimeEntry, TribunalSync
 from apps.documents.models import Document
 from apps.documents.api import DocumentSerializer, DocumentUploadSerializer
 from apps.billing.limits import assert_can_create_process
@@ -409,6 +409,93 @@ class HearingViewSet(TenantAuditedModelViewSet):
     ordering = ['hearing_date']
 
 
+class TaskSerializer(TenantScopedSerializerMixin, serializers.ModelSerializer):
+    def validate(self, attrs):
+        if attrs.get('process'):
+            self._validate_process(attrs['process'])
+        if attrs.get('assigned_to'):
+            self._validate_member(attrs['assigned_to'], 'assigned_to')
+        return attrs
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+        read_only_fields = ('id', 'tenant', 'created_at', 'updated_at', 'created_by', 'updated_by', 'completed_at')
+
+
+class TaskViewSet(TenantAuditedModelViewSet):
+    queryset = Task.objects.select_related('process', 'assigned_to').all().order_by('due_date', '-created_at')
+    serializer_class = TaskSerializer
+    permission_classes = [IsTenantMember, IsLegal]
+
+    audit_enabled = True
+    audit_entity_type = 'Task'
+
+    filterset_fields = {'process': ['exact'], 'status': ['exact'], 'priority': ['exact'], 'assigned_to': ['exact']}
+    search_fields = ['title', 'description', 'process__cnj', 'process__subject']
+    ordering_fields = ['due_date', 'created_at', 'status', 'priority']
+    ordering = ['due_date', '-created_at']
+
+    def perform_update(self, serializer):
+        from django.utils import timezone
+        instance = serializer.instance
+        new_status = serializer.validated_data.get('status', instance.status)
+        extra = {}
+        if new_status == 'concluida' and instance.status != 'concluida':
+            extra['completed_at'] = timezone.now()
+        elif new_status != 'concluida' and instance.status == 'concluida':
+            extra['completed_at'] = None
+        if extra:
+            serializer.validated_data.update(extra)
+        super().perform_update(serializer)
+
+
+class TimeEntrySerializer(TenantScopedSerializerMixin, serializers.ModelSerializer):
+    user_email = serializers.SerializerMethodField()
+    process_label = serializers.SerializerMethodField()
+
+    def get_user_email(self, obj):
+        return getattr(obj.user, 'email', None)
+
+    def get_process_label(self, obj):
+        if not obj.process:
+            return None
+        return obj.process.cnj or obj.process.subject or str(obj.process.id)[:8]
+
+    def validate(self, attrs):
+        if attrs.get('process'):
+            self._validate_process(attrs['process'])
+        return attrs
+
+    class Meta:
+        model = TimeEntry
+        fields = '__all__'
+        read_only_fields = ('id', 'tenant', 'user', 'created_at', 'updated_at', 'user_email', 'process_label')
+
+
+class TimeEntryViewSet(TenantAuditedModelViewSet):
+    queryset = TimeEntry.objects.select_related('process', 'user').all().order_by('-date', '-created_at')
+    serializer_class = TimeEntrySerializer
+    permission_classes = [IsTenantMember, IsLegal]
+
+    audit_enabled = True
+    audit_entity_type = 'TimeEntry'
+
+    filterset_fields = {
+        'process': ['exact'],
+        'user': ['exact'],
+        'billable': ['exact'],
+        'activity_type': ['exact'],
+        'date': ['gte', 'lte', 'exact'],
+    }
+    search_fields = ['description', 'process__cnj', 'process__subject']
+    ordering_fields = ['date', 'created_at', 'hours']
+    ordering = ['-date', '-created_at']
+
+    def perform_create(self, serializer):
+        serializer.save(tenant=self.request.tenant, user=self.request.user)
+
+
 class TribunalSyncSerializer(serializers.ModelSerializer):
     class Meta:
         model = TribunalSync
@@ -479,9 +566,6 @@ class TribunalSyncViewSet(TenantAuditedModelViewSet):
                         date=data_mov,
                     )
                     new_count += 1
-
-            if status_tribunal and sync.process.status != status_tribunal:
-                pass
 
             from django.utils import timezone as tz
             sync.last_synced_at = tz.now()

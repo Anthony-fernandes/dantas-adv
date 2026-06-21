@@ -373,15 +373,14 @@ function DashboardKpiCard(props: {
           type="button"
           onClick={onClick}
           className={cn(
-            "stat-card relative overflow-hidden p-5 text-left transition-all",
+            "stat-card p-5 text-left transition-all",
             clickable ? "hover:-translate-y-0.5 hover:shadow-elevated" : "cursor-default",
           )}
         >
-          <span className={cn("absolute inset-x-0 top-0 h-1", toneAccentClassName(tone))} />
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-3">
               <p className="kpi-label">{title}</p>
-              <p className="font-display text-[2.2rem] font-semibold leading-none text-foreground">
+              <p className="text-[2.2rem] font-bold leading-none tracking-tight text-foreground">
                 {typeof value === "number" ? formatCount(value) : value}
               </p>
             </div>
@@ -406,7 +405,7 @@ function SectionHeader(props: { title: string; description: string; actionLabel?
   return (
     <div className="flex items-start justify-between gap-4">
       <div>
-        <h2 className="font-display text-[1.55rem] font-semibold tracking-[-0.02em] text-foreground">{title}</h2>
+        <h2 className="text-[1.4rem] font-bold tracking-[-0.02em] text-foreground">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
       {actionLabel && onAction ? (
@@ -1030,10 +1029,11 @@ export default function Dashboard() {
   return (
     <TooltipProvider delayDuration={120}>
       <div className="page-container space-y-8 animate-fade-in">
+
         <section className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <h2 className="font-display text-[1.55rem] font-semibold tracking-[-0.02em] text-foreground">Resumo juridico</h2>
+              <h2 className="text-[1.4rem] font-bold tracking-[-0.02em] text-foreground">Resumo juridico</h2>
               <p className="mt-1 text-sm text-muted-foreground">Indicadores centrais da operacao juridica organizados por prioridade.</p>
             </div>
 

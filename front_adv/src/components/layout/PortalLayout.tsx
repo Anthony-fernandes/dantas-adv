@@ -1,26 +1,27 @@
 import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, FileText, Gavel, Home, LogOut, Menu, MessageSquare, Scale, X } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import {
+  DollarSign, FileText, Home, LogOut, Menu, MessageSquare, Scale, X,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { firstText } from "@/lib/brandTheme";
 import { cn } from "@/lib/utils";
 import { leadService } from "@/services/api";
 
 const portalNav = [
-  { label: "Inicio", icon: Home, path: "/portal" },
-  { label: "Processos", icon: Scale, path: "/portal/processos" },
-  { label: "Documentos", icon: FileText, path: "/portal/documentos" },
-  { label: "Financeiro", icon: DollarSign, path: "/portal/financeiro" },
-  { label: "Mensagens", icon: MessageSquare, path: "/portal/mensagens" },
+  { label: "Início",     icon: Home,          path: "/portal",            exact: true },
+  { label: "Processos",  icon: Scale,         path: "/portal/processos" },
+  { label: "Documentos", icon: FileText,      path: "/portal/documentos" },
+  { label: "Financeiro", icon: DollarSign,    path: "/portal/financeiro" },
+  { label: "Mensagens",  icon: MessageSquare, path: "/portal/mensagens" },
 ];
 
 export function PortalLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logout, user } = useAuth();
+
   const publicSiteQuery = useQuery({
     queryKey: ["portal-layout-brand"],
     queryFn: async () => await leadService.getPublicSite(),
@@ -32,152 +33,167 @@ export function PortalLayout() {
   const brand = useMemo(() => {
     const companyName = firstText(payload?.company?.name, settings?.brand_name, "Portal do Cliente");
     const logoUrl = firstText(payload?.company?.logo_url);
+    const portalLabel = firstText(settings?.client_portal_label, "Portal do cliente");
+    return { companyName: companyName || "Portal do Cliente", logoUrl, portalLabel };
+  }, [payload?.company?.logo_url, payload?.company?.name, settings?.brand_name, settings?.client_portal_label]);
 
-    return {
-      companyName: companyName || "Portal do Cliente",
-      logoUrl,
-    };
-  }, [payload?.company?.logo_url, payload?.company?.name, settings?.brand_name]);
-
-  const isActive = (path: string) => {
-    if (path === "/portal") return location.pathname === "/portal";
-    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  const isActive = (item: typeof portalNav[0]) => {
+    if (item.exact) return location.pathname === item.path;
+    return location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
   };
 
-  function renderBrandMark() {
-    if (brand.logoUrl) {
-      return <img src={brand.logoUrl} alt={`Logo de ${brand.companyName}`} className="h-12 w-12 rounded-md border border-border object-cover" />;
-    }
+  const initials = (user?.email || "C").slice(0, 2).toUpperCase();
 
+  function NavItems({ onNavigate }: { onNavigate?: () => void }) {
     return (
-      <div className="flex h-12 w-12 items-center justify-center rounded-md border border-border bg-muted/45 text-foreground">
-        <Gavel className="h-5 w-5" />
+      <div className="space-y-px">
+        {portalNav.map((item) => {
+          const active = isActive(item);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={onNavigate}
+              className={cn(
+                "group flex items-center gap-2.5 rounded-md px-2.5 py-[6px] text-[13px] transition-all duration-100 select-none",
+                active
+                  ? "bg-primary/[0.08] text-primary font-semibold"
+                  : "text-foreground/60 hover:bg-muted hover:text-foreground font-medium",
+              )}
+            >
+              <item.icon className={cn(
+                "h-[15px] w-[15px] shrink-0 transition-colors",
+                active ? "text-primary" : "text-foreground/40 group-hover:text-foreground/70",
+              )} />
+              {item.label}
+            </Link>
+          );
+        })}
       </div>
     );
   }
 
-  function renderNav(onNavigate?: () => void) {
+  function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     return (
-      <nav className="space-y-1.5">
-        {portalNav.map((item) => (
-          <Link key={item.path} to={item.path} onClick={onNavigate}>
-            <div
-              className={cn(
-                "flex items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors",
-                isActive(item.path)
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-transparent text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
-              )}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              <span>{item.label}</span>
+      <div className="flex h-full flex-col">
+        {/* Brand */}
+        <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border/70 px-4">
+          {brand.logoUrl ? (
+            <img src={brand.logoUrl} alt={brand.companyName} className="h-7 w-7 shrink-0 rounded-lg object-cover" />
+          ) : (
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Scale className="h-[14px] w-[14px]" />
             </div>
-          </Link>
-        ))}
-      </nav>
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-semibold leading-tight text-foreground">{brand.companyName}</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">{brand.portalLabel}</p>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <div className="flex-1 overflow-y-auto px-2 py-3">
+          <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+            Menu
+          </p>
+          <NavItems onNavigate={onNavigate} />
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 border-t border-border/70 p-3">
+          <div className="mb-1 flex items-center gap-2.5 rounded-md px-2 py-1.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+              {initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[12px] font-semibold text-foreground">{user?.email || "Cliente"}</p>
+              <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Conta ativa
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sair
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-paper text-foreground">
-      <div className="mx-auto flex min-h-screen max-w-[1480px]">
-        <aside className="hidden w-72 shrink-0 flex-col border-r border-border bg-surface lg:flex">
-          <div className="border-b border-border px-8 py-8">
-            <div className="flex items-center gap-4">
-              {renderBrandMark()}
-              <div className="min-w-0">
-                <p className="eyebrow mb-1">Portal do cliente</p>
-                <p className="truncate font-display text-2xl text-foreground">{brand.companyName}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Acompanhamento institucional e documentos compartilhados.</p>
-              </div>
-            </div>
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      {/* Desktop sidebar */}
+      <aside className="hidden w-[200px] shrink-0 border-r border-border/70 bg-card lg:flex lg:flex-col">
+        <SidebarContent />
+      </aside>
 
-            <div className="mt-6 rounded-lg border border-border bg-accent/40 px-4 py-4">
-              <p className="text-sm font-medium text-foreground">Clareza sobre cada etapa</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Consulte prazos, comunicados e arquivos com uma navegacao mais sobria e organizada.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-4 py-5">
-            <p className="px-3 pb-3 font-mono-ui text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Navegacao</p>
-            {renderNav()}
-          </div>
-
-          <div className="border-t border-border p-4">
-            <div className="rounded-lg border border-border bg-card px-4 py-4 shadow-card">
-              <p className="eyebrow mb-2">Conta conectada</p>
-              <p className="truncate text-sm font-medium text-foreground">{user?.email || "Cliente"}</p>
-            </div>
-
-            <Button type="button" variant="outline" onClick={logout} className="mt-4 h-11 w-full rounded-md">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        </aside>
-
-        <div className="min-w-0 flex-1">
-          <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur-sm lg:hidden">
-            <div className="flex min-w-0 items-center gap-3">
-              {renderBrandMark()}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">Portal do cliente</p>
-                <p className="truncate text-xs text-muted-foreground">{brand.companyName}</p>
-              </div>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-md border border-border text-foreground hover:bg-muted/45"
-              onClick={() => setMobileOpen((prev) => !prev)}
-            >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </header>
-
-          {mobileOpen ? (
-            <div className="fixed inset-0 z-50 bg-slate-950/45 lg:hidden" onClick={() => setMobileOpen(false)}>
-              <aside
-                className="h-full w-[304px] border-r border-border bg-surface px-4 py-4 shadow-elevated"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="flex items-center justify-between border-b border-border pb-4">
-                  <div className="flex items-center gap-3">
-                    {renderBrandMark()}
-                    <div className="min-w-0">
-                      <p className="truncate font-display text-xl text-foreground">Portal do cliente</p>
-                      <p className="truncate text-xs text-muted-foreground">{brand.companyName}</p>
-                    </div>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <aside
+            className="absolute inset-y-0 left-0 flex w-[220px] flex-col border-r border-border/70 bg-card shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex h-14 items-center justify-between border-b border-border/70 px-4">
+              <div className="flex items-center gap-2.5">
+                {brand.logoUrl ? (
+                  <img src={brand.logoUrl} alt={brand.companyName} className="h-7 w-7 rounded-lg object-cover" />
+                ) : (
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Scale className="h-3.5 w-3.5" />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-md border border-border text-foreground hover:bg-muted/45"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="pt-4">{renderNav(() => setMobileOpen(false))}</div>
-
-                <Button type="button" variant="outline" onClick={logout} className="mt-6 h-11 w-full rounded-md">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sair
-                </Button>
-              </aside>
+                )}
+                <p className="text-[13px] font-semibold text-foreground">{brand.companyName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-          ) : null}
-
-          <main className="min-w-0 px-4 pb-8 pt-20 sm:px-6 lg:px-10 lg:pb-10 lg:pt-10">
-            <div className="mx-auto w-full max-w-[1180px]">
-              <Outlet />
-            </div>
-          </main>
+            <SidebarContent onNavigate={() => setMobileOpen(false)} />
+          </aside>
         </div>
+      )}
+
+      {/* Main */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Mobile topbar */}
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/70 bg-card px-4 lg:hidden">
+          <div className="flex items-center gap-2.5">
+            {brand.logoUrl ? (
+              <img src={brand.logoUrl} alt={brand.companyName} className="h-7 w-7 rounded-lg object-cover" />
+            ) : (
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Scale className="h-3.5 w-3.5" />
+              </div>
+            )}
+            <p className="text-[13px] font-semibold text-foreground">{brand.companyName}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto bg-background">
+          <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+            <Outlet />
+          </div>
+        </main>
       </div>
     </div>
   );

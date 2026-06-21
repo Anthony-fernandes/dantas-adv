@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('finance', '0005_accountspayable_employee'),
-        ('core', '0001_initial'),
+        ('core', '0010_task_model'),
         ('clients', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]

@@ -1,0 +1,1253 @@
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  BarChart3,
+  Calendar,
+  ChevronDown,
+  Download,
+  FileText,
+  Gavel,
+  Scale,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { apiGetAllPages, getAccessToken } from '@/integrations/api/client';
+import { useTimeEntries } from '@/hooks/useApiData';
+import { useTenant } from '@/contexts/TenantContext';
+import { cn } from '@/lib/utils';
+import { exportToCsv, formatCsvCurrency, formatCsvDate } from '@/lib/csvExport';
+
+type PeriodOption = '30d' | '90d' | '6m' | '12m';
+
+function formatCurrency(value?: number | string | null) {
+  const n = Number(value || 0);
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+    Number.isFinite(n) ? n : 0,
+  );
+}
+
+function formatCompact(value?: number | string | null) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n)) return 'R$ 0';
+  if (Math.abs(n) >= 1_000_000) return `R$ ${(n / 1_000_000).toFixed(1)}M`;
+  if (Math.abs(n) >= 1_000) return `R$ ${(n / 1_000).toFixed(1)}k`;
+  return formatCurrency(n);
+}
+
+function toDate(v?: string | null) {
+  if (!v) return null;
+  const d = new Date(v.includes('T') ? v : `${v}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function monthKey(v?: string | null) {
+  const d = toDate(v);
+  if (!d) return '';
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function monthLabel(key: string) {
+  const [y, m] = key.split('-');
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('pt-BR', {
+    month: 'short',
+    year: '2-digit',
+  });
+}
+
+function periodToDays(p: PeriodOption) {
+  return { '30d': 30, '90d': 90, '6m': 180, '12m': 365 }[p];
+}
+
+const PERIOD_LABELS: Record<PeriodOption, string> = {
+  '30d': 'Últimos 30 dias',
+  '90d': 'Últimos 90 dias',
+  '6m': 'Últimos 6 meses',
+  '12m': 'Últimos 12 meses',
+};
+
+const CHART_COLORS = {
+  primary: 'hsl(var(--foreground))',
+  gold: 'hsl(var(--gold))',
+  success: 'hsl(var(--success))',
+  destructive: 'hsl(var(--destructive))',
+  info: 'hsl(var(--info))',
+  muted: 'hsl(var(--muted-foreground))',
+};
+
+const PIE_PALETTE = [
+  '#111827',
+  '#374151',
+  '#4b5563',
+  '#6b7280',
+  '#9ca3af',
+  '#d1d5db',
+];
+
+function HearingRate({ hearings }: { hearings: any[] }) {
+  const total = hearings.length || 1;
+  const done = hearings.filter((h) => h.status === 'realizada' || h.status === 'completed').length;
+  const pct = Math.round((done / total) * 100);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-end gap-2">
+        <span className="font-display text-5xl font-semibold text-foreground">{pct}%</span>
+        <span className="mb-1 text-sm text-muted-foreground">de realização</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-foreground transition-all" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {done} de {hearings.length} audiências realizadas
+      </p>
+    </div>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  delta,
+  icon: Icon,
+  loading,
+  tone = 'default',
+}: {
+  label: string;
+  value: string | number;
+  delta?: string;
+  icon: React.ElementType;
+  loading?: boolean;
+  tone?: 'default' | 'success' | 'warning' | 'danger';
+}) {
+  const toneColor = {
+    default: 'text-foreground',
+    success: 'text-success',
+    warning: 'text-warning',
+    danger: 'text-destructive',
+  }[tone];
+
+  return (
+    <div className="kpi">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="kpi-label">{label}</p>
+          {loading ? (
+            <Skeleton className="mt-2 h-9 w-28" />
+          ) : (
+            <p className={cn('kpi-value mt-2', toneColor)}>{value}</p>
+          )}
+          {delta && !loading && (
+            <p className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+              {delta.startsWith('+') ? (
+                <TrendingUp className="h-3 w-3 text-success" />
+              ) : (
+                <TrendingDown className="h-3 w-3 text-destructive" />
+              )}
+              {delta} vs. período anterior
+            </p>
+          )}
+        </div>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
+          <Icon className="h-5 w-5 text-muted-foreground" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Reports() {
+  const [period, setPeriod] = useState<PeriodOption>('30d');
+  const [exporting, setExporting] = useState(false);
+  const { activeTenantId } = useTenant();
+  const days = periodToDays(period);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const token = getAccessToken();
+      const RAW_BASE = String((import.meta as any).env?.VITE_API_BASE_URL || '').trim().replace(/\/$/, '');
+      const url = `${RAW_BASE}/api/tenant/export/`;
+      const resp = await fetch(url, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(activeTenantId ? { 'X-Tenant-Id': activeTenantId } : {}),
+        },
+      });
+      if (!resp.ok) throw new Error('Falha ao exportar dados');
+      const blob = await resp.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const cd = resp.headers.get('Content-Disposition') || '';
+      const match = cd.match(/filename="(.+?)"/);
+      a.download = match ? match[1] : 'export.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      // toast already shown by fetch error
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  const cutoffDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d;
+  }, [days]);
+
+  const { data: processesRaw, isLoading: loadingProcesses } = useQuery({
+    queryKey: ['reports-processes'],
+    queryFn: () => apiGetAllPages<any>('/processes/'),
+    staleTime: 60_000,
+  });
+
+  const { data: receivablesRaw, isLoading: loadingReceivables } = useQuery({
+    queryKey: ['reports-receivables'],
+    queryFn: () => apiGetAllPages<any>('/accounts-receivable/'),
+    staleTime: 60_000,
+  });
+
+  const { data: payablesRaw, isLoading: loadingPayables } = useQuery({
+    queryKey: ['reports-payables'],
+    queryFn: () => apiGetAllPages<any>('/accounts-payable/'),
+    staleTime: 60_000,
+  });
+
+  const { data: clientsRaw, isLoading: loadingClients } = useQuery({
+    queryKey: ['reports-clients'],
+    queryFn: () => apiGetAllPages<any>('/clients/'),
+    staleTime: 60_000,
+  });
+
+  const { data: hearingsRaw, isLoading: loadingHearings } = useQuery({
+    queryKey: ['reports-hearings'],
+    queryFn: () => apiGetAllPages<any>('/hearings/'),
+    staleTime: 60_000,
+  });
+
+  const { data: honorariosRaw, isLoading: loadingHonorarios } = useQuery({
+    queryKey: ['reports-honorarios'],
+    queryFn: () => apiGetAllPages<any>('/accounts-receivable/?category=honorarios'),
+    staleTime: 60_000,
+  });
+
+  const { data: timeEntriesRaw, isLoading: loadingTimeEntries } = useTimeEntries();
+
+  const isLoading = loadingProcesses || loadingReceivables || loadingPayables || loadingClients;
+
+  const processes = useMemo(() => (Array.isArray(processesRaw) ? processesRaw : []), [processesRaw]);
+  const receivables = useMemo(() => (Array.isArray(receivablesRaw) ? receivablesRaw : []), [receivablesRaw]);
+  const payables = useMemo(() => (Array.isArray(payablesRaw) ? payablesRaw : []), [payablesRaw]);
+  const clients = useMemo(() => (Array.isArray(clientsRaw) ? clientsRaw : []), [clientsRaw]);
+  const hearings = useMemo(() => (Array.isArray(hearingsRaw) ? hearingsRaw : []), [hearingsRaw]);
+
+  const filteredReceivables = useMemo(
+    () => receivables.filter((r) => toDate(r.created_at) && toDate(r.created_at)! >= cutoffDate),
+    [receivables, cutoffDate],
+  );
+
+  const filteredPayables = useMemo(
+    () => payables.filter((p) => toDate(p.created_at) && toDate(p.created_at)! >= cutoffDate),
+    [payables, cutoffDate],
+  );
+
+  const totalReceivable = useMemo(
+    () => filteredReceivables.reduce((acc, r) => acc + Number(r.amount || 0), 0),
+    [filteredReceivables],
+  );
+
+  const totalPaid = useMemo(
+    () =>
+      filteredReceivables
+        .filter((r) => r.status === 'pago' || r.status === 'paid')
+        .reduce((acc, r) => acc + Number(r.amount || 0), 0),
+    [filteredReceivables],
+  );
+
+  const totalPayable = useMemo(
+    () => filteredPayables.reduce((acc, p) => acc + Number(p.amount || 0), 0),
+    [filteredPayables],
+  );
+
+  const netResult = totalPaid - totalPayable;
+
+  const activeProcesses = useMemo(
+    () => processes.filter((p) => p.status === 'em_andamento' || p.status === 'ativo'),
+    [processes],
+  );
+
+  const activeClients = useMemo(
+    () => clients.filter((c) => c.status === 'ATIVO' || c.status === 'ativo'),
+    [clients],
+  );
+
+  const processesByArea = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of processes) {
+      const area = p.area || p.practice_area || 'Não informada';
+      map[area] = (map[area] || 0) + 1;
+    }
+    return Object.entries(map)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+  }, [processes]);
+
+  const processesByStatus = useMemo(() => {
+    const statusLabels: Record<string, string> = {
+      em_andamento: 'Em andamento',
+      ativo: 'Ativo',
+      suspenso: 'Suspenso',
+      finalizado: 'Finalizado',
+      arquivado: 'Arquivado',
+      pre_processual: 'Pré-processual',
+    };
+    const map: Record<string, number> = {};
+    for (const p of processes) {
+      const s = statusLabels[p.status] || p.status || 'Não informado';
+      map[s] = (map[s] || 0) + 1;
+    }
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [processes]);
+
+  const revenueByMonth = useMemo(() => {
+    const map: Record<string, { received: number; expense: number }> = {};
+    for (const r of receivables) {
+      const k = monthKey(r.due_date || r.created_at);
+      if (!k) continue;
+      if (!map[k]) map[k] = { received: 0, expense: 0 };
+      if (r.status === 'pago' || r.status === 'paid') map[k].received += Number(r.amount || 0);
+    }
+    for (const p of payables) {
+      const k = monthKey(p.due_date || p.created_at);
+      if (!k) continue;
+      if (!map[k]) map[k] = { received: 0, expense: 0 };
+      map[k].expense += Number(p.amount || 0);
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-12)
+      .map(([key, val]) => ({ month: monthLabel(key), ...val, result: val.received - val.expense }));
+  }, [receivables, payables]);
+
+  const receivableByStatus = useMemo(() => {
+    const labels: Record<string, string> = {
+      pago: 'Pago',
+      paid: 'Pago',
+      aberto: 'Em aberto',
+      open: 'Em aberto',
+      vencido: 'Vencido',
+      overdue: 'Vencido',
+      cancelado: 'Cancelado',
+    };
+    const map: Record<string, number> = {};
+    for (const r of receivables) {
+      const s = labels[r.status] || r.status || 'Outro';
+      map[s] = (map[s] || 0) + Number(r.amount || 0);
+    }
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [receivables]);
+
+  const hearingsByMonth = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const h of hearings) {
+      const k = monthKey(h.hearing_date);
+      if (!k) continue;
+      map[k] = (map[k] || 0) + 1;
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-12)
+      .map(([key, count]) => ({ month: monthLabel(key), count }));
+  }, [hearings]);
+
+  const honorarios = useMemo(() => (Array.isArray(honorariosRaw) ? honorariosRaw : []), [honorariosRaw]);
+  const timeEntries = useMemo(() => (Array.isArray(timeEntriesRaw) ? timeEntriesRaw : []), [timeEntriesRaw]);
+
+  const honorariosTotal = useMemo(() => honorarios.reduce((a, h) => a + Number(h.amount || 0), 0), [honorarios]);
+  const honorariosPago = useMemo(
+    () => honorarios.filter((h) => h.status === 'pago' || h.status === 'paid').reduce((a, h) => a + Number(h.amount || 0), 0),
+    [honorarios],
+  );
+  const honorariosVencidos = useMemo(
+    () => honorarios.filter((h) => h.status === 'vencido' || h.status === 'overdue').length,
+    [honorarios],
+  );
+  const honorariosByStatus = useMemo(() => {
+    const labels: Record<string, string> = { pago: 'Pago', paid: 'Pago', aberto: 'A receber', open: 'A receber', vencido: 'Vencido', overdue: 'Vencido' };
+    const map: Record<string, number> = {};
+    for (const h of honorarios) {
+      const s = labels[h.status] || h.status || 'Outro';
+      map[s] = (map[s] || 0) + Number(h.amount || 0);
+    }
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [honorarios]);
+
+  const totalHours = useMemo(() => timeEntries.reduce((a, e) => a + Number(e.hours || 0), 0), [timeEntries]);
+  const billableHours = useMemo(
+    () => timeEntries.filter((e) => e.billable).reduce((a, e) => a + Number(e.hours || 0), 0),
+    [timeEntries],
+  );
+  const hoursByActivity = useMemo(() => {
+    const labels: Record<string, string> = { diligencia: 'Diligência', pesquisa: 'Pesquisa', reuniao: 'Reunião', audiencia: 'Audiência', peticao: 'Petição', consulta: 'Consulta', outros: 'Outros' };
+    const map: Record<string, number> = {};
+    for (const e of timeEntries) {
+      const a = labels[e.activity_type] || e.activity_type || 'Outros';
+      map[a] = (map[a] || 0) + Number(e.hours || 0);
+    }
+    return Object.entries(map).map(([name, value]) => ({ name, value: Math.round(value * 100) / 100 }));
+  }, [timeEntries]);
+  const hoursByMonth = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of timeEntries) {
+      const k = monthKey(e.date);
+      if (!k) continue;
+      map[k] = (map[k] || 0) + Number(e.hours || 0);
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-12)
+      .map(([key, hours]) => ({ month: monthLabel(key), hours: Math.round(hours * 100) / 100 }));
+  }, [timeEntries]);
+
+  const hoursByUser = useMemo(() => {
+    const map: Record<string, { name: string; total: number; billable: number; entries: number }> = {};
+    for (const e of timeEntries) {
+      const key = e.user_email || e.user || 'Desconhecido';
+      if (!map[key]) map[key] = { name: key, total: 0, billable: 0, entries: 0 };
+      map[key].total += Number(e.hours || 0);
+      if (e.billable) map[key].billable += Number(e.hours || 0);
+      map[key].entries += 1;
+    }
+    return Object.values(map)
+      .map((u) => ({ ...u, total: Math.round(u.total * 100) / 100, billable: Math.round(u.billable * 100) / 100 }))
+      .sort((a, b) => b.total - a.total);
+  }, [timeEntries]);
+
+  function exportFinanceiroCsv() {
+    exportToCsv(`financeiro_${period}_${new Date().toISOString().slice(0,10)}`, [
+      { key: 'description', label: 'Descrição' },
+      { key: 'type', label: 'Tipo' },
+      { key: 'amount_fmt', label: 'Valor (R$)' },
+      { key: 'status', label: 'Status' },
+      { key: 'due_date_fmt', label: 'Vencimento' },
+      { key: 'created_at_fmt', label: 'Criado em' },
+    ], [
+      ...filteredReceivables.map((r: any) => ({
+        description: r.description || '',
+        type: 'Recebível',
+        amount_fmt: formatCsvCurrency(r.amount),
+        status: r.status || '',
+        due_date_fmt: formatCsvDate(r.due_date),
+        created_at_fmt: formatCsvDate(r.created_at),
+      })),
+      ...filteredPayables.map((p: any) => ({
+        description: p.description || '',
+        type: 'Pagável',
+        amount_fmt: formatCsvCurrency(p.amount),
+        status: p.status || '',
+        due_date_fmt: formatCsvDate(p.due_date),
+        created_at_fmt: formatCsvDate(p.created_at),
+      })),
+    ]);
+  }
+
+  function exportProcessosCsv() {
+    exportToCsv(`processos_${new Date().toISOString().slice(0,10)}`, [
+      { key: 'cnj', label: 'CNJ' },
+      { key: 'title', label: 'Assunto' },
+      { key: 'client_name', label: 'Cliente' },
+      { key: 'status', label: 'Status' },
+      { key: 'area', label: 'Área' },
+      { key: 'phase', label: 'Fase' },
+      { key: 'created_at_fmt', label: 'Cadastrado em' },
+      { key: 'updated_at_fmt', label: 'Atualizado em' },
+    ], processes.map((p: any) => ({
+      cnj: p.cnj || p.number || '',
+      title: p.title || p.subject || '',
+      client_name: p.client_name || p.cliente_nome || '',
+      status: p.status || '',
+      area: p.area || '',
+      phase: p.phase || '',
+      created_at_fmt: formatCsvDate(p.created_at),
+      updated_at_fmt: formatCsvDate(p.updated_at),
+    })));
+  }
+
+  function exportClientesCsv() {
+    exportToCsv(`clientes_${new Date().toISOString().slice(0,10)}`, [
+      { key: 'name', label: 'Nome' },
+      { key: 'type', label: 'Tipo' },
+      { key: 'cpf_cnpj', label: 'CPF/CNPJ' },
+      { key: 'email', label: 'E-mail' },
+      { key: 'phone', label: 'Telefone' },
+      { key: 'city', label: 'Cidade' },
+      { key: 'state', label: 'UF' },
+      { key: 'created_at_fmt', label: 'Cadastrado em' },
+    ], clients.map((c: any) => ({
+      name: c.name || c.full_name || c.razao_social || '',
+      type: c.type === 'pj' ? 'PJ' : 'PF',
+      cpf_cnpj: c.cpf || c.cnpj || '',
+      email: c.email || '',
+      phone: c.phone || c.phone_number || '',
+      city: c.address_city || c.city || '',
+      state: c.address_state || c.state || '',
+      created_at_fmt: formatCsvDate(c.created_at),
+    })));
+  }
+
+  function exportHorasCsv() {
+    exportToCsv(`horas_${period}_${new Date().toISOString().slice(0,10)}`, [
+      { key: 'date_fmt', label: 'Data' },
+      { key: 'user', label: 'Usuário' },
+      { key: 'activity_type', label: 'Atividade' },
+      { key: 'hours', label: 'Horas' },
+      { key: 'billable', label: 'Faturável' },
+      { key: 'description', label: 'Descrição' },
+    ], timeEntries.map((e: any) => ({
+      date_fmt: formatCsvDate(e.date),
+      user: e.user_email || e.user || '',
+      activity_type: e.activity_type || '',
+      hours: e.hours || 0,
+      billable: e.billable ? 'Sim' : 'Não',
+      description: e.description || '',
+    })));
+  }
+
+  return (
+    <div className="page-container animate-fade-in">
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <p className="eyebrow mb-2">Análise gerencial</p>
+          <h1 className="page-title">Relatórios</h1>
+          <p className="page-subtitle mt-1">
+            Visão consolidada do desempenho financeiro, jurídico e operacional do escritório.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select value={period} onValueChange={(v) => setPeriod(v as PeriodOption)}>
+            <SelectTrigger className="h-9 w-48 border-border text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(PERIOD_LABELS) as PeriodOption[]).map((k) => (
+                <SelectItem key={k} value={k}>
+                  {PERIOD_LABELS[k]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2">
+                <Download className="h-4 w-4" />
+                Exportar
+                <ChevronDown className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel>Exportar CSV</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={exportFinanceiroCsv}>
+                <FileText className="mr-2 h-4 w-4" />
+                Financeiro do período
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportProcessosCsv}>
+                <Gavel className="mr-2 h-4 w-4" />
+                Lista de processos
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportClientesCsv}>
+                <Users className="mr-2 h-4 w-4" />
+                Lista de clientes
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportHorasCsv}>
+                <Calendar className="mr-2 h-4 w-4" />
+                Controle de horas
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleExport} disabled={exporting}>
+                <Download className="mr-2 h-4 w-4" />
+                {exporting ? 'Exportando...' : 'Exportação LGPD'}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* KPI Row */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          label="Receita no período"
+          value={isLoading ? '—' : formatCompact(totalReceivable)}
+          icon={Wallet}
+          loading={isLoading}
+          tone="default"
+        />
+        <KpiCard
+          label="Recebido no período"
+          value={isLoading ? '—' : formatCompact(totalPaid)}
+          icon={TrendingUp}
+          loading={isLoading}
+          tone="success"
+        />
+        <KpiCard
+          label="Despesas no período"
+          value={isLoading ? '—' : formatCompact(totalPayable)}
+          icon={TrendingDown}
+          loading={isLoading}
+          tone="danger"
+        />
+        <KpiCard
+          label="Resultado líquido"
+          value={isLoading ? '—' : formatCompact(netResult)}
+          icon={BarChart3}
+          loading={isLoading}
+          tone={netResult >= 0 ? 'success' : 'danger'}
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          label="Processos ativos"
+          value={activeProcesses.length}
+          icon={Gavel}
+          loading={loadingProcesses}
+        />
+        <KpiCard
+          label="Total de processos"
+          value={processes.length}
+          icon={Scale}
+          loading={loadingProcesses}
+        />
+        <KpiCard
+          label="Clientes ativos"
+          value={activeClients.length}
+          icon={Users}
+          loading={loadingClients}
+        />
+        <KpiCard
+          label="Audiências realizadas"
+          value={hearings.length}
+          icon={Calendar}
+          loading={loadingHearings}
+        />
+      </div>
+
+      {/* Tabs de relatórios */}
+      <Tabs defaultValue="financeiro" className="space-y-5">
+        <TabsList className="border-b-0 bg-muted/40">
+          <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+          <TabsTrigger value="juridico">Jurídico</TabsTrigger>
+          <TabsTrigger value="audiencias">Audiências</TabsTrigger>
+          <TabsTrigger value="honorarios">Honorários</TabsTrigger>
+          <TabsTrigger value="horas">Horas</TabsTrigger>
+          <TabsTrigger value="equipe">Equipe</TabsTrigger>
+        </TabsList>
+
+        {/* FINANCEIRO */}
+        <TabsContent value="financeiro" className="space-y-5">
+          <div className="grid gap-5 lg:grid-cols-2">
+            {/* Receita x Despesa por mês */}
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Receita x Despesa mensal</CardTitle>
+                <CardDescription className="text-xs">Comparativo dos últimos 12 meses</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingReceivables || loadingPayables ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : revenueByMonth.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
+                    Sem dados no período
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={revenueByMonth} margin={{ top: 4, right: 4, left: 0, bottom: 4 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                      <RechartsTooltip
+                        contentStyle={{ fontSize: 12, border: '1px solid hsl(var(--border))', borderRadius: 8, background: 'hsl(var(--card))' }}
+                        formatter={(v: number, name: string) => [formatCurrency(v), name === 'received' ? 'Recebido' : 'Despesa']}
+                      />
+                      <Legend formatter={(v) => (v === 'received' ? 'Recebido' : 'Despesa')} wrapperStyle={{ fontSize: 12 }} />
+                      <Bar dataKey="received" name="received" fill={CHART_COLORS.success} radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="expense" name="expense" fill={CHART_COLORS.destructive} radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Contas a receber por status */}
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Contas a receber por status</CardTitle>
+                <CardDescription className="text-xs">Distribuição financeira dos recebíveis</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingReceivables ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : receivableByStatus.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
+                    Sem dados
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <ResponsiveContainer width="55%" height={220}>
+                      <PieChart>
+                        <Pie
+                          data={receivableByStatus}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={88}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {receivableByStatus.map((_, i) => (
+                            <Cell key={i} fill={PIE_PALETTE[i % PIE_PALETTE.length]} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip
+                          contentStyle={{ fontSize: 12, border: '1px solid hsl(var(--border))', borderRadius: 8, background: 'hsl(var(--card))' }}
+                          formatter={(v: number) => formatCurrency(v)}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex-1 space-y-2">
+                      {receivableByStatus.map((item, i) => (
+                        <div key={item.name} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: PIE_PALETTE[i % PIE_PALETTE.length] }} />
+                            <span className="text-xs text-muted-foreground">{item.name}</span>
+                          </div>
+                          <span className="text-xs font-medium text-foreground">{formatCompact(item.value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Resultado líquido mensal */}
+            <Card className="shadow-card lg:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Resultado líquido mensal</CardTitle>
+                <CardDescription className="text-xs">Evolução do lucro operacional mês a mês</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingReceivables || loadingPayables ? (
+                  <Skeleton className="h-48 w-full" />
+                ) : revenueByMonth.length === 0 ? (
+                  <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">
+                    Sem dados no período
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={200}>
+                    <AreaChart data={revenueByMonth} margin={{ top: 4, right: 4, left: 0, bottom: 4 }}>
+                      <defs>
+                        <linearGradient id="resultGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={CHART_COLORS.gold} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={CHART_COLORS.gold} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                      <RechartsTooltip
+                        contentStyle={{ fontSize: 12, border: '1px solid hsl(var(--border))', borderRadius: 8, background: 'hsl(var(--card))' }}
+                        formatter={(v: number) => [formatCurrency(v), 'Resultado']}
+                      />
+                      <Area dataKey="result" stroke={CHART_COLORS.gold} strokeWidth={2} fill="url(#resultGradient)" dot={false} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* JURÍDICO */}
+        <TabsContent value="juridico" className="space-y-5">
+          <div className="grid gap-5 lg:grid-cols-2">
+            {/* Processos por área */}
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Processos por área</CardTitle>
+                <CardDescription className="text-xs">Distribuição por área de atuação</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingProcesses ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : processesByArea.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
+                    Sem dados
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={processesByArea} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={100} />
+                      <RechartsTooltip
+                        contentStyle={{ fontSize: 12, border: '1px solid hsl(var(--border))', borderRadius: 8, background: 'hsl(var(--card))' }}
+                      />
+                      <Bar dataKey="value" name="Processos" radius={[0, 4, 4, 0]} fill={CHART_COLORS.primary} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Processos por status */}
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Processos por status</CardTitle>
+                <CardDescription className="text-xs">Situação atual dos processos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingProcesses ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : processesByStatus.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
+                    Sem dados
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <ResponsiveContainer width="55%" height={220}>
+                      <PieChart>
+                        <Pie
+                          data={processesByStatus}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={88}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {processesByStatus.map((_, i) => (
+                            <Cell key={i} fill={PIE_PALETTE[i % PIE_PALETTE.length]} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip
+                          contentStyle={{ fontSize: 12, border: '1px solid hsl(var(--border))', borderRadius: 8, background: 'hsl(var(--card))' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex-1 space-y-2">
+                      {processesByStatus.map((item, i) => (
+                        <div key={item.name} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: PIE_PALETTE[i % PIE_PALETTE.length] }} />
+                            <span className="text-xs text-muted-foreground">{item.name}</span>
+                          </div>
+                          <span className="text-xs font-medium tabular-nums text-foreground">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Resumo de processos */}
+            <Card className="shadow-card lg:col-span-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold">Resumo por área de atuação</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingProcesses ? (
+                  <Skeleton className="h-32 w-full" />
+                ) : (
+                  <div className="table-container overflow-auto">
+                    <table className="table-editorial w-full">
+                      <thead>
+                        <tr>
+                          <th>Área</th>
+                          <th>Total</th>
+                          <th>Ativos</th>
+                          <th>Finalizados</th>
+                          <th>% do total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {processesByArea.map((area) => {
+                          const total = processes.length || 1;
+                          const areaProcesses = processes.filter((p) => (p.area || p.practice_area || 'Não informada') === area.name);
+                          const active = areaProcesses.filter((p) => p.status === 'em_andamento' || p.status === 'ativo').length;
+                          const finished = areaProcesses.filter((p) => p.status === 'finalizado').length;
+                          return (
+                            <tr key={area.name}>
+                              <td className="font-medium text-foreground">{area.name}</td>
+                              <td>{area.value}</td>
+                              <td>
+                                <Badge variant="outline" className="text-xs">{active}</Badge>
+                              </td>
+                              <td>{finished}</td>
+                              <td>
+                                <div className="flex items-center gap-2">
+                                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                                    <div
+                                      className="h-full rounded-full bg-foreground"
+                                      style={{ width: `${Math.round((area.value / total) * 100)}%` }}
+                                    />
+                                  </div>
+                                  <span className="tabular-nums text-muted-foreground">
+                                    {Math.round((area.value / total) * 100)}%
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* AUDIÊNCIAS */}
+        <TabsContent value="audiencias" className="space-y-5">
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card className="shadow-card lg:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Audiências por mês</CardTitle>
+                <CardDescription className="text-xs">Quantidade de audiências realizadas mensalmente</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingHearings ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : hearingsByMonth.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
+                    Sem dados de audiências
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={hearingsByMonth} margin={{ top: 4, right: 4, left: 0, bottom: 4 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                      <RechartsTooltip
+                        contentStyle={{ fontSize: 12, border: '1px solid hsl(var(--border))', borderRadius: 8, background: 'hsl(var(--card))' }}
+                        formatter={(v: number) => [v, 'Audiências']}
+                      />
+                      <Bar dataKey="count" name="Audiências" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold">Resumo de audiências</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {loadingHearings ? (
+                  <Skeleton className="h-24 w-full" />
+                ) : (
+                  <>
+                    {[
+                      { label: 'Total de audiências', value: hearings.length },
+                      { label: 'Realizadas', value: hearings.filter((h: any) => h.status === 'realizada' || h.status === 'completed').length },
+                      { label: 'Agendadas', value: hearings.filter((h: any) => h.status === 'agendada' || h.status === 'scheduled').length },
+                      { label: 'Canceladas', value: hearings.filter((h: any) => h.status === 'cancelada' || h.status === 'canceled').length },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center justify-between border-b border-border pb-2 last:border-0 last:pb-0">
+                        <span className="text-sm text-muted-foreground">{item.label}</span>
+                        <span className="text-sm font-semibold tabular-nums text-foreground">{item.value}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold">Taxa de realização</CardTitle>
+                <CardDescription className="text-xs">Audiências realizadas sobre o total</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingHearings ? (
+                  <Skeleton className="h-24 w-full" />
+                ) : (
+                  <HearingRate hearings={hearings} />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* HONORÁRIOS */}
+        <TabsContent value="honorarios" className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="kpi">
+              <p className="kpi-label">Total contratado</p>
+              <p className="kpi-value">{loadingHonorarios ? '—' : formatCompact(honorariosTotal)}</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Recebido</p>
+              <p className="kpi-value text-success">{loadingHonorarios ? '—' : formatCompact(honorariosPago)}</p>
+            </div>
+            <div className={cn('kpi', honorariosVencidos > 0 ? 'border-destructive/30 bg-destructive/5' : '')}>
+              <p className="kpi-label">Vencidos</p>
+              <p className={cn('kpi-value', honorariosVencidos > 0 ? 'text-destructive' : '')}>{honorariosVencidos}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Honorários por status</CardTitle>
+                <CardDescription className="text-xs">Distribuição por valor</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingHonorarios ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : honorariosByStatus.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">Sem dados</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={224}>
+                    <PieChart>
+                      <Pie data={honorariosByStatus} cx="50%" cy="50%" outerRadius={80} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        {honorariosByStatus.map((_, i) => (
+                          <Cell key={i} fill={PIE_PALETTE[i % PIE_PALETTE.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip formatter={(v: any) => formatCurrency(v)} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Resumo de honorários</CardTitle>
+                <CardDescription className="text-xs">Valores totais</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingHonorarios ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : (
+                  <div className="space-y-4 pt-2">
+                    {[
+                      { label: 'Total contratado', value: honorariosTotal, cls: '' },
+                      { label: 'Recebido', value: honorariosPago, cls: 'text-success' },
+                      { label: 'A receber', value: honorariosTotal - honorariosPago, cls: 'text-warning' },
+                    ].map(({ label, value, cls }) => (
+                      <div key={label} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0">
+                        <span className="text-sm text-muted-foreground">{label}</span>
+                        <span className={cn('font-mono-ui text-sm font-medium', cls || 'text-foreground')}>{formatCurrency(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* HORAS */}
+        <TabsContent value="horas" className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="kpi">
+              <p className="kpi-label">Total de horas</p>
+              <p className="kpi-value">{loadingTimeEntries ? '—' : `${totalHours.toFixed(1)}h`}</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Horas cobráveis</p>
+              <p className="kpi-value">{loadingTimeEntries ? '—' : `${billableHours.toFixed(1)}h`}</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Lançamentos</p>
+              <p className="kpi-value">{timeEntries.length}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Horas por mês</CardTitle>
+                <CardDescription className="text-xs">Últimos 12 meses</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingTimeEntries ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : hoursByMonth.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">Sem lançamentos</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={224}>
+                    <BarChart data={hoursByMonth}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} unit="h" />
+                      <RechartsTooltip formatter={(v: any) => [`${v}h`, 'Horas']} />
+                      <Bar dataKey="hours" fill={CHART_COLORS.primary} radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Horas por atividade</CardTitle>
+                <CardDescription className="text-xs">Distribuição por tipo</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingTimeEntries ? (
+                  <Skeleton className="h-56 w-full" />
+                ) : hoursByActivity.length === 0 ? (
+                  <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">Sem dados</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={224}>
+                    <PieChart>
+                      <Pie data={hoursByActivity} cx="50%" cy="50%" outerRadius={80} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        {hoursByActivity.map((_, i) => (
+                          <Cell key={i} fill={PIE_PALETTE[i % PIE_PALETTE.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip formatter={(v: any) => [`${v}h`, 'Horas']} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        {/* EQUIPE */}
+        <TabsContent value="equipe" className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="kpi">
+              <p className="kpi-label">Membros com lançamentos</p>
+              <p className="kpi-value">{hoursByUser.length}</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Total de horas (equipe)</p>
+              <p className="kpi-value">{hoursByUser.reduce((a, u) => a + u.total, 0).toFixed(1)}h</p>
+            </div>
+            <div className="kpi">
+              <p className="kpi-label">Média por membro</p>
+              <p className="kpi-value">
+                {hoursByUser.length > 0 ? (hoursByUser.reduce((a, u) => a + u.total, 0) / hoursByUser.length).toFixed(1) : '0'}h
+              </p>
+            </div>
+          </div>
+
+          <Card className="shadow-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Horas por membro da equipe</CardTitle>
+              <CardDescription className="text-xs">Total de horas lançadas, cobráveis e quantidade de lançamentos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingTimeEntries ? (
+                <Skeleton className="h-48 w-full" />
+              ) : hoursByUser.length === 0 ? (
+                <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">Sem lançamentos registrados</div>
+              ) : (
+                <div className="overflow-auto">
+                  <table className="table-editorial w-full">
+                    <thead>
+                      <tr>
+                        <th className="w-6">#</th>
+                        <th>Membro</th>
+                        <th className="text-right">Total</th>
+                        <th className="text-right">Cobráveis</th>
+                        <th className="text-right">% Cobrável</th>
+                        <th className="text-right">Lançamentos</th>
+                        <th className="w-36">Distribuição</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {hoursByUser.map((u, i) => {
+                        const maxHours = hoursByUser[0]?.total || 1;
+                        const pctBillable = u.total > 0 ? Math.round((u.billable / u.total) * 100) : 0;
+                        return (
+                          <tr key={u.name}>
+                            <td className="text-xs text-muted-foreground">{i + 1}</td>
+                            <td className="font-medium text-foreground">{u.name}</td>
+                            <td className="text-right font-mono-ui text-sm">{u.total.toFixed(1)}h</td>
+                            <td className="text-right font-mono-ui text-sm text-success">{u.billable.toFixed(1)}h</td>
+                            <td className="text-right text-sm text-muted-foreground">{pctBillable}%</td>
+                            <td className="text-right text-sm text-muted-foreground">{u.entries}</td>
+                            <td>
+                              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className="h-full rounded-full bg-foreground transition-all"
+                                  style={{ width: `${Math.round((u.total / maxHours) * 100)}%` }}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {hoursByUser.length > 0 && (
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Top contribuidores</CardTitle>
+                <CardDescription className="text-xs">Ranking visual por total de horas</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={Math.max(200, hoursByUser.length * 38)}>
+                  <BarChart data={hoursByUser.slice(0, 10)} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} unit="h" />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={140} />
+                    <RechartsTooltip
+                      contentStyle={{ fontSize: 12, border: '1px solid hsl(var(--border))', borderRadius: 8, background: 'hsl(var(--card))' }}
+                      formatter={(v: number, name: string) => [`${v}h`, name === 'total' ? 'Total' : 'Cobráveis']}
+                    />
+                    <Bar dataKey="total" name="total" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="billable" name="billable" fill={CHART_COLORS.success} radius={[0, 4, 4, 0]} />
+                    <Legend formatter={(v) => (v === 'total' ? 'Total' : 'Cobráveis')} wrapperStyle={{ fontSize: 12 }} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

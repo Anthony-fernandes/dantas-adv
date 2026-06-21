@@ -96,6 +96,7 @@ class PortalDashboardView(generics.GenericAPIView):
 
 class PortalProcessListSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source='client.name', read_only=True)
+    title = serializers.CharField(read_only=True)
 
     class Meta:
         model = Process
@@ -115,6 +116,7 @@ class PortalProcessListSerializer(serializers.ModelSerializer):
 
 class PortalProcessDetailSerializer(serializers.ModelSerializer):
     client = serializers.SerializerMethodField()
+    title = serializers.CharField(read_only=True)
 
     class Meta:
         model = Process
@@ -125,7 +127,7 @@ class PortalProcessDetailSerializer(serializers.ModelSerializer):
             'status',
             'phase',
             'area',
-            'description',
+            'notes',
             'created_at',
             'updated_at',
             'client',
@@ -159,8 +161,8 @@ class PortalProcessBase:
 class PortalProcessListView(PortalProcessBase, generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated, IsClient]
     serializer_class = PortalProcessListSerializer
-    search_fields = ['title', 'cnj', 'client__name']
-    ordering_fields = ['updated_at', 'created_at', 'status', 'title']
+    search_fields = ['subject', 'cnj', 'client__name']
+    ordering_fields = ['updated_at', 'created_at', 'status', 'subject']
     ordering = ['-updated_at']
 
 
@@ -230,6 +232,41 @@ class PortalDocumentsView(PortalProcessBase, generics.ListAPIView):
         )
 
 
+class PortalFinancialView(generics.GenericAPIView):
+    """Returns invoices/receivables scoped to the authenticated portal client."""
+    permission_classes = [permissions.IsAuthenticated, IsClient]
+
+    def get(self, request, *args, **kwargs):
+        from apps.finance.models import AccountsReceivable, Invoice
+
+        tenant = request.tenant
+        client = Client.objects.filter(tenant=tenant, portal_user=request.user).first()
+        if client is None:
+            return Response({'invoices': [], 'receivables': []})
+
+        invoices = list(
+            Invoice.objects
+            .filter(tenant=tenant, client=client)
+            .order_by('-due_date')
+            .values('id', 'description', 'amount', 'due_date', 'status', 'issue_date', 'paid_at')
+        )
+        receivables = list(
+            AccountsReceivable.objects
+            .filter(tenant=tenant, client=client)
+            .order_by('-due_date')
+            .values('id', 'description', 'amount', 'due_date', 'status', 'paid_date', 'category')
+        )
+
+        def str_id(row):
+            row['id'] = str(row['id'])
+            return row
+
+        return Response({
+            'invoices': [str_id(r) for r in invoices],
+            'receivables': [str_id(r) for r in receivables],
+        })
+
+
 class PortalMessageSerializer(serializers.ModelSerializer):
     sender = serializers.SerializerMethodField()
     sender_name = serializers.SerializerMethodField()
@@ -288,3 +325,33 @@ class PortalMessagesView(generics.GenericAPIView):
             content=serializer.validated_data['content'].strip(),
         )
         return Response(PortalMessageSerializer(msg, context={'request': request}).data, status=201)
+
+
+class PortalMovementSerializer(serializers.ModelSerializer):
+    class Meta:
+        from apps.processes.models import Movement
+        model = Movement
+        fields = ['id', 'description', 'date', 'type', 'created_at']
+
+
+class PortalMovementsView(PortalProcessBase, generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsClient]
+    ordering = ['-date', '-created_at']
+
+    def get_serializer_class(self):
+        from rest_framework import serializers as s
+        from apps.processes.models import Movement
+
+        class Ser(s.ModelSerializer):
+            class Meta:
+                model = Movement
+                fields = ['id', 'description', 'date', 'type', 'created_at']
+        return Ser
+
+    def get_queryset(self):
+        process = self.get_object()
+        from apps.processes.models import Movement
+        return Movement.objects.filter(
+            tenant=self.request.tenant,
+            process=process,
+        ).order_by('-date', '-created_at')

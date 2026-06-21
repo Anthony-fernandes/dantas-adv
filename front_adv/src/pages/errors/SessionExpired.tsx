@@ -1,21 +1,28 @@
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import { Clock, LogIn } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function SessionExpired() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="max-w-lg w-full rounded-xl border bg-background p-6 space-y-3">
-        <h1 className="text-xl font-semibold">Sessão expirada</h1>
-        <p className="text-sm text-muted-foreground">Sua sessão expirou. Faça login novamente.</p>
-        <div className="flex gap-2 pt-2">
-          <Button asChild>
-            <Link to="/app/dashboard">Ir para o Dashboard</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/app/login">Login</Link>
-          </Button>
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/30 p-6 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20">
+        <Clock className="h-7 w-7 text-amber-600 dark:text-amber-400" />
       </div>
+      <div className="space-y-2">
+        <p className="font-mono-ui text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+          Sessão encerrada
+        </p>
+        <h1 className="font-display text-3xl font-semibold text-foreground">Sessão expirada</h1>
+        <p className="mx-auto max-w-sm text-sm text-muted-foreground">
+          Por segurança, sua sessão foi encerrada após um período de inatividade. Faça login novamente para continuar.
+        </p>
+      </div>
+      <Button asChild className="gap-2">
+        <Link to="/app/login">
+          <LogIn className="h-4 w-4" />
+          Fazer login
+        </Link>
+      </Button>
     </div>
   );
 }

@@ -277,7 +277,21 @@ export const useMovements = (processId?: string) =>
 
 // Deadlines
 export const useDeadlines = (filters?: Record<string, any>) => useList<any>('deadlines', { filters });
+export const useDeadlinesPaged = (
+  filters?: Record<string, any>,
+  search?: string,
+  page: number = 1,
+  orderBy?: { column: string; ascending?: boolean },
+) =>
+  usePaginatedList<any>('deadlines', {
+    page,
+    filters,
+    search: search ? [{ column: 'search', value: search }] : undefined,
+    orderBy,
+  });
 export const useCreateDeadline = () => useCreate<any>('deadlines');
+export const useUpdateDeadline = () => useUpdate<any>('deadlines');
+export const useDeleteDeadline = () => useDelete('deadlines');
 
 // Hearings
 export const useHearings = (filters?: Record<string, any>) => useList<any>('hearings', { filters });
@@ -293,6 +307,7 @@ export const usePayments = (filters?: Record<string, any>) => useList<any>('paym
 export const useNotifications = (filters?: Record<string, any>, enabled: boolean = true) =>
   useList<any>('notifications', { filters, enabled });
 export const useCreateNotification = () => useCreate<any>('notifications');
+export const useUpdateNotification = () => useUpdate<any>('notifications');
 
 // Audit Logs (paged)
 export const useAuditEventsPaged = (
@@ -353,6 +368,11 @@ export const useUpdateReceivable = () => useUpdate<any>('accounts-receivable');
 export const useDeleteReceivable = () => useDelete('accounts-receivable');
 
 // Receivable installments
+export const useInstallments = (filters?: Record<string, any>) =>
+  useList<any>('receivable-installments', { filters });
+export const useUpdateInstallment = () => useUpdate<any>('receivable-installments');
+export const useCreateInstallment = () => useCreate<any>('receivable-installments');
+
 export const useInstallmentsPaged = (
   filters?: Record<string, any>,
   search?: string,
@@ -397,3 +417,63 @@ export const usePaymentsPaged = (
   });
 
 export const useCreatePayment = () => useCreate<any>('payments');
+
+// Tasks
+export const useTasks = (filters?: Record<string, any>) => useList<any>('tasks', { filters });
+export const useTasksPaged = (
+  filters?: Record<string, any>,
+  search?: string,
+  page: number = 1,
+  orderBy?: { column: string; ascending?: boolean },
+) =>
+  usePaginatedList<any>('tasks', {
+    page,
+    filters,
+    search: search ? [{ column: 'search', value: search }] : undefined,
+    orderBy,
+  });
+export const useCreateTask = () => useCreate<any>('tasks');
+export const useUpdateTask = () => useUpdate<any>('tasks');
+export const useDeleteTask = () => useDelete('tasks');
+
+// Time Entries
+export const useTimeEntries = (filters?: Record<string, any>) => useList<any>('time-entries', { filters });
+export const useTimeEntriesPaged = (
+  filters?: Record<string, any>,
+  search?: string,
+  page: number = 1,
+  orderBy?: { column: string; ascending?: boolean },
+) =>
+  usePaginatedList<any>('time-entries', {
+    page,
+    filters,
+    search: search ? [{ column: 'search', value: search }] : undefined,
+    orderBy,
+  });
+export const useCreateTimeEntry = () => useCreate<any>('time-entries');
+export const useUpdateTimeEntry = () => useUpdate<any>('time-entries');
+export const useDeleteTimeEntry = () => useDelete('time-entries');
+
+// Internal Chat
+export const useChatMessages = (processId?: string) =>
+  useList<any>('chat-messages', { filters: processId ? { process: processId } : undefined });
+export const useCreateChatMessage = () => useCreate<any>('chat-messages');
+
+// Legal Templates
+export const useLegalTemplates = (filters?: Record<string, any>) =>
+  useList<any>('legal-templates', { filters });
+export const useLegalTemplatesPaged = (
+  filters?: Record<string, any>,
+  search?: string,
+  page: number = 1,
+  orderBy?: { column: string; ascending?: boolean },
+) =>
+  usePaginatedList<any>('legal-templates', {
+    page,
+    filters,
+    search: search ? [{ column: 'search', value: search }] : undefined,
+    orderBy,
+  });
+export const useCreateLegalTemplate = () => useCreate<any>('legal-templates');
+export const useUpdateLegalTemplate = () => useUpdate<any>('legal-templates');
+export const useDeleteLegalTemplate = () => useDelete('legal-templates');

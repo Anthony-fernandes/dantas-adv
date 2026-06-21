@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { TribunalSyncPanel } from '@/components/processes/TribunalSyncPanel';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +26,9 @@ import {
   BriefcaseBusiness,
   CalendarClock,
   CheckCircle2,
+  CheckSquare,
+  Circle,
+  Clock,
   FileText,
   Gavel,
   History,
@@ -33,6 +37,7 @@ import {
   MoreHorizontal,
   Paperclip,
   PenSquare,
+  Printer,
   PlusCircle,
   Scale,
   ShieldCheck,
@@ -43,6 +48,7 @@ import {
 } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTasks, useUpdateTask, useTimeEntries } from '@/hooks/useApiData';
 import { api, apiGetAllPages } from '@/integrations/api/client';
 import { processService } from '@/services/api';
 import { invalidateProcessRelatedQueries } from '@/services/processQueryInvalidation';
@@ -654,6 +660,207 @@ function HearingForm({
   );
 }
 
+function ProcessTasksPanel({ processId }: { processId: string }) {
+  const { data: tasks = [] } = useTasks({ process: processId });
+  const updateTask = useUpdateTask();
+
+  const pending = tasks.filter((t: any) => t.status === 'pendente' || t.status === 'em_andamento');
+  const done = tasks.filter((t: any) => t.status === 'concluida');
+
+  async function toggle(task: any) {
+    const newStatus = task.status === 'concluida' ? 'pendente' : 'concluida';
+    await updateTask.mutateAsync({ id: task.id, status: newStatus });
+  }
+
+  return (
+    <Card className="border-border/60 shadow-card">
+      <CardHeader>
+        <CardTitle>Tarefas do processo</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-1 pt-0">
+        {tasks.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">
+            Nenhuma tarefa vinculada. Crie tarefas em{' '}
+            <a href="/app/tarefas" className="underline hover:text-foreground">
+              Tarefas
+            </a>
+            .
+          </p>
+        ) : (
+          <>
+            {pending.map((t: any) => (
+              <div key={t.id} className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted/40">
+                <button
+                  onClick={() => toggle(t)}
+                  className="shrink-0 text-muted-foreground hover:text-foreground"
+                >
+                  <Circle className="h-4 w-4" />
+                </button>
+                <span className="flex-1 text-sm text-foreground">{t.title}</span>
+                {t.due_date && (
+                  <span className="text-[11px] text-muted-foreground">
+                    {new Date(t.due_date).toLocaleDateString('pt-BR')}
+                  </span>
+                )}
+              </div>
+            ))}
+            {done.length > 0 && (
+              <>
+                <p className="px-2 pt-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  Concluídas ({done.length})
+                </p>
+                {done.map((t: any) => (
+                  <div key={t.id} className="flex items-center gap-3 rounded-md px-2 py-2 opacity-50 hover:bg-muted/40">
+                    <button onClick={() => toggle(t)} className="shrink-0 text-success">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </button>
+                    <span className="flex-1 text-sm line-through text-muted-foreground">{t.title}</span>
+                  </div>
+                ))}
+              </>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProcessAuditTrail({ processId }: { processId: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['process-audit', processId],
+    queryFn: () => api.get<any>(`/audit-log/?entity_type=process&entity_id=${processId}&ordering=-created_at&limit=50`),
+    enabled: !!processId,
+  });
+
+  const events: any[] = Array.isArray(data) ? data : (data?.results ?? []);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3 py-4">
+        {[1, 2, 3].map((i) => <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />)}
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-2 py-12 text-center">
+        <History className="h-8 w-8 text-muted-foreground/40" />
+        <p className="text-sm text-muted-foreground">Nenhum evento registrado ainda.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative space-y-0">
+      {events.map((event, idx) => (
+        <div key={event.id} className="flex gap-4">
+          <div className="flex flex-col items-center">
+            <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-sm">
+              <History className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+            {idx < events.length - 1 && <div className="w-px flex-1 bg-border" />}
+          </div>
+          <div className="pb-6 min-w-0 flex-1">
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="text-sm font-medium text-foreground">{event.summary || event.event_type}</span>
+              {event.actor_email && (
+                <span className="text-xs text-muted-foreground">por {event.actor_email}</span>
+              )}
+            </div>
+            <p className="mt-0.5 font-mono-ui text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+              {new Date(event.created_at).toLocaleString('pt-BR')}
+            </p>
+            {event.payload && Object.keys(event.payload).length > 0 && (
+              <div className="mt-1.5 rounded-md border border-border bg-muted/40 px-3 py-2">
+                {Object.entries(event.payload).map(([k, v]) => (
+                  <div key={k} className="flex gap-2 text-xs">
+                    <span className="shrink-0 font-medium text-muted-foreground">{k}:</span>
+                    <span className="text-foreground">{String(v)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProcessHorasPanel({ processId }: { processId: string }) {
+  const { data: entries = [] } = useTimeEntries({ process: processId });
+
+  const totalHours = entries.reduce((a: number, e: any) => a + Number(e.hours || 0), 0);
+  const billableHours = entries.filter((e: any) => e.billable).reduce((a: number, e: any) => a + Number(e.hours || 0), 0);
+  const billableValue = entries
+    .filter((e: any) => e.billable && e.hourly_rate)
+    .reduce((a: number, e: any) => a + Number(e.hours || 0) * Number(e.hourly_rate || 0), 0);
+
+  function fmtH(h: number) {
+    const hrs = Math.floor(h);
+    const mins = Math.round((h - hrs) * 60);
+    return mins === 0 ? `${hrs}h` : `${hrs}h ${mins}min`;
+  }
+
+  const ACTIVITY_LABELS: Record<string, string> = {
+    diligencia: 'Diligência', pesquisa: 'Pesquisa', reuniao: 'Reunião',
+    audiencia: 'Audiência', peticao: 'Petição', consulta: 'Consulta', outros: 'Outros',
+  };
+
+  return (
+    <Card className="border-border/60 shadow-card">
+      <CardHeader>
+        <CardTitle>Horas lançadas</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="mb-4 grid grid-cols-3 gap-3">
+          <div className="kpi">
+            <p className="kpi-label">Total</p>
+            <p className="kpi-value text-lg">{fmtH(totalHours)}</p>
+          </div>
+          <div className="kpi">
+            <p className="kpi-label">Cobráveis</p>
+            <p className="kpi-value text-lg">{fmtH(billableHours)}</p>
+          </div>
+          <div className="kpi">
+            <p className="kpi-label">Valor cobrável</p>
+            <p className="kpi-value text-lg">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(billableValue)}
+            </p>
+          </div>
+        </div>
+
+        {entries.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">
+            Nenhum lançamento. Registre horas em{' '}
+            <a href="/app/horas" className="underline hover:text-foreground">Controle de Horas</a>.
+          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {(entries as any[]).slice(0, 10).map((e) => (
+              <div key={e.id} className="flex items-center gap-3 py-2 text-sm">
+                <span className="w-24 shrink-0 font-mono-ui text-xs text-muted-foreground">
+                  {new Date(`${e.date}T12:00:00`).toLocaleDateString('pt-BR')}
+                </span>
+                <span className="flex-1 text-foreground">{e.description || (ACTIVITY_LABELS[e.activity_type] ?? e.activity_type)}</span>
+                <span className="shrink-0 font-medium">{fmtH(Number(e.hours))}</span>
+              </div>
+            ))}
+            {entries.length > 10 && (
+              <p className="pt-2 text-center text-xs text-muted-foreground">
+                +{entries.length - 10} lançamentos — ver todos em{' '}
+                <a href="/app/horas" className="underline hover:text-foreground">Horas</a>
+              </p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ProcessDetail() {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -789,7 +996,7 @@ export default function ProcessDetail() {
     [employees],
   );
   const storedProcessMeta = processMetaQuery.data?.[processId] || null;
-  const tabOptions = ['movements', 'deadlines', 'timeline', 'hearings', 'documents'];
+  const tabOptions = ['movements', 'deadlines', 'timeline', 'hearings', 'documents', 'tarefas', 'horas'];
   const requestedTab = searchParams.get('tab') || '';
   const activeTab = tabOptions.includes(requestedTab) ? requestedTab : 'movements';
 
@@ -1218,6 +1425,11 @@ export default function ProcessDetail() {
                     <History className="mr-2 h-4 w-4" />
                     Ver timeline geral
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => window.print()}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Imprimir / Salvar PDF
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -1324,6 +1536,22 @@ export default function ProcessDetail() {
           <TabsTrigger value="documents">
             <FileText className="mr-2 h-4 w-4" />
             Documentos
+          </TabsTrigger>
+          <TabsTrigger value="tarefas">
+            <CheckSquare className="mr-2 h-4 w-4" />
+            Tarefas
+          </TabsTrigger>
+          <TabsTrigger value="horas">
+            <Clock className="mr-2 h-4 w-4" />
+            Horas
+          </TabsTrigger>
+          <TabsTrigger value="audit">
+            <History className="mr-2 h-4 w-4" />
+            Histórico
+          </TabsTrigger>
+          <TabsTrigger value="tribunal">
+            <Landmark className="mr-2 h-4 w-4" />
+            Tribunal
           </TabsTrigger>
         </TabsList>
 
@@ -1590,6 +1818,26 @@ export default function ProcessDetail() {
             isLoading={documentsQuery.isLoading}
             isError={documentsQuery.isError}
           />
+        </TabsContent>
+
+        <TabsContent value="tarefas" className="space-y-3">
+          <ProcessTasksPanel processId={processId} />
+        </TabsContent>
+
+        <TabsContent value="horas" className="space-y-3">
+          <ProcessHorasPanel processId={processId} />
+        </TabsContent>
+
+        <TabsContent value="audit">
+          <ProcessAuditTrail processId={processId} />
+        </TabsContent>
+
+        <TabsContent value="tribunal" className="space-y-4">
+          <Card className="border-border/60 shadow-card">
+            <CardContent className="p-6">
+              <TribunalSyncPanel processId={processId} processCnj={process?.cnj ?? ''} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

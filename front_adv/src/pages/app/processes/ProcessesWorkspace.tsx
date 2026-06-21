@@ -789,6 +789,7 @@ export default function ProcessesWorkspace() {
               </div>
             ) : (
               <>
+              <div className="overflow-x-auto">
                 <Table className="table-fixed min-w-[1480px]">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
@@ -822,7 +823,7 @@ export default function ProcessesWorkspace() {
                     ))}
                   </TableBody>
                 </Table>
-
+              </div>
                 {totalPages > 1 ? (
                   <div className="flex items-center justify-between border-t border-border px-4 py-3">
                     <span className="text-sm text-muted-foreground">Página {page} de {totalPages}</span>
@@ -834,6 +835,7 @@ export default function ProcessesWorkspace() {
                 ) : null}
               </>
             )}
+
           </CardContent>
         </Card>
       ) : (

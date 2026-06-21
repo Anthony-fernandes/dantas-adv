@@ -62,9 +62,12 @@ class Profile(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='profiles', null=True, blank=True)
     full_name = models.CharField(max_length=255, default='', blank=True)
     phone = models.CharField(max_length=50, blank=True, null=True)
+    oab = models.CharField(max_length=30, blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
     avatar_url = models.URLField(blank=True, null=True)
     cargo = models.CharField(max_length=120, blank=True, null=True)
     status = models.CharField(max_length=30, default='active')
+    notification_prefs = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -9,7 +9,8 @@ from django.utils import timezone
 
 from apps.core.models import Tenant
 from apps.accounts.models import UserRole, User
-from apps.notifications.services import NotificationSpec, notify_users
+from apps.notifications.services import NotificationSpec, notify_users, _safe_send_email
+from apps.notifications.email_templates import deadline_alert_email
 from apps.processes.models import Deadline, DeadlineStatus, DeadlineAlert
 from apps.core.services.audit import audit_event
 
@@ -93,18 +94,37 @@ class Command(BaseCommand):
                         users = list(User.objects.filter(id__in=user_ids))
 
                     due_str = timezone.localtime(deadline.due_date).strftime('%d/%m/%Y %H:%M')
-                    prefix = 'Vence agora' if window_hours == 0 else f'Vence em {window_hours}h'
+                    days_until = max(0, round(window_hours / 24))
+                    process_cnj = getattr(deadline.process, 'cnj', '') or ''
+                    title = f'Alerta de prazo — {deadline.description[:60]}'
+                    plain_msg = f'Vence em {window_hours}h: {deadline.description}\nVencimento: {due_str}'
                     spec = NotificationSpec(
                         type='deadline_alert',
-                        title='Alerta de prazo',
-                        message=f'{prefix}: {deadline.description}\nVencimento: {due_str}',
+                        title=title,
+                        message=plain_msg,
                         payload={
                             'deadline_id': str(deadline.id),
                             'process_id': str(deadline.process_id),
                             'window_hours': window_hours,
                         },
                     )
-                    notify_users(tenant=tenant, users=users, spec=spec, send_email=send_email)
+                    if send_email:
+                        users_with_profile = list(User.objects.filter(id__in=[u.id for u in users]).select_related('profile'))
+                        for u in users_with_profile:
+                            profile = getattr(u, 'profile', None)
+                            name = getattr(profile, 'full_name', None) or u.email
+                            _subj, html = deadline_alert_email(
+                                user_name=name,
+                                deadline_description=deadline.description or '',
+                                due_date_str=due_str,
+                                process_cnj=process_cnj,
+                                days_until=days_until,
+                                office_name=tenant.name,
+                            )
+                            _safe_send_email(to_email=u.email, subject=_subj, message=plain_msg, html_message=html)
+                        notify_users(tenant=tenant, users=users, spec=spec, send_email=False)
+                    else:
+                        notify_users(tenant=tenant, users=users, spec=spec, send_email=False)
 
                     DeadlineAlert.objects.create(tenant=tenant, deadline=deadline, window_hours=window_hours)
                     audit_event(
