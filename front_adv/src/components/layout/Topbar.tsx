@@ -1,7 +1,6 @@
-import { Bell, LogOut, Menu, Moon, Settings, Sun, User } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Bell, LogOut, Moon, Settings, Sun, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { TenantSwitcher } from '@/components/shared/TenantSwitcher';
@@ -14,51 +13,12 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 
-type TopbarProps = { onOpenMenu: () => void };
-
-function resolvePageTitle(pathname: string) {
-  if (pathname.startsWith('/app/processos')) return 'Processos';
-  if (pathname.startsWith('/app/clientes')) return 'Clientes';
-  if (pathname.startsWith('/app/areas')) return 'Áreas de atuação';
-  if (pathname.startsWith('/app/documentos')) return 'Documentos';
-  if (pathname.startsWith('/app/audiencias')) return 'Audiências';
-  if (pathname.startsWith('/app/prazos')) return 'Prazos';
-  if (pathname.startsWith('/app/tarefas')) return 'Tarefas';
-  if (pathname.startsWith('/app/horas')) return 'Controle de Horas';
-  if (pathname.startsWith('/app/chat')) return 'Chat Interno';
-  if (pathname.startsWith('/app/agenda')) return 'Agenda';
-  if (pathname.startsWith('/app/financeiro')) return 'Financeiro';
-  if (pathname.startsWith('/app/honorarios')) return 'Honorários';
-  if (pathname.startsWith('/app/relatorios')) return 'Relatórios';
-  if (pathname.startsWith('/app/funcionarios')) return 'Funcionários';
-  if (pathname.startsWith('/app/cargos')) return 'Cargos';
-  if (pathname.startsWith('/app/usuarios')) return 'Usuários';
-  if (pathname.startsWith('/app/empresas')) return 'Empresas';
-  if (pathname.startsWith('/app/landing')) return 'Site institucional';
-  if (pathname.startsWith('/app/blog')) return 'Blog';
-  if (pathname.startsWith('/app/auditoria')) return 'Log de Auditoria';
-  if (pathname.startsWith('/app/contratos')) return 'Contratos';
-  if (pathname.startsWith('/app/modelos')) return 'Modelos';
-  if (pathname.startsWith('/app/perfil')) return 'Meu perfil';
-  if (pathname.startsWith('/app/configuracoes')) return 'Configurações';
-  return 'Painel';
-}
-
-function resolveRoleLabel(roles: string[], isSuperuser: boolean) {
-  if (isSuperuser) return 'Superusuário';
-  const roleLabels: Record<string, string> = {
-    OWNER: 'Proprietário', ADMIN: 'Administrador', LAWYER: 'Advogado(a)',
-    ASSISTANT: 'Assistente', FINANCE: 'Financeiro', CLIENT: 'Cliente',
-  };
-  return roleLabels[roles[0] || ''] || 'Equipe interna';
-}
-
-export function Topbar({ onOpenMenu }: TopbarProps) {
-  const location = useLocation();
+export function Topbar() {
   const navigate = useNavigate();
-  const { profile, roles, isSuperuser, logout } = useAuth();
+  const { profile, isSuperuser, logout } = useAuth();
   const { tenants } = useTenant();
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
@@ -70,90 +30,78 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
     await updateNotification.mutateAsync({ id, read: true });
   }
   async function markAllRead() {
-    await Promise.all((notifications ?? []).filter((n) => !n.read).map((n) => updateNotification.mutateAsync({ id: n.id, read: true })));
+    await Promise.all(
+      (notifications ?? []).filter((n) => !n.read).map((n) => updateNotification.mutateAsync({ id: n.id, read: true }))
+    );
   }
 
-  const initials = (profile?.full_name || 'U').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() || '').join('');
+  const initials = (profile?.full_name || 'U')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() || '')
+    .join('');
   const localAvatar = useLocalAvatar();
-  const pageTitle = resolvePageTitle(location.pathname);
-  const userMeta = resolveRoleLabel(roles, isSuperuser);
 
   function handleLogout() {
     logout();
     navigate('/app/login', { replace: true });
   }
 
-  return (
-    <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center border-b border-slate-200/60 dark:border-border bg-white dark:bg-card px-4 gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-      {/* Hamburger (mobile) */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 shrink-0 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 lg:hidden"
-        onClick={onOpenMenu}
-      >
-        <Menu className="h-4 w-4" />
-      </Button>
+  const iconBtnCls = "grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors";
 
-      {/* Search — center */}
-      <div className="hidden flex-1 justify-center lg:flex">
+  return (
+    <header className="glass-strong sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border px-4">
+      {/* Sidebar trigger */}
+      <SidebarTrigger className="h-9 w-9 text-muted-foreground hover:bg-muted/50 hover:text-foreground" />
+
+      {/* Tenant switcher */}
+      {tenants.length > 0 && (
+        <div className="hidden lg:block">
+          <TenantSwitcher />
+        </div>
+      )}
+
+      {/* Search bar — GlobalSearch manages its own dialog state */}
+      <div className="hidden md:block">
         <GlobalSearch />
       </div>
 
-      {/* Mobile: title */}
-      <h1 className="min-w-0 flex-1 truncate text-[14px] font-semibold text-foreground lg:hidden">
-        {pageTitle}
-      </h1>
+      <div className="flex-1" />
 
-      {/* Right group */}
-      <div className="flex shrink-0 items-center gap-1">
-        {tenants.length > 0 && (
-          <div className="hidden lg:block mr-1">
-            <TenantSwitcher />
-          </div>
-        )}
-
+      {/* Right actions */}
+      <div className="flex items-center gap-1">
         {/* Theme toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
+        <button
+          type="button"
+          className={iconBtnCls}
           onClick={() => setTheme(isDark ? 'light' : 'dark')}
+          title={isDark ? 'Modo claro' : 'Modo escuro'}
         >
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </Button>
-
-        {/* Settings */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
-          onClick={() => navigate('/app/configuracoes')}
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
+        </button>
 
         {/* Notification bell */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
-            >
+            <button type="button" className={cn(iconBtnCls, "relative")}>
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
-            </Button>
+            </button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0 shadow-lg border-border/60" align="end">
             <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
               <p className="text-[13px] font-semibold text-foreground">Notificações</p>
               {unreadCount > 0 && (
-                <button type="button" onClick={markAllRead} className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                >
                   Marcar todas lidas
                 </button>
               )}
@@ -192,24 +140,32 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           </PopoverContent>
         </Popover>
 
+        {/* Settings */}
+        <Link to="/app/configuracoes" className={iconBtnCls} title="Configurações">
+          <Settings className="h-4 w-4" />
+        </Link>
+
         {/* Logout */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
+        <button
+          type="button"
+          className={iconBtnCls}
           onClick={handleLogout}
           title="Sair"
         >
           <LogOut className="h-4 w-4" />
-        </Button>
+        </button>
 
-        {/* User avatar dropdown */}
+        {/* User avatar */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="ml-1 flex items-center rounded-full transition-colors hover:bg-slate-100 dark:hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring p-0.5">
+            <button className="ml-1 flex items-center rounded-full transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring p-0.5">
               <Avatar className="h-8 w-8">
-                {localAvatar && <AvatarImage src={localAvatar} alt={profile?.full_name || ''} className="object-cover" />}
-                <AvatarFallback className="bg-primary text-[10px] font-semibold text-white">{initials}</AvatarFallback>
+                {localAvatar && (
+                  <AvatarImage src={localAvatar} alt={profile?.full_name || ''} className="object-cover" />
+                )}
+                <AvatarFallback className="rounded-full bg-gradient-primary text-[10px] font-semibold text-white">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
             </button>
           </DropdownMenuTrigger>
@@ -217,7 +173,6 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
             <DropdownMenuLabel className="pb-1">
               <p className="text-[13px] font-medium text-foreground">{profile?.full_name || 'Usuário'}</p>
               <p className="text-[11px] font-normal text-muted-foreground">{profile?.email || ''}</p>
-              <p className="text-[10px] font-normal text-muted-foreground/70">{userMeta}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 text-[13px]" onClick={() => navigate('/app/perfil')}>
