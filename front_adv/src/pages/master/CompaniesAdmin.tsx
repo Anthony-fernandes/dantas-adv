@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   Building2, Loader2, Shield, UserPlus, CheckCircle2, Mail, Phone,
   MapPin, Image as ImgIcon, ChevronRight, Users, Lock, Eye, EyeOff,
@@ -123,16 +123,12 @@ function RoleCard({ role, checked, onChange }: { role: string; checked: boolean;
 }
 
 type TabKey = "company" | "admin-user" | "users" | "permissions";
-const TABS: { key: TabKey; label: string; icon: any }[] = [
-  { key: "company",     label: "Empresa",       icon: Building2 },
-  { key: "admin-user",  label: "Usuário admin", icon: UserPlus },
-  { key: "users",       label: "Usuários",      icon: Users },
-  { key: "permissions", label: "Permissões",    icon: Shield },
-];
 
 export default function CompaniesAdmin() {
   const { user: authUser, profile } = useAuth();
-  const [tab, setTab] = useState<TabKey>("company");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = (searchParams.get("tab") as TabKey) || "company";
+  const setTab = (key: TabKey) => setSearchParams({ tab: key }, { replace: true });
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -345,26 +341,6 @@ export default function CompaniesAdmin() {
           </div>
         </div>
       )}
-
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-xl bg-muted p-1">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-all",
-              tab === t.key
-                ? "bg-card text-primary shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <t.icon className="h-3.5 w-3.5" />
-            {t.label}
-          </button>
-        ))}
-      </div>
 
       {/* ── EMPRESA ── */}
       {tab === "company" && (

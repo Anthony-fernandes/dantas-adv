@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { Building2, LogOut, Menu, Shield, X, ChevronRight } from "lucide-react";
+import { Link, Outlet, useLocation, useSearchParams } from "react-router-dom";
+import { Building2, LogOut, Menu, Shield, X, ChevronRight, UserPlus, Users, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -8,13 +8,28 @@ const navItems = [
   { label: "Empresas", icon: Building2, path: "/master/companies", desc: "Gestão de tenants" },
 ];
 
+const companyTabs = [
+  { key: "company",     label: "Empresa",       icon: Building2 },
+  { key: "admin-user",  label: "Usuário admin",  icon: UserPlus },
+  { key: "users",       label: "Usuários",       icon: Users },
+  { key: "permissions", label: "Permissões",     icon: Lock },
+];
+
 export function MasterLayout() {
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logout, user } = useAuth();
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
+
+  const onCompanies = isActive("/master/companies");
+  const activeTab = searchParams.get("tab") || "company";
+
+  function setTab(key: string) {
+    setSearchParams({ tab: key }, { replace: true });
+  }
 
   const initials = (user?.email || "S").slice(0, 2).toUpperCase();
 
@@ -64,6 +79,40 @@ export function MasterLayout() {
               );
             })}
           </nav>
+
+          {/* Sub-nav when on Companies page */}
+          {onCompanies && (
+            <div className="mt-4">
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
+                Configuração
+              </p>
+              <nav className="space-y-0.5">
+                {companyTabs.map((t) => {
+                  const active = activeTab === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => { setTab(t.key); onNavigate?.(); }}
+                      className={cn(
+                        "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 text-left",
+                        active ? "bg-white/10 text-white" : "text-white/50 hover:bg-white/5 hover:text-white/80"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors",
+                        active ? "bg-gold/30" : "bg-white/5 group-hover:bg-white/10"
+                      )}>
+                        <t.icon className={cn("h-3.5 w-3.5", active ? "text-gold" : "")} />
+                      </div>
+                      <p className="text-[13px] font-medium leading-none">{t.label}</p>
+                      {active && <ChevronRight className="ml-auto h-3 w-3 text-white/30" />}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
