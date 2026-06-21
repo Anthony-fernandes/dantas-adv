@@ -56,6 +56,8 @@ import SetupTenant from "@/pages/app/SetupTenant";
 import SelectTenant from "@/pages/app/SelectTenant";
 import AcceptInvite from "@/pages/AcceptInvite";
 import ContractsPage from "@/pages/app/ContractsPage";
+import ContabilidadePage from "@/pages/app/ContabilidadePage";
+import NFSeWorkspace from "@/pages/app/financial/NFSeWorkspace";
 import LGPD from "@/pages/app/LGPD";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalApiErrorListener } from "@/components/GlobalApiErrorListener";
@@ -301,6 +303,8 @@ const App = () => (
                 <Route path="modelos" element={<RequireRole roles={RoleGroups.LEGAL}><TemplatesPage /></RequireRole>} />
                 <Route path="perfil" element={<ProfilePage />} />
                 <Route path="configuracoes" element={<RequireRole roles={RoleGroups.ADMIN}><SettingsPage /></RequireRole>} />
+                <Route path="contabilidade" element={<RequireRole roles={RoleGroups.FINANCE}><ContabilidadePage /></RequireRole>} />
+                <Route path="nfse" element={<RequireRole roles={RoleGroups.FINANCE}><div className="page-container max-w-5xl"><NFSeWorkspace /></div></RequireRole>} />
                 <Route path="admin" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
                 <Route path="admin/*" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
               </Route>

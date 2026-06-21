@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { TribunalSyncPanel } from '@/components/processes/TribunalSyncPanel';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -1548,6 +1549,10 @@ export default function ProcessDetail() {
             <History className="mr-2 h-4 w-4" />
             Histórico
           </TabsTrigger>
+          <TabsTrigger value="tribunal">
+            <Landmark className="mr-2 h-4 w-4" />
+            Tribunal
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="movements">
@@ -1825,6 +1830,14 @@ export default function ProcessDetail() {
 
         <TabsContent value="audit">
           <ProcessAuditTrail processId={processId} />
+        </TabsContent>
+
+        <TabsContent value="tribunal" className="space-y-4">
+          <Card className="border-border/60 shadow-card">
+            <CardContent className="p-6">
+              <TribunalSyncPanel processId={processId} processCnj={process?.cnj ?? ''} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

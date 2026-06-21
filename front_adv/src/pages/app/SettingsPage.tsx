@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Building2, Bell, BellRing, Save, CheckCircle2, Globe, Phone, Mail, FileText, Loader2, CreditCard, Users, FolderOpen, HardDrive } from 'lucide-react';
+import { Building2, Bell, BellRing, Save, CheckCircle2, Globe, Phone, Mail, FileText, Loader2, CreditCard, Users, FolderOpen, HardDrive, Plug } from 'lucide-react';
+import { IntegracoesSettings } from './office-settings/IntegracoesSettings';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/integrations/api/client';
@@ -580,6 +582,29 @@ export default function SettingsPage() {
               </span>
             )}
           </div>
+        )}
+      </Section>
+
+      {/* Integrations */}
+      <Section
+        icon={Plug}
+        title="Integrações"
+        description="Configure provedores de assinatura digital, NFS-e, tribunais e escrituração contábil"
+      >
+        {tenant && activeTenantId ? (
+          <IntegracoesSettings
+            tenantId={activeTenantId}
+            tenantSettings={tenant.settings ?? {}}
+            tenantCnpj={tenant.cnpj}
+            canEdit={canEdit}
+            onSaved={() => {
+              if (activeTenantId) {
+                api.get<TenantDetails>(`/tenants/${activeTenantId}/`).then((data) => setTenant(data)).catch(() => {});
+              }
+            }}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">Carregando...</p>
         )}
       </Section>
 
