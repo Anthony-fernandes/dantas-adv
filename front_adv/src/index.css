@@ -7,12 +7,15 @@
 @layer base {
   :root {
     /* Neutral grays — clean, sem tom dourado */
+    --paper:       220 20% 97%;
     --background:  220 20% 97%;
     --surface:     0 0% 100%;
     --surface-2:   220 16% 95%;
-
-    --foreground:  222 28% 10%;
-    --foreground-soft: 220 12% 44%;
+    --ink:         222 28% 10%;
+    --ink-soft:    220 12% 44%;
+    --rule:        220 13% 88%;
+    --gold:        252 82% 57%;
+    --gold-soft:   252 90% 95%;
 
     --card:        0 0% 100%;
     --card-foreground: 222 28% 10%;
@@ -71,9 +74,15 @@
   }
 
   .dark {
+    --paper:       224 30% 9%;
     --background:  224 30% 9%;
     --surface:     224 26% 12%;
     --surface-2:   224 22% 15%;
+    --ink:         220 20% 93%;
+    --ink-soft:    220 12% 62%;
+    --rule:        224 18% 20%;
+    --gold:        252 78% 65%;
+    --gold-soft:   252 30% 20%;
 
     --foreground:  220 20% 93%;
     --foreground-soft: 220 12% 62%;
