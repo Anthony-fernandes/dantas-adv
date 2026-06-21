@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Building2, Bell, Save, CheckCircle2, Globe, Phone, Mail, FileText, Loader2, CreditCard, Users, FolderOpen, HardDrive } from 'lucide-react';
+import { Building2, Bell, BellRing, Save, CheckCircle2, Globe, Phone, Mail, FileText, Loader2, CreditCard, Users, FolderOpen, HardDrive } from 'lucide-react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/integrations/api/client';
 import { useTenant } from '@/contexts/TenantContext';
@@ -262,6 +263,8 @@ export default function SettingsPage() {
     setNotif((n) => ({ ...n, [field]: value }));
   }
 
+  const push = usePushNotifications();
+
   return (
     <div className="page-container max-w-3xl">
       <div className="page-header">
@@ -521,6 +524,45 @@ export default function SettingsPage() {
               <p className="text-xs text-muted-foreground">
                 Os alertas também serão enviados para este endereço além dos e-mails dos membros da equipe.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Push notification opt-in */}
+        {push.state !== 'unsupported' && (
+          <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <BellRing className="h-4 w-4 text-muted-foreground" />
+                  Notificações push no navegador
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {push.state === 'granted'
+                    ? 'Ativadas — você receberá alertas mesmo com o app fechado.'
+                    : push.state === 'denied'
+                    ? 'Bloqueadas — habilite nas configurações do navegador.'
+                    : 'Receba alertas de prazos e audiências diretamente no navegador.'}
+                </p>
+              </div>
+              {push.state === 'default' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={push.requestPermission}
+                  disabled={push.loading}
+                  className="shrink-0 gap-2"
+                >
+                  {push.loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bell className="h-3.5 w-3.5" />}
+                  Ativar
+                </Button>
+              )}
+              {push.state === 'granted' && (
+                <span className="flex shrink-0 items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Ativas
+                </span>
+              )}
             </div>
           </div>
         )}

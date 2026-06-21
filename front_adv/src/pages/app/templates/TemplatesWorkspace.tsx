@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { FileText, Plus, Search, Pencil, Trash2, Copy, Download, Loader2, History } from 'lucide-react';
+import { FileText, Plus, Search, Pencil, Trash2, Copy, Download, Loader2, History, PenLine } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/integrations/api/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SignatureRequestDialog } from '@/components/documents/SignatureRequestDialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -186,12 +187,14 @@ function GenerateDialog({
   const [processId, setProcessId] = useState('');
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ url: string; name: string } | null>(null);
+  const [result, setResult] = useState<{ url: string; name: string; docId?: string } | null>(null);
+  const [signatureOpen, setSignatureOpen] = useState(false);
 
   function reset() {
     setProcessId('');
     setTitle('');
     setResult(null);
+    setSignatureOpen(false);
   }
 
   async function generate() {
@@ -206,7 +209,7 @@ function GenerateDialog({
       });
       // Step 2: export to PDF
       const pdf: any = await api.post(`/editor-documents/${doc.id}/export-pdf/`, {});
-      setResult({ url: pdf.file_download_url ?? pdf.file ?? pdf.url ?? '', name: doc.title ?? template.name });
+      setResult({ url: pdf.file_download_url ?? pdf.file ?? pdf.url ?? '', name: doc.title ?? template.name, docId: doc.id });
       toast({ title: 'Documento gerado com sucesso!' });
     } catch (e: any) {
       toast({ title: e?.message || 'Erro ao gerar documento.', variant: 'destructive' });
@@ -218,6 +221,7 @@ function GenerateDialog({
   const open = !!template;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -232,8 +236,14 @@ function GenerateDialog({
                 <p className="truncate text-xs text-green-700 dark:text-green-400">{result.name}</p>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-wrap gap-2">
               <Button variant="outline" onClick={() => { reset(); onClose(); }}>Fechar</Button>
+              {result.docId && (
+                <Button variant="outline" className="gap-2" onClick={() => setSignatureOpen(true)}>
+                  <PenLine className="h-4 w-4" />
+                  Solicitar assinaturas
+                </Button>
+              )}
               {result.url && (
                 <Button asChild className="gap-2">
                   <a href={result.url} target="_blank" rel="noopener noreferrer">
@@ -282,6 +292,16 @@ function GenerateDialog({
         )}
       </DialogContent>
     </Dialog>
+
+    {result?.docId && (
+      <SignatureRequestDialog
+        open={signatureOpen}
+        onClose={() => setSignatureOpen(false)}
+        documentId={result.docId}
+        documentTitle={result.name}
+      />
+    )}
+    </>
   );
 }
 
