@@ -1,12 +1,8 @@
 import { useState } from "react";
-import { Link, Outlet, useLocation, useSearchParams } from "react-router-dom";
+import { Outlet, useLocation, useSearchParams } from "react-router-dom";
 import { Building2, LogOut, Menu, Shield, X, ChevronRight, UserPlus, Users, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { label: "Empresas", icon: Building2, path: "/master/companies" },
-];
 
 const companyTabs = [
   { key: "company",     label: "Empresa",       icon: Building2 },
@@ -51,36 +47,10 @@ export function MasterLayout() {
 
         {/* Nav */}
         <div className="flex-1 overflow-y-auto px-3">
-          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
-            Navegação
-          </p>
-          <nav className="space-y-0.5">
-            {navItems.map((item) => {
-              const active = isActive(item.path);
-              return (
-                <Link key={item.path} to={item.path} onClick={onNavigate}>
-                  <div className={cn(
-                    "group flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150",
-                    active ? "bg-white/[0.08] text-white" : "text-white/40 hover:bg-white/[0.04] hover:text-white/70"
-                  )}>
-                    <div className={cn(
-                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
-                      active ? "bg-white/10" : "bg-transparent group-hover:bg-white/[0.06]"
-                    )}>
-                      <item.icon className="h-[15px] w-[15px]" />
-                    </div>
-                    <p className="text-[13px] font-medium">{item.label}</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Sub-nav when on Companies page */}
           {onCompanies && (
-            <div className="mt-4">
+            <div>
               <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/30">
-                Configuração
+                Empresas
               </p>
               <nav className="space-y-0.5">
                 {companyTabs.map((t) => {
@@ -110,6 +80,7 @@ export function MasterLayout() {
             </div>
           )}
         </div>
+
 
         {/* Footer */}
         <div className="border-t border-white/[0.07] px-3 py-4 space-y-2">
