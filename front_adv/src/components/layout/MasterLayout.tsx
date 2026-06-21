@@ -91,7 +91,7 @@ export function MasterLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-paper text-foreground">
+    <div className="flex h-screen overflow-hidden bg-[#f4f4f5] text-foreground">
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 bg-ink lg:flex lg:flex-col">
         <SidebarContent />
