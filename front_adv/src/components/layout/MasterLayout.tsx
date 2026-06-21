@@ -70,7 +70,6 @@ export function MasterLayout() {
                       <item.icon className="h-[15px] w-[15px]" />
                     </div>
                     <p className="text-[13px] font-medium">{item.label}</p>
-                    {active && <ChevronRight className="ml-auto h-3 w-3 text-white/25" />}
                   </div>
                 </Link>
               );
