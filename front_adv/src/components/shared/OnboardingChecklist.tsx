@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Circle, ArrowRight, Users, Gavel, FileSignature, CalendarDays, DollarSign, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CheckCircle2, Circle, ArrowRight, Settings, Palette, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Step = {
@@ -13,67 +12,21 @@ type Step = {
 };
 
 type OnboardingChecklistProps = {
-  hasClients: boolean;
-  hasProcesses: boolean;
-  hasContracts: boolean;
-  hasAgenda: boolean;
-  hasFinancial: boolean;
   hasSettings: boolean;
+  hasBrand: boolean;
+  hasPortal: boolean;
   onDismiss: () => void;
 };
 
 export function OnboardingChecklist({
-  hasClients,
-  hasProcesses,
-  hasContracts,
-  hasAgenda,
-  hasFinancial,
   hasSettings,
+  hasBrand,
+  hasPortal,
   onDismiss,
 }: OnboardingChecklistProps) {
   const navigate = useNavigate();
 
   const steps: Step[] = [
-    {
-      id: 'clients',
-      label: 'Cadastre seu primeiro cliente',
-      description: 'A base de qualquer processo começa pelo cliente.',
-      icon: Users,
-      path: '/app/clientes',
-      done: hasClients,
-    },
-    {
-      id: 'processes',
-      label: 'Abra seu primeiro processo',
-      description: 'Registre o número CNJ, partes e responsáveis.',
-      icon: Gavel,
-      path: '/app/processos',
-      done: hasProcesses,
-    },
-    {
-      id: 'contracts',
-      label: 'Crie um contrato de honorários',
-      description: 'Defina o tipo de remuneração acordado com o cliente.',
-      icon: FileSignature,
-      path: '/app/contratos',
-      done: hasContracts,
-    },
-    {
-      id: 'agenda',
-      label: 'Agende uma audiência ou prazo',
-      description: 'Mantenha o controle dos compromissos jurídicos.',
-      icon: CalendarDays,
-      path: '/app/agenda',
-      done: hasAgenda,
-    },
-    {
-      id: 'financial',
-      label: 'Lance um recebimento',
-      description: 'Registre as receitas do escritório no módulo financeiro.',
-      icon: DollarSign,
-      path: '/app/financeiro',
-      done: hasFinancial,
-    },
     {
       id: 'settings',
       label: 'Configure o escritório',
@@ -81,6 +34,22 @@ export function OnboardingChecklist({
       icon: Settings,
       path: '/app/configuracoes',
       done: hasSettings,
+    },
+    {
+      id: 'brand',
+      label: 'Personalize a identidade visual',
+      description: 'Defina as cores e nome exibidos no sistema.',
+      icon: Palette,
+      path: '/app/configuracoes',
+      done: hasBrand,
+    },
+    {
+      id: 'portal',
+      label: 'Ative o portal do cliente',
+      description: 'Permita que clientes acompanhem processos online.',
+      icon: Globe,
+      path: '/app/configuracoes',
+      done: hasPortal,
     },
   ];
 

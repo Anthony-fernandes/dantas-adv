@@ -453,27 +453,17 @@ export default function Dashboard() {
     queryFn: () => loadWorkspaceStateMap<PracticeAreaUiMeta>("practice_area_ui"),
   });
 
-  const contractsCheckQuery = useQuery({
-    queryKey: ["onboarding-check", "contracts", activeTenantId],
-    enabled: !checklistDismissed && (isSuperuser || !!activeTenantId),
-    queryFn: () => apiRequest<{ count?: number; results?: unknown[] } | unknown[]>("/contracts/?limit=1"),
-    staleTime: 60_000,
-  });
-
   const settingsCheckQuery = useQuery({
     queryKey: ["onboarding-check", "settings", activeTenantId],
     enabled: !checklistDismissed && (isSuperuser || !!activeTenantId),
-    queryFn: () => apiRequest<{ logo?: string | null; address?: string | null }>("/office-settings/"),
+    queryFn: () => apiRequest<{ logo?: string | null; address?: string | null; brand_name?: string | null; client_portal_enabled?: boolean | null }>("/office-settings/"),
     staleTime: 60_000,
   });
 
-  const hasContracts = (() => {
-    const d = contractsCheckQuery.data as any;
-    if (!d) return false;
-    if (Array.isArray(d)) return d.length > 0;
-    return (d.count ?? (d.results?.length ?? 0)) > 0;
-  })();
-  const hasSettings = !!((settingsCheckQuery.data as any)?.logo || (settingsCheckQuery.data as any)?.address);
+  const settingsData = settingsCheckQuery.data as any;
+  const hasSettings = !!(settingsData?.logo || settingsData?.address);
+  const hasBrand = !!(settingsData?.brand_name);
+  const hasPortal = !!(settingsData?.client_portal_enabled);
 
   const data = dashboardQuery.data;
   const range = useMemo(() => resolveRange(period, customFrom, customTo), [customFrom, customTo, period]);
@@ -1063,12 +1053,9 @@ export default function Dashboard() {
         {/* Onboarding checklist */}
         {!checklistDismissed && (
           <OnboardingChecklist
-            hasClients={(data?.clients ?? []).length > 0}
-            hasProcesses={(data?.processes ?? []).length > 0}
-            hasContracts={hasContracts}
-            hasAgenda={(data?.hearings ?? []).length > 0}
-            hasFinancial={(data?.receivables ?? []).length > 0}
             hasSettings={hasSettings}
+            hasBrand={hasBrand}
+            hasPortal={hasPortal}
             onDismiss={() => {
               setChecklistDismissed(true);
               try { localStorage.setItem('onboarding_checklist_dismissed', '1'); } catch {}
