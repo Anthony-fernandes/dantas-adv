@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -149,7 +149,8 @@
   }
 
   h1, h2, h3 {
-    font-family: var(--font-display);
+    font-family: var(--font-body);
+    font-weight: 700;
     letter-spacing: -0.015em;
     line-height: 1.2;
   }
@@ -168,7 +169,7 @@
 
 @layer components {
   /* Tipografia utilitária */
-  .font-display  { font-family: var(--font-display); }
+  .font-display  { font-family: var(--font-body); font-weight: 700; }
   .font-mono-ui  { font-family: var(--font-mono-ui); }
 
   .eyebrow {
@@ -199,8 +200,8 @@
   }
 
   .kpi-value {
-    font-family: var(--font-display);
-    @apply text-[2.4rem] font-normal leading-none text-foreground;
+    font-family: var(--font-body);
+    @apply text-[2.4rem] font-bold leading-none text-foreground;
   }
 
   /* Stat card */
@@ -216,8 +217,8 @@
   .page-header    { @apply flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between; }
 
   .page-title {
-    font-family: var(--font-display);
-    @apply text-[2rem] font-normal tracking-tight text-foreground;
+    font-family: var(--font-body);
+    @apply text-[1.6rem] font-bold tracking-tight text-foreground;
   }
 
   .page-subtitle { @apply max-w-2xl text-[13px] leading-relaxed text-muted-foreground; }
