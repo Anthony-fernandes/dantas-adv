@@ -2,7 +2,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -81,6 +81,33 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function LandingOrRedirect() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["landing-bootstrap-check"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/landing/");
+        if (!res.ok) return null;
+        return res.json();
+      } catch {
+        return null;
+      }
+    },
+    retry: false,
+    staleTime: 30_000,
+  });
+
+  if (isLoading) return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-950">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+    </div>
+  );
+
+  const hasCompany = !!(data?.company?.name || data?.settings?.brand_name);
+  if (!hasCompany) return <Navigate to="/master/login" replace />;
+  return <Landing />;
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -229,7 +256,7 @@ const App = () => (
       <BrowserRouter>
           <ErrorBoundary>
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<LandingOrRedirect />} />
             <Route path="/blog/:slug" element={<BlogArticle />} />
             <Route path="/error/403" element={<Forbidden />} />
             <Route path="/error/500" element={<ServerError />} />
