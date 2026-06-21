@@ -4,10 +4,12 @@ import { AppSidebar } from './AppSidebar';
 import { Topbar } from './Topbar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
+import { useDynamicFavicon } from '@/hooks/useDynamicFavicon';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
 export function AppLayout() {
+  useDynamicFavicon();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'; } catch { return false; }
