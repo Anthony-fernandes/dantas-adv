@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Building2, Bell, BellRing, Save, CheckCircle2, Globe, Phone, Mail, FileText, Loader2, CreditCard, Users, FolderOpen, HardDrive } from 'lucide-react';
 import { Building2, Bell, BellRing, Save, CheckCircle2, Globe, Phone, Mail, FileText, Loader2, CreditCard, Users, FolderOpen, HardDrive, Plug } from 'lucide-react';
 import { IntegracoesSettings } from './office-settings/IntegracoesSettings';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
