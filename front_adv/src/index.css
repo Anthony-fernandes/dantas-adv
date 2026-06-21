@@ -77,37 +77,36 @@
   }
 
   .dark {
-    /* fundo bem escuro, cards notavelmente mais claros */
-    --paper:       220 18% 8%;
-    --background:  220 18% 8%;
-    --surface:     220 15% 12%;
-    --surface-2:   220 13% 16%;
+    /* fundo #0f1117, cards #252a32 — contraste claro */
+    --paper:       222 18% 7%;
+    --background:  222 18% 7%;
+    --surface:     222 14% 11%;
+    --surface-2:   222 12% 15%;
     --ink:         210 20% 88%;
     --ink-soft:    210 14% 56%;
-    --rule:        220 12% 20%;
+    --rule:        222 12% 22%;
     --gold:        40 88% 52%;
     --gold-soft:   40 60% 18%;
 
     --foreground:  210 20% 88%;
     --foreground-soft: 210 14% 56%;
 
-    /* card ~10pp mais claro que o fundo = contraste visível */
-    --card:        220 14% 18%;
+    --card:        222 12% 17%;
     --card-foreground: 210 20% 88%;
 
-    --popover:     220 14% 18%;
+    --popover:     222 12% 17%;
     --popover-foreground: 210 20% 88%;
 
     --primary:     220 55% 62%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary:   220 12% 22%;
+    --secondary:   222 10% 22%;
     --secondary-foreground: 210 20% 80%;
 
-    --muted:       220 12% 20%;
+    --muted:       222 10% 19%;
     --muted-foreground: 210 12% 50%;
 
-    --accent:      220 12% 22%;
+    --accent:      222 10% 22%;
     --accent-foreground: 40 88% 65%;
 
     --destructive: 0 62% 58%;
@@ -122,13 +121,13 @@
     --info:        213 70% 58%;
     --info-foreground: 0 0% 100%;
 
-    --border:      220 12% 23%;
-    --input:       220 12% 23%;
+    --border:      222 10% 22%;
+    --input:       222 10% 22%;
     --ring:        220 55% 62%;
 
-    --sidebar-background: 220 20% 6%;
+    --sidebar-background: 222 20% 5%;
     --sidebar-foreground: 210 18% 70%;
-    --sidebar-border: 220 14% 14%;
+    --sidebar-border: 222 12% 13%;
     --sidebar-muted: 210 12% 42%;
 
     --shadow-xs:   0 1px 2px hsl(0 0% 0% / 0.5);

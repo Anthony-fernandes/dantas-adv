@@ -127,7 +127,7 @@ export function PortalLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f5f6f8] text-foreground">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Desktop sidebar */}
       <aside className="hidden w-[200px] shrink-0 border-r border-border/70 bg-card lg:flex lg:flex-col">
         <SidebarContent />
@@ -189,7 +189,7 @@ export function PortalLayout() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto bg-[#f5f6f8]">
+        <main className="flex-1 overflow-y-auto bg-background">
           <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
             <Outlet />
           </div>
