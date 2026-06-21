@@ -36,6 +36,7 @@ import {
   MoreHorizontal,
   Paperclip,
   PenSquare,
+  Printer,
   PlusCircle,
   Scale,
   ShieldCheck,
@@ -1422,6 +1423,11 @@ export default function ProcessDetail() {
                   <DropdownMenuItem onSelect={() => openTab('timeline')}>
                     <History className="mr-2 h-4 w-4" />
                     Ver timeline geral
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => window.print()}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Imprimir / Salvar PDF
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

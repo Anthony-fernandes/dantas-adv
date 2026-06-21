@@ -467,3 +467,71 @@
     }
   }
 }
+
+@media print {
+  /* Hide navigation, sidebars, toolbars and non-essential UI */
+  aside,
+  header,
+  nav,
+  [data-radix-toast-viewport],
+  [role="toolbar"],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Remove sidebar offset */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  main > * {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Tabs: hide tab triggers, show all tab content */
+  [role="tablist"] {
+    display: none !important;
+  }
+
+  [role="tabpanel"] {
+    display: block !important;
+  }
+
+  /* Reset backgrounds to white for ink savings */
+  body,
+  .bg-background,
+  .bg-card,
+  .bg-muted,
+  .bg-paper,
+  .bg-surface {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Remove shadows */
+  * {
+    box-shadow: none !important;
+  }
+
+  /* Ensure cards and borders print cleanly */
+  .border,
+  [class*="border-"] {
+    border-color: #d1d5db !important;
+  }
+
+  /* Prevent page breaks inside key blocks */
+  .kpi,
+  .rounded-xl,
+  tr {
+    break-inside: avoid;
+  }
+
+  /* Dropdown menus and dialogs — never print */
+  [data-radix-popper-content-wrapper],
+  [role="dialog"],
+  [role="alertdialog"] {
+    display: none !important;
+  }
+}
