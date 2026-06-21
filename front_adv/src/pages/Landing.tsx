@@ -712,59 +712,58 @@ export default function Landing() {
 
       {/* ─── FOOTER ─── */}
       {settings.footer_enabled !== false && (
-        <footer className="px-4 py-16 text-white md:px-6" style={{ backgroundColor: "var(--dark)" }}>
-          <div className="mx-auto max-w-6xl">
-            <div className="grid gap-10 md:grid-cols-[minmax(0,1.5fr)_1fr_1fr]">
-              {/* Brand column */}
+        <footer className="relative overflow-hidden text-white" style={{ backgroundColor: "var(--dark)" }}>
+          {/* top accent line */}
+          <div className="h-px w-full" style={{ background: "linear-gradient(90deg, transparent, var(--accent), transparent)", opacity: 0.35 }} />
+
+          <div className="mx-auto max-w-6xl px-4 py-16 md:px-6">
+            <div className="grid gap-12 md:grid-cols-[minmax(0,2fr)_1fr_1fr]">
+
+              {/* ── Brand column ── */}
               <div>
                 <div className="flex items-center gap-3">
                   {company.logo_url ? (
-                    <img src={company.logo_url} alt={companyName} className="h-10 w-10 rounded-md object-cover" />
+                    <img src={company.logo_url} alt={companyName} className="h-11 w-11 rounded-lg object-cover ring-1 ring-white/10" />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md border border-white/15" style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10" style={{ background: "linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))" }}>
                       <Scale className="h-5 w-5" style={{ color: "var(--accent)" }} />
                     </div>
                   )}
                   <div>
-                    {companyName && <p className="font-display text-lg font-semibold text-white">{companyName}</p>}
-                    {companyTagline && <p className="text-[10px] text-white/40 uppercase tracking-widest">{companyTagline}</p>}
+                    {companyName && <p className="font-display text-[17px] font-bold text-white leading-tight">{companyName}</p>}
+                    {companyTagline && <p className="text-[9px] uppercase tracking-[0.2em] mt-0.5" style={{ color: "var(--accent)", opacity: 0.8 }}>{companyTagline}</p>}
                   </div>
                 </div>
 
                 {settings.footer_description && (
-                  <p className="mt-5 text-sm leading-relaxed text-white/55">{settings.footer_description}</p>
+                  <p className="mt-5 max-w-xs text-[13.5px] leading-relaxed text-white/50">{settings.footer_description}</p>
                 )}
 
-                <div className="mt-6 space-y-2 text-sm text-white/50">
-                  {companyAddress && <p className="flex items-start gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />{companyAddress}</p>}
-                  {companyEmail && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 shrink-0" />{companyEmail}</p>}
-                  {companyPhone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 shrink-0" />{maskPhoneBR(companyPhone)}</p>}
+                {/* Contact info */}
+                <div className="mt-7 space-y-3">
+                  {companyAddress && (
+                    <div className="flex items-start gap-2.5 text-[13px] text-white/45">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--accent)", opacity: 0.7 }} />
+                      <span>{companyAddress}</span>
+                    </div>
+                  )}
+                  {companyEmail && (
+                    <a href={`mailto:${companyEmail}`} className="flex items-center gap-2.5 text-[13px] text-white/45 transition-colors hover:text-white/80">
+                      <Mail className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--accent)", opacity: 0.7 }} />
+                      <span>{companyEmail}</span>
+                    </a>
+                  )}
+                  {companyPhone && (
+                    <a href={`tel:${companyPhone}`} className="flex items-center gap-2.5 text-[13px] text-white/45 transition-colors hover:text-white/80">
+                      <Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--accent)", opacity: 0.7 }} />
+                      <span>{maskPhoneBR(companyPhone)}</span>
+                    </a>
+                  )}
                 </div>
-              </div>
 
-              {/* Nav column */}
-              {footerLinks.length > 0 && (
-                <div>
-                  <p className="mb-4 text-[0.7rem] font-semibold uppercase tracking-widest text-white/40">Menu</p>
-                  <div className="space-y-2.5">
-                    {footerLinks.map((item) => (
-                      <a
-                        key={item.id}
-                        href={item.url}
-                        className="block text-sm text-white/55 transition-colors hover:text-white"
-                      >
-                        {item.label}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Social column */}
-              {socialLinks.length > 0 && (
-                <div>
-                  <p className="mb-4 text-[0.7rem] font-semibold uppercase tracking-widest text-white/40">Redes sociais</p>
-                  <div className="flex flex-wrap gap-2">
+                {/* Social icons */}
+                {socialLinks.length > 0 && (
+                  <div className="mt-8 flex flex-wrap gap-2.5">
                     {socialLinks.map((item) => (
                       <a
                         key={item.id}
@@ -772,22 +771,75 @@ export default function Landing() {
                         target="_blank"
                         rel="noreferrer"
                         aria-label={item.label}
-                        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-white/55 transition-colors hover:border-white/25 hover:text-white"
-                        style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                        className="group flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-white/40 transition-all hover:border-white/25 hover:text-white hover:scale-105"
+                        style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
                       >
                         <SocialIcon name={item.icon} />
                       </a>
                     ))}
                   </div>
+                )}
+              </div>
+
+              {/* ── Nav column ── */}
+              {footerLinks.length > 0 && (
+                <div>
+                  <p className="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/30">Navegação</p>
+                  <div className="space-y-3">
+                    {footerLinks.map((item) => (
+                      <a
+                        key={item.id}
+                        href={item.url}
+                        className="group flex items-center gap-2 text-[13.5px] text-white/45 transition-colors hover:text-white"
+                      >
+                        <span className="h-px w-4 shrink-0 transition-all group-hover:w-6" style={{ backgroundColor: "var(--accent)", opacity: 0.7 }} />
+                        {item.label}
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
+
+              {/* ── Legal / extra column ── */}
+              <div>
+                <p className="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/30">Legal</p>
+                <div className="space-y-3">
+                  {[
+                    { label: "Política de Privacidade", href: "#privacidade" },
+                    { label: "Termos de Uso", href: "#termos" },
+                    { label: "LGPD", href: "#lgpd" },
+                  ].map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="group flex items-center gap-2 text-[13.5px] text-white/45 transition-colors hover:text-white"
+                    >
+                      <span className="h-px w-4 shrink-0 transition-all group-hover:w-6" style={{ backgroundColor: "var(--accent)", opacity: 0.7 }} />
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+
+                {/* OAB badge */}
+                <div className="mt-8 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2" style={{ backgroundColor: "rgba(255,255,255,0.04)" }}>
+                  <Scale className="h-4 w-4 shrink-0" style={{ color: "var(--accent)" }} />
+                  <div>
+                    <p className="text-[10px] font-semibold text-white/70">Inscrito OAB</p>
+                    <p className="text-[9px] text-white/30 uppercase tracking-wide">Advocacia Especializada</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {settings.footer_copyright && (
-              <div className="mt-12 border-t border-white/8 pt-6 text-center text-xs text-white/30">
-                {settings.footer_copyright}
-              </div>
-            )}
+            {/* ── Bottom bar ── */}
+            <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/[0.07] pt-7 sm:flex-row">
+              <p className="text-[11.5px] text-white/28">
+                {settings.footer_copyright || `© ${new Date().getFullYear()} ${companyName}. Todos os direitos reservados.`}
+              </p>
+              <p className="text-[11px] text-white/20 tracking-wide">
+                Sistema jurídico integrado
+              </p>
+            </div>
           </div>
         </footer>
       )}
