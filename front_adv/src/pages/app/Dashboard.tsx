@@ -44,14 +44,12 @@ import { useTenant } from "@/contexts/TenantContext";
 import { cn } from "@/lib/utils";
 import { resolvePracticeAreaByCode, type PracticeAreaUiMeta } from "@/lib/practice-area";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { OnboardingChecklist } from "@/components/shared/OnboardingChecklist";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { apiRequest } from "@/integrations/api/client";
 import {
   type DashboardDeadlineRecord,
   type DashboardProcessRecord,
@@ -432,9 +430,6 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [customFrom, setCustomFrom] = useState(() => new Date().toISOString().slice(0, 10));
   const [customTo, setCustomTo] = useState(() => addDays(new Date(), 6).toISOString().slice(0, 10));
-  const [checklistDismissed, setChecklistDismissed] = useState(() => {
-    try { return localStorage.getItem('onboarding_checklist_dismissed') === '1'; } catch { return false; }
-  });
   const [responsibleFilter, setResponsibleFilter] = useState("all");
   const [areaFilter, setAreaFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -452,18 +447,6 @@ export default function Dashboard() {
     enabled: !!activeTenantId,
     queryFn: () => loadWorkspaceStateMap<PracticeAreaUiMeta>("practice_area_ui"),
   });
-
-  const settingsCheckQuery = useQuery({
-    queryKey: ["onboarding-check", "settings", activeTenantId],
-    enabled: !checklistDismissed && (isSuperuser || !!activeTenantId),
-    queryFn: () => apiRequest<{ logo?: string | null; address?: string | null; brand_name?: string | null; client_portal_enabled?: boolean | null }>("/office-settings/"),
-    staleTime: 60_000,
-  });
-
-  const settingsData = settingsCheckQuery.data as any;
-  const hasSettings = !!(settingsData?.logo || settingsData?.address);
-  const hasBrand = !!(settingsData?.brand_name);
-  const hasPortal = !!(settingsData?.client_portal_enabled);
 
   const data = dashboardQuery.data;
   const range = useMemo(() => resolveRange(period, customFrom, customTo), [customFrom, customTo, period]);
@@ -1049,19 +1032,6 @@ export default function Dashboard() {
   return (
     <TooltipProvider delayDuration={120}>
       <div className="page-container space-y-8 animate-fade-in">
-
-        {/* Onboarding checklist */}
-        {!checklistDismissed && (
-          <OnboardingChecklist
-            hasSettings={hasSettings}
-            hasBrand={hasBrand}
-            hasPortal={hasPortal}
-            onDismiss={() => {
-              setChecklistDismissed(true);
-              try { localStorage.setItem('onboarding_checklist_dismissed', '1'); } catch {}
-            }}
-          />
-        )}
 
         {/* Quick actions */}
         <section>
