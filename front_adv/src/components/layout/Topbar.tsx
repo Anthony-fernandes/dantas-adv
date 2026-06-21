@@ -84,7 +84,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-border/70 bg-white px-4 gap-3">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-border/70 bg-card px-4 gap-3">
       {/* Hamburger (mobile) */}
       <Button
         variant="ghost"

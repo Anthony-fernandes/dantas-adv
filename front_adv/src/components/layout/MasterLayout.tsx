@@ -108,7 +108,7 @@ export function MasterLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-[#f5f6f8] text-foreground">
       {/* Desktop sidebar */}
-      <aside className="hidden w-[200px] shrink-0 border-r border-border/70 bg-white lg:flex lg:flex-col">
+      <aside className="hidden w-[200px] shrink-0 border-r border-border/70 bg-card lg:flex lg:flex-col">
         <SidebarContent />
       </aside>
 
@@ -117,7 +117,7 @@ export function MasterLayout() {
         <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <aside
-            className="absolute left-0 top-0 h-full w-[200px] border-r border-border/70 bg-white shadow-xl"
+            className="absolute left-0 top-0 h-full w-[200px] border-r border-border/70 bg-card shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex h-14 items-center justify-between border-b border-border/70 px-4">
@@ -142,7 +142,7 @@ export function MasterLayout() {
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/70 bg-white px-4">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/70 bg-card px-4">
           <button
             className="rounded-md p-1.5 text-muted-foreground hover:bg-muted lg:hidden"
             onClick={() => setMobileOpen(true)}

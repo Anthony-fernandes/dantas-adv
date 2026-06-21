@@ -157,7 +157,7 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
   function SidebarShell({ children, width }: { children: React.ReactNode; width: string }) {
     return (
       <aside className={cn(
-        "flex h-screen flex-col overflow-hidden bg-white border-r border-border/70 transition-all duration-300",
+        "flex h-screen flex-col overflow-hidden bg-card border-r border-border/70 transition-all duration-300",
         width,
       )}>
         {children}
@@ -237,7 +237,7 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
         <div className="fixed inset-0 z-50 lg:hidden" onClick={onClose}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <aside
-            className="absolute left-0 top-0 flex h-full w-[240px] flex-col bg-white border-r border-border/70 shadow-xl"
+            className="absolute left-0 top-0 flex h-full w-[240px] flex-col bg-card border-r border-border/70 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex h-14 items-center justify-between border-b border-border/70 px-4">
