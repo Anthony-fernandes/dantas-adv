@@ -12,6 +12,7 @@ import {
 import { api } from '@/integrations/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { PortalWelcomeBanner } from '@/components/portal/PortalWelcomeBanner';
 
 type PortalDashboard = {
   active_processes: number;
@@ -106,6 +107,9 @@ export default function PortalHome() {
           Acompanhe seus processos, prazos e documentos em um só lugar.
         </p>
       </div>
+
+      {/* Welcome onboarding banner (auto-dismissible) */}
+      <PortalWelcomeBanner />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

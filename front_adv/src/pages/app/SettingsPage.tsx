@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { maskCEP, maskCNPJ, maskPhoneBR } from '@/lib/masks';
 import { useCepLookup } from '@/hooks/useCepLookup';
@@ -46,6 +47,9 @@ type NotifSettings = {
   task_alerts: boolean;
   finance_alerts: boolean;
   alert_email: boolean;
+  email_deadline_days: string;
+  email_hearing_days: string;
+  email_recipient: string;
 };
 
 const DEFAULT_FORM: OfficeForm = {
@@ -69,6 +73,9 @@ const DEFAULT_NOTIF: NotifSettings = {
   task_alerts: false,
   finance_alerts: true,
   alert_email: false,
+  email_deadline_days: '3',
+  email_hearing_days: '1',
+  email_recipient: '',
 };
 
 function Section({ icon: Icon, title, description, children }: {
@@ -160,6 +167,9 @@ export default function SettingsPage() {
         task_alerts: s.task_alerts === true,
         finance_alerts: s.finance_alerts !== false,
         alert_email: s.alert_email === true,
+        email_deadline_days: String(s.email_deadline_days ?? '3'),
+        email_hearing_days: String(s.email_hearing_days ?? '1'),
+        email_recipient: s.email_recipient ?? '',
       });
     }).catch(() => {});
   }, [activeTenantId]);
@@ -230,6 +240,9 @@ export default function SettingsPage() {
           task_alerts: notif.task_alerts,
           finance_alerts: notif.finance_alerts,
           alert_email: notif.alert_email,
+          email_deadline_days: Number(notif.email_deadline_days),
+          email_hearing_days: Number(notif.email_hearing_days),
+          email_recipient: notif.email_recipient.trim() || null,
         },
       });
       setNotifSaved(true);
@@ -242,6 +255,10 @@ export default function SettingsPage() {
   }
 
   function toggleNotif(field: keyof NotifSettings, value: boolean) {
+    setNotif((n) => ({ ...n, [field]: value }));
+  }
+
+  function setNotifField(field: keyof NotifSettings, value: string) {
     setNotif((n) => ({ ...n, [field]: value }));
   }
 
@@ -457,6 +474,56 @@ export default function SettingsPage() {
             onCheckedChange={(v) => toggleNotif('alert_email', v)}
           />
         </div>
+
+        {notif.alert_email && (
+          <div className="mt-4 space-y-4 rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Configurações de e-mail</p>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-sm">Antecedência — prazos</Label>
+                <Select value={notif.email_deadline_days} onValueChange={(v) => setNotifField('email_deadline_days', v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 dia antes</SelectItem>
+                    <SelectItem value="3">3 dias antes</SelectItem>
+                    <SelectItem value="7">7 dias antes</SelectItem>
+                    <SelectItem value="15">15 dias antes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-sm">Antecedência — audiências</Label>
+                <Select value={notif.email_hearing_days} onValueChange={(v) => setNotifField('email_hearing_days', v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 dia antes</SelectItem>
+                    <SelectItem value="3">3 dias antes</SelectItem>
+                    <SelectItem value="7">7 dias antes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-sm">E-mail de destino adicional <span className="text-muted-foreground">(opcional)</span></Label>
+              <Input
+                type="email"
+                value={notif.email_recipient}
+                onChange={(e) => setNotifField('email_recipient', e.target.value)}
+                placeholder="ex: diretor@escritorio.com.br"
+              />
+              <p className="text-xs text-muted-foreground">
+                Os alertas também serão enviados para este endereço além dos e-mails dos membros da equipe.
+              </p>
+            </div>
+          </div>
+        )}
 
         {canEdit && (
           <div className="mt-4 flex items-center gap-3 border-t border-border pt-4">

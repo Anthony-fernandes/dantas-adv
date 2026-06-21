@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { FileText, Plus, Search, Pencil, Trash2, Copy, Download, Loader2 } from 'lucide-react';
+import { FileText, Plus, Search, Pencil, Trash2, Copy, Download, Loader2, History } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/integrations/api/client';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -282,6 +285,82 @@ function GenerateDialog({
   );
 }
 
+function VersionHistoryDialog({
+  template,
+  onClose,
+  onRestore,
+}: {
+  template: any | null;
+  onClose: () => void;
+  onRestore: (content: string) => void;
+}) {
+  const { data: versions, isLoading } = useQuery({
+    queryKey: ['template-versions', template?.id],
+    queryFn: () => api.get<any[]>(`/legal-templates/${template!.id}/versions/`),
+    enabled: !!template?.id,
+    retry: false,
+  });
+
+  const open = !!template;
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Histórico de versões</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">{template?.name}</p>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : !versions?.length ? (
+          <div className="rounded-lg border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
+            Nenhuma versão anterior registrada.
+            <p className="mt-1 text-xs">As versões são salvas automaticamente a cada edição.</p>
+          </div>
+        ) : (
+          <ScrollArea className="max-h-[360px]">
+            <div className="space-y-2 pr-1">
+              {versions.map((v: any, i: number) => (
+                <div key={v.id ?? i} className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">v{v.version ?? (versions.length - i)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {v.created_at ? new Date(v.created_at).toLocaleString('pt-BR') : '—'}
+                      </span>
+                    </div>
+                    {v.changed_by_email && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">Por: {v.changed_by_email}</p>
+                    )}
+                    {v.change_summary && (
+                      <p className="mt-0.5 text-xs text-foreground">{v.change_summary}</p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 text-xs"
+                    onClick={() => { onRestore(v.content ?? ''); onClose(); }}
+                  >
+                    Restaurar
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Fechar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function TemplatesWorkspace() {
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -291,6 +370,7 @@ export default function TemplatesWorkspace() {
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [generateTarget, setGenerateTarget] = useState<any | null>(null);
+  const [historyTarget, setHistoryTarget] = useState<any | null>(null);
 
   const filters: Record<string, any> = {};
   if (categoryFilter !== 'all') filters.category = categoryFilter;
@@ -487,7 +567,16 @@ export default function TemplatesWorkspace() {
                     </Badge>
                   </td>
                   <td className="text-sm text-muted-foreground">{FORMAT_LABELS[t.format] ?? t.format}</td>
-                  <td className="text-sm text-muted-foreground">v{t.version}</td>
+                  <td>
+                    <button
+                      type="button"
+                      onClick={() => setHistoryTarget(t)}
+                      className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                      title="Ver histórico de versões"
+                    >
+                      v{t.version}
+                    </button>
+                  </td>
                   <td className="whitespace-nowrap text-xs text-muted-foreground font-mono-ui">{fmtDate(t.created_at)}</td>
                   <td>
                     <div className="flex items-center justify-end gap-1">
@@ -499,6 +588,15 @@ export default function TemplatesWorkspace() {
                         onClick={() => setGenerateTarget(t)}
                       >
                         <Download className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        title="Histórico de versões"
+                        onClick={() => setHistoryTarget(t)}
+                      >
+                        <History className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -555,6 +653,15 @@ export default function TemplatesWorkspace() {
       <GenerateDialog
         template={generateTarget}
         onClose={() => setGenerateTarget(null)}
+      />
+
+      <VersionHistoryDialog
+        template={historyTarget}
+        onClose={() => setHistoryTarget(null)}
+        onRestore={(content) => {
+          if (!historyTarget) return;
+          openEdit({ ...historyTarget, content });
+        }}
       />
 
       <TemplateDialog
