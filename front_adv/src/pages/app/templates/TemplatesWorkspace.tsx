@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, Plus, Search, Pencil, Trash2, Copy, Download, Loader2, History, PenLine } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/integrations/api/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SignatureRequestDialog } from '@/components/documents/SignatureRequestDialog';
 import { Input } from '@/components/ui/input';
