@@ -1,14 +1,19 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AppSidebar } from './AppSidebar';
 import { Topbar } from './Topbar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { useDynamicFavicon } from '@/hooks/useDynamicFavicon';
-import { SidebarProvider } from '@/components/ui/sidebar';
+
+const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
 export function AppLayout() {
   useDynamicFavicon();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'; } catch { return false; }
+  });
   const { isLoading, isSuperuser } = useAuth();
   const { activeTenantId, tenants, isLoadingTenants, setActiveTenant } = useTenant();
 
@@ -17,6 +22,14 @@ export function AppLayout() {
       setActiveTenant(tenants[0].id);
     }
   }, [isLoading, isLoadingTenants, activeTenantId, tenants, setActiveTenant]);
+
+  function handleToggleCollapse() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next)); } catch {}
+      return next;
+    });
+  }
 
   if (isLoading || isLoadingTenants) {
     return (
@@ -37,16 +50,21 @@ export function AppLayout() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
-        <AppSidebar />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <Topbar />
-          <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50 dark:bg-background text-foreground">
+      <AppSidebar
+        mobileOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={handleToggleCollapse}
+      />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <Topbar onOpenMenu={() => setMobileOpen(true)} />
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-6">
+          <div className="mx-auto w-full max-w-[1680px]">
             <Outlet />
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
