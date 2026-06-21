@@ -5,7 +5,7 @@ import {
   BriefcaseBusiness, UserCog, UserSquare2, Gavel, Globe2, FolderKanban,
   CalendarDays, FileStack, FileSignature, FolderOpen, X, ChevronLeft,
   ChevronRight, BarChart3, Timer, Banknote, CheckSquare, Clock,
-  MessageSquare, Shield, FileText, Settings, LogOut, Receipt, BookOpenCheck,
+  MessageSquare, Shield, FileText, Settings, Receipt, BookOpenCheck,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -62,21 +62,21 @@ const navSections: NavSection[] = [
   {
     title: "Gestão",
     items: [
-      { label: "Funcionários",      icon: UserSquare2,    path: "/app/funcionarios",  roles: ["OWNER","ADMIN"] },
-      { label: "Cargos",            icon: BriefcaseBusiness, path: "/app/cargos",     roles: ["OWNER","ADMIN"] },
-      { label: "Usuários",          icon: UserCog,        path: "/app/usuarios",      roles: ["OWNER","ADMIN"] },
-      { label: "Empresas",          icon: Building2,      path: "/app/empresas",      roles: ["OWNER","ADMIN"] },
-      { label: "Site institucional",icon: Globe2,         path: "/app/landing",       roles: ["OWNER","ADMIN"] },
-      { label: "Blog",              icon: BookOpenText,   path: "/app/blog",          roles: ["OWNER","ADMIN"] },
-      { label: "Auditoria",         icon: Shield,         path: "/app/auditoria",     roles: ["OWNER","ADMIN"] },
-      { label: "Configurações",     icon: Settings,       path: "/app/configuracoes", roles: ["OWNER","ADMIN"] },
+      { label: "Funcionários",      icon: UserSquare2,       path: "/app/funcionarios",  roles: ["OWNER","ADMIN"] },
+      { label: "Cargos",            icon: BriefcaseBusiness, path: "/app/cargos",        roles: ["OWNER","ADMIN"] },
+      { label: "Usuários",          icon: UserCog,           path: "/app/usuarios",      roles: ["OWNER","ADMIN"] },
+      { label: "Empresas",          icon: Building2,         path: "/app/empresas",      roles: ["OWNER","ADMIN"] },
+      { label: "Site institucional",icon: Globe2,            path: "/app/landing",       roles: ["OWNER","ADMIN"] },
+      { label: "Blog",              icon: BookOpenText,      path: "/app/blog",          roles: ["OWNER","ADMIN"] },
+      { label: "Auditoria",         icon: Shield,            path: "/app/auditoria",     roles: ["OWNER","ADMIN"] },
+      { label: "Configurações",     icon: Settings,          path: "/app/configuracoes", roles: ["OWNER","ADMIN"] },
     ],
   },
 ];
 
 export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }: AppSidebarProps) {
   const location = useLocation();
-  const { hasRole, profile, logout } = useAuth();
+  const { hasRole, profile } = useAuth();
   const { activeTenant } = useTenant();
   const publicSiteQuery = useQuery({
     queryKey: ["sidebar-public-site-brand"],
@@ -94,10 +94,10 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
 
   function renderBrand() {
     if (companyLogo) {
-      return <img src={companyLogo} alt="Logo" className="h-7 w-7 shrink-0 rounded-lg object-cover" />;
+      return <img src={companyLogo} alt="Logo" className="h-8 w-8 shrink-0 rounded-full object-cover" />;
     }
     return (
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-[12px] font-bold text-white">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white">
         {initials}
       </div>
     );
@@ -110,7 +110,7 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
       return (
         <div key={section.title}>
           {!isCollapsed && (
-            <p className="px-3 pb-1 pt-5 first:pt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+            <p className="px-3 pb-1 pt-5 first:pt-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/50">
               {section.title}
             </p>
           )}
@@ -126,15 +126,15 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
                   onClick={onNavigate}
                   className={cn(
                     "group flex items-center rounded-md transition-all duration-100 select-none",
-                    isCollapsed ? "h-8 w-8 justify-center mx-auto" : "gap-2.5 px-2.5 py-[6px] text-[13px]",
+                    isCollapsed ? "h-8 w-8 justify-center mx-auto" : "gap-2.5 px-3 py-[5px] text-[13px]",
                     isActive
-                      ? "bg-primary/[0.08] text-primary font-semibold"
-                      : "text-foreground/60 hover:bg-muted hover:text-foreground font-medium",
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800",
                   )}
                 >
                   <item.icon className={cn(
                     "h-[15px] w-[15px] shrink-0 transition-colors",
-                    isActive ? "text-primary" : "text-foreground/40 group-hover:text-foreground/70",
+                    isActive ? "text-primary" : "text-muted-foreground/60 group-hover:text-foreground/70",
                   )} />
                   {!isCollapsed && <span className="truncate">{item.label}</span>}
                 </Link>
@@ -159,7 +159,7 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
   function SidebarShell({ children, width }: { children: React.ReactNode; width: string }) {
     return (
       <aside className={cn(
-        "flex h-screen flex-col overflow-hidden bg-card border-r border-border/70 transition-all duration-300",
+        "flex h-screen flex-col overflow-hidden bg-white dark:bg-card border-r border-slate-200/80 dark:border-border/70 transition-all duration-300",
         width,
       )}>
         {children}
@@ -169,41 +169,41 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
 
   const header = (
     <div className={cn(
-      "flex h-14 shrink-0 items-center border-b border-border/70",
+      "flex h-14 shrink-0 items-center border-b border-slate-200/80 dark:border-border/70",
       collapsed ? "justify-center px-2" : "gap-2.5 px-4",
     )}>
       {renderBrand()}
       {!collapsed && (
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold leading-tight text-foreground">{companyName}</p>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Portal interno</p>
+          <p className="truncate text-[14px] font-semibold leading-tight text-foreground">{companyName}</p>
+          <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Portal Interno</p>
         </div>
       )}
     </div>
   );
 
   const footer = (
-    <div className={cn("shrink-0 border-t border-border/70", collapsed ? "p-2 flex flex-col items-center gap-2" : "p-3")}>
+    <div className={cn(
+      "shrink-0 border-t border-slate-200/80 dark:border-border/70",
+      collapsed ? "p-2 flex flex-col items-center gap-2" : "p-3",
+    )}>
       {!collapsed && (
-        <div className="mb-1 flex items-center gap-2.5 rounded-md px-2 py-1.5">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+        <div className="mb-2 flex items-center gap-2.5 rounded-md px-2 py-1.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
             {userInitials}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[12px] font-semibold text-foreground">{profile?.full_name || "Usuário"}</p>
             <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
-              Portal interno
+              {profile?.roles?.[0] || "Equipe interna"}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded-md p-1 text-muted-foreground/50 hover:bg-muted hover:text-foreground transition-colors"
-            title="Sair"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-          </button>
+          <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+        </div>
+      )}
+      {collapsed && (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary mb-1">
+          {userInitials}
         </div>
       )}
       <Button
@@ -211,13 +211,13 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
         size="sm"
         onClick={onToggleCollapse}
         className={cn(
-          "h-7 rounded-md text-muted-foreground/50 hover:bg-muted hover:text-foreground",
-          collapsed ? "w-7 px-0" : "w-full gap-2 text-[11px] font-medium",
+          "h-6 rounded-md text-muted-foreground/50 hover:bg-slate-100 dark:hover:bg-muted hover:text-foreground",
+          collapsed ? "w-6 px-0 mx-auto" : "w-full gap-1.5 text-[10px] font-medium",
         )}
       >
         {collapsed
-          ? <ChevronRight className="h-3.5 w-3.5" />
-          : <><ChevronLeft className="h-3.5 w-3.5" /><span>Recolher</span></>
+          ? <ChevronRight className="h-3 w-3" />
+          : <><ChevronLeft className="h-3 w-3" /><span>Recolher</span></>
         }
       </Button>
     </div>
@@ -226,7 +226,7 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
   return (
     <>
       {/* Desktop */}
-      <SidebarShell width={collapsed ? "w-[56px]" : "w-[220px]"}>
+      <SidebarShell width={collapsed ? "w-[52px]" : "w-[200px]"}>
         {header}
         <div className="flex-1 overflow-y-auto px-2 py-2">
           {renderSections(collapsed)}
@@ -239,15 +239,15 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
         <div className="fixed inset-0 z-50 lg:hidden" onClick={onClose}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <aside
-            className="absolute left-0 top-0 flex h-full w-[240px] flex-col bg-card border-r border-border/70 shadow-xl"
+            className="absolute left-0 top-0 flex h-full w-[240px] flex-col bg-white dark:bg-card border-r border-slate-200/80 dark:border-border/70 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex h-14 items-center justify-between border-b border-border/70 px-4">
+            <div className="flex h-14 items-center justify-between border-b border-slate-200/80 dark:border-border/70 px-4">
               <div className="flex items-center gap-2.5">
                 {renderBrand()}
                 <div>
-                  <p className="text-[13px] font-semibold text-foreground">{companyName}</p>
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Portal interno</p>
+                  <p className="text-[14px] font-semibold text-foreground">{companyName}</p>
+                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Portal Interno</p>
                 </div>
               </div>
               <Button variant="ghost" size="sm" className="h-7 w-7 rounded-md p-0 text-muted-foreground" onClick={onClose}>
