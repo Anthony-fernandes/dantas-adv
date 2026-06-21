@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Plus, Search, Pencil, Trash2, Copy, Download, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { RichTextEditor } from '@/components/editor/RichTextEditor';
 import { useToast } from '@/hooks/use-toast';
 import {
   useLegalTemplatesPaged,
@@ -86,16 +86,17 @@ function TemplateDialog({
 }) {
   const [form, setForm] = useState<TemplateForm>(initial ?? EMPTY_FORM);
 
+  // Sync form when dialog opens or initial data changes
+  useEffect(() => {
+    if (open) setForm(initial ?? EMPTY_FORM);
+  }, [open, initial]);
+
   function set(key: keyof TemplateForm, val: string) {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-  function handleOpen(isOpen: boolean) {
-    if (isOpen) setForm(initial ?? EMPTY_FORM);
-  }
-
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else handleOpen(true); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{initial ? 'Editar modelo' : 'Novo modelo de documento'}</DialogTitle>
@@ -137,19 +138,23 @@ function TemplateDialog({
             <Input value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Breve descrição do modelo (opcional)" />
           </div>
           <div className="grid gap-1.5">
-            <div className="flex items-center justify-between">
-              <Label>Conteúdo *</Label>
-              <span className="text-[11px] text-muted-foreground">
-                Use {'{{cliente.nome}}'}, {'{{processo.numero}}'}, {'{{escritorio.nome}}'} como variáveis
-              </span>
-            </div>
-            <Textarea
-              value={form.content}
-              onChange={(e) => set('content', e.target.value)}
-              rows={12}
-              placeholder="Conteúdo do modelo..."
-              className="font-mono text-sm"
-            />
+            <Label>Conteúdo *</Label>
+            {form.format === 'PLAIN_TEXT' ? (
+              <textarea
+                value={form.content}
+                onChange={(e) => set('content', e.target.value)}
+                rows={12}
+                placeholder="Conteúdo do modelo..."
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            ) : (
+              <RichTextEditor
+                value={form.content}
+                onChange={(html) => set('content', html)}
+                placeholder="Conteúdo do modelo..."
+                minHeight={320}
+              />
+            )}
           </div>
         </div>
         <DialogFooter>
@@ -190,11 +195,15 @@ function GenerateDialog({
     if (!template || !processId) return;
     setLoading(true);
     try {
-      const data: any = await api.post(`/legal-templates/${template.id}/export-pdf/`, {
+      // Step 1: create editor document from template content
+      const doc: any = await api.post('/editor-documents/', {
+        title: title.trim() || template.name,
+        content_html: template.content,
         process: processId,
-        title: title.trim() || undefined,
       });
-      setResult({ url: data.file_download_url ?? data.file ?? '', name: data.name ?? data.title ?? template.name });
+      // Step 2: export to PDF
+      const pdf: any = await api.post(`/editor-documents/${doc.id}/export-pdf/`, {});
+      setResult({ url: pdf.file_download_url ?? pdf.file ?? pdf.url ?? '', name: doc.title ?? template.name });
       toast({ title: 'Documento gerado com sucesso!' });
     } catch (e: any) {
       toast({ title: e?.message || 'Erro ao gerar documento.', variant: 'destructive' });
