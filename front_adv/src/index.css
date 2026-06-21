@@ -48,6 +48,9 @@
     --info:        213 93% 52%;
     --info-foreground: 0 0% 100%;
 
+    --foreground:  222 28% 10%;
+    --foreground-soft: 220 12% 44%;
+
     --border:      220 13% 88%;
     --input:       220 13% 88%;
     --ring:        252 82% 57%;
