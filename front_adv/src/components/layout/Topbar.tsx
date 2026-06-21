@@ -1,6 +1,5 @@
-import { Bell, LogOut, Menu, Moon, Sun, User } from 'lucide-react';
+import { Bell, LogOut, Menu, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
@@ -9,7 +8,6 @@ import { GlobalSearch } from '@/components/shared/GlobalSearch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLocalAvatar } from '@/hooks/useLocalAvatar';
 import { useNotifications, useUpdateNotification } from '@/hooks/useApiData';
-import { useQueryClient } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -61,12 +59,9 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   const navigate = useNavigate();
   const { profile, roles, isSuperuser, logout } = useAuth();
   const { tenants } = useTenant();
-  const { theme, setTheme } = useTheme();
-  const queryClient = useQueryClient();
   const { data: notifications } = useNotifications(undefined, !isSuperuser);
   const updateNotification = useUpdateNotification();
   const unreadCount = notifications?.filter((n) => !n.read).length || 0;
-  const isDark = theme === 'dark';
 
   async function markRead(id: string) {
     await updateNotification.mutateAsync({ id, read: true });
@@ -114,16 +109,6 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
             <TenantSwitcher />
           </div>
         )}
-
-        {/* Theme toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground"
-          onClick={() => setTheme(isDark ? 'light' : 'dark')}
-        >
-          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </Button>
 
         {/* Notification bell */}
         <Popover>

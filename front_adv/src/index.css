@@ -76,66 +76,7 @@
     --font-mono-ui: 'JetBrains Mono', ui-monospace, monospace;
   }
 
-  .dark {
-    --paper:       230 35% 8%;
-    --background:  230 35% 8%;
-    --surface:     230 30% 11%;
-    --surface-2:   230 26% 14%;
-    --ink:         210 22% 90%;
-    --ink-soft:    210 16% 58%;
-    --rule:        230 22% 18%;
-    --gold:        40 88% 52%;    /* #F0A818 âmbar */
-    --gold-soft:   40 60% 18%;
-
-    --foreground:  210 22% 90%;
-    --foreground-soft: 210 16% 58%;
-
-    --card:        230 30% 11%;
-    --card-foreground: 210 22% 90%;
-
-    --popover:     230 30% 11%;
-    --popover-foreground: 210 22% 90%;
-
-    --primary:     220 50% 55%;   /* navy mais claro no dark */
-    --primary-foreground: 0 0% 100%;
-
-    --secondary:   230 26% 16%;
-    --secondary-foreground: 210 22% 80%;
-
-    --muted:       230 24% 14%;
-    --muted-foreground: 210 14% 52%;
-
-    --accent:      40 60% 18%;    /* âmbar escuro */
-    --accent-foreground: 40 88% 65%;
-
-    --destructive: 0 62% 58%;
-    --destructive-foreground: 0 0% 100%;
-
-    --success:     142 60% 42%;
-    --success-foreground: 0 0% 100%;
-
-    --warning:     40 88% 52%;
-    --warning-foreground: 40 60% 10%;
-
-    --info:        213 70% 58%;
-    --info-foreground: 0 0% 100%;
-
-    --border:      230 22% 18%;
-    --input:       230 22% 18%;
-    --ring:        220 50% 55%;
-
-    --sidebar-background: 240 50% 10%;  /* navy mais escuro */
-    --sidebar-foreground: 210 22% 72%;
-    --sidebar-border: 240 35% 18%;
-    --sidebar-muted: 210 14% 42%;
-
-    --shadow-xs:   0 1px 2px hsl(0 0% 0% / 0.2);
-    --shadow-sm:   0 1px 3px hsl(0 0% 0% / 0.25), 0 1px 2px hsl(0 0% 0% / 0.15);
-    --shadow-md:   0 4px 6px -1px hsl(0 0% 0% / 0.25), 0 2px 4px -2px hsl(0 0% 0% / 0.15);
-    --shadow-lg:   0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -4px hsl(0 0% 0% / 0.2);
-    --shadow-card: 0 0 0 1px hsl(224 18% 20% / 1), 0 1px 3px hsl(0 0% 0% / 0.2);
-    --shadow-elevated: 0 0 0 1px hsl(224 18% 20% / 0.8), 0 8px 24px -4px hsl(0 0% 0% / 0.4);
-  }
+  /* dark mode desativado — sistema usa apenas tema claro */
 }
 
 @layer base {
