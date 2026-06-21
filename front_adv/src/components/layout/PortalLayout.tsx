@@ -2,8 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  DollarSign, FileText, Home, LogOut, Menu, MessageSquare,
-  Scale, X, ChevronRight,
+  DollarSign, FileText, Home, LogOut, Menu, MessageSquare, Scale, X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { firstText } from "@/lib/brandTheme";
@@ -11,11 +10,11 @@ import { cn } from "@/lib/utils";
 import { leadService } from "@/services/api";
 
 const portalNav = [
-  { label: "Início",      icon: Home,          path: "/portal",            exact: true },
-  { label: "Processos",   icon: Scale,         path: "/portal/processos" },
-  { label: "Documentos",  icon: FileText,      path: "/portal/documentos" },
-  { label: "Financeiro",  icon: DollarSign,    path: "/portal/financeiro" },
-  { label: "Mensagens",   icon: MessageSquare, path: "/portal/mensagens" },
+  { label: "Início",     icon: Home,          path: "/portal",            exact: true },
+  { label: "Processos",  icon: Scale,         path: "/portal/processos" },
+  { label: "Documentos", icon: FileText,      path: "/portal/documentos" },
+  { label: "Financeiro", icon: DollarSign,    path: "/portal/financeiro" },
+  { label: "Mensagens",  icon: MessageSquare, path: "/portal/mensagens" },
 ];
 
 export function PortalLayout() {
@@ -34,7 +33,7 @@ export function PortalLayout() {
   const brand = useMemo(() => {
     const companyName = firstText(payload?.company?.name, settings?.brand_name, "Portal do Cliente");
     const logoUrl = firstText(payload?.company?.logo_url);
-    const portalLabel = firstText(settings?.client_portal_label, "Portal do Cliente");
+    const portalLabel = firstText(settings?.client_portal_label, "Portal do cliente");
     return { companyName: companyName || "Portal do Cliente", logoUrl, portalLabel };
   }, [payload?.company?.logo_url, payload?.company?.name, settings?.brand_name, settings?.client_portal_label]);
 
@@ -45,108 +44,118 @@ export function PortalLayout() {
 
   const initials = (user?.email || "C").slice(0, 2).toUpperCase();
 
+  function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+    return (
+      <div className="space-y-px">
+        {portalNav.map((item) => {
+          const active = isActive(item);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={onNavigate}
+              className={cn(
+                "group flex items-center gap-2.5 rounded-md px-2.5 py-[6px] text-[13px] transition-all duration-100 select-none",
+                active
+                  ? "bg-primary/[0.08] text-primary font-semibold"
+                  : "text-foreground/60 hover:bg-muted hover:text-foreground font-medium",
+              )}
+            >
+              <item.icon className={cn(
+                "h-[15px] w-[15px] shrink-0 transition-colors",
+                active ? "text-primary" : "text-foreground/40 group-hover:text-foreground/70",
+              )} />
+              {item.label}
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
   function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     return (
       <div className="flex h-full flex-col">
         {/* Brand */}
-        <div className="flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.07] px-4">
+        <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-border/70 px-4">
           {brand.logoUrl ? (
-            <img src={brand.logoUrl} alt={brand.companyName} className="h-7 w-7 shrink-0 rounded-md object-cover ring-1 ring-white/20" />
+            <img src={brand.logoUrl} alt={brand.companyName} className="h-7 w-7 shrink-0 rounded-lg object-cover" />
           ) : (
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-white">
-              <Scale className="h-3.5 w-3.5" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Scale className="h-[14px] w-[14px]" />
             </div>
           )}
           <div className="min-w-0">
-            <p className="truncate text-[13.5px] font-semibold leading-tight text-white">{brand.companyName}</p>
-            <p className="text-[10px] font-medium uppercase tracking-widest text-white/30">{brand.portalLabel}</p>
+            <p className="truncate text-[13px] font-semibold leading-tight text-foreground">{brand.companyName}</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">{brand.portalLabel}</p>
           </div>
         </div>
 
         {/* Nav */}
         <div className="flex-1 overflow-y-auto px-2 py-3">
-          <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/25">Menu</p>
-          <nav className="space-y-0.5">
-            {portalNav.map((item) => {
-              const active = isActive(item);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={onNavigate}
-                  className={cn(
-                    "group flex items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] font-medium transition-all duration-150 select-none",
-                    active
-                      ? "bg-white/10 text-white"
-                      : "text-white/50 hover:bg-white/[0.06] hover:text-white/80",
-                  )}
-                >
-                  <item.icon className={cn(
-                    "h-[15px] w-[15px] shrink-0 transition-colors",
-                    active ? "text-gold" : "text-white/35 group-hover:text-white/60",
-                  )} />
-                  <span className="truncate">{item.label}</span>
-                  {active && <ChevronRight className="ml-auto h-3 w-3 text-white/30 shrink-0" />}
-                </Link>
-              );
-            })}
-          </nav>
+          <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
+            Menu
+          </p>
+          <NavItems onNavigate={onNavigate} />
         </div>
 
-        {/* User footer */}
-        <div className="shrink-0 border-t border-white/[0.07] p-2">
-          <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-white">
+        {/* Footer */}
+        <div className="shrink-0 border-t border-border/70 p-3">
+          <div className="mb-1 flex items-center gap-2.5 rounded-md px-2 py-1.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[12px] font-medium text-white/80">{user?.email || "Cliente"}</p>
-              <p className="text-[10px] text-white/30">Conta ativa</p>
+              <p className="truncate text-[12px] font-semibold text-foreground">{user?.email || "Cliente"}</p>
+              <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Conta ativa
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-md p-1.5 text-white/25 transition-colors hover:bg-white/[0.08] hover:text-white/60"
-              title="Sair"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-            </button>
           </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[12px] font-medium text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sair
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen overflow-hidden bg-[#f5f6f8] text-foreground">
       {/* Desktop sidebar */}
-      <aside className="hidden w-[220px] shrink-0 bg-[#0d0f14] lg:flex lg:flex-col border-r border-white/[0.06]">
+      <aside className="hidden w-[200px] shrink-0 border-r border-border/70 bg-white lg:flex lg:flex-col">
         <SidebarContent />
       </aside>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <aside
-            className="absolute inset-y-0 left-0 flex w-[260px] flex-col bg-[#0d0f14] border-r border-white/[0.06]"
+            className="absolute inset-y-0 left-0 flex w-[220px] flex-col border-r border-border/70 bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex h-14 items-center justify-between border-b border-white/[0.07] px-4">
-              <div className="flex items-center gap-3">
+            <div className="flex h-14 items-center justify-between border-b border-border/70 px-4">
+              <div className="flex items-center gap-2.5">
                 {brand.logoUrl ? (
-                  <img src={brand.logoUrl} alt={brand.companyName} className="h-7 w-7 rounded-md object-cover" />
+                  <img src={brand.logoUrl} alt={brand.companyName} className="h-7 w-7 rounded-lg object-cover" />
                 ) : (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-white">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Scale className="h-3.5 w-3.5" />
                   </div>
                 )}
-                <p className="text-sm font-semibold text-white">{brand.companyName}</p>
+                <p className="text-[13px] font-semibold text-foreground">{brand.companyName}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-white/40 hover:bg-white/[0.06] hover:text-white"
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -159,28 +168,28 @@ export function PortalLayout() {
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile topbar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 lg:hidden">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/70 bg-white px-4 lg:hidden">
           <div className="flex items-center gap-2.5">
             {brand.logoUrl ? (
-              <img src={brand.logoUrl} alt={brand.companyName} className="h-7 w-7 rounded-md object-cover" />
+              <img src={brand.logoUrl} alt={brand.companyName} className="h-7 w-7 rounded-lg object-cover" />
             ) : (
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Scale className="h-3.5 w-3.5" />
               </div>
             )}
-            <p className="text-sm font-semibold text-foreground">{brand.companyName}</p>
+            <p className="text-[13px] font-semibold text-foreground">{brand.companyName}</p>
           </div>
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted/60"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-5 w-5" />
           </button>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-[#f5f6f8]">
           <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
             <Outlet />
           </div>
