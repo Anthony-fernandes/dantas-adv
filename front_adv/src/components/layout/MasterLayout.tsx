@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Empresas", icon: Building2, path: "/master/companies", desc: "Gestão de tenants" },
+  { label: "Empresas", icon: Building2, path: "/master/companies" },
 ];
 
 const companyTabs = [
@@ -39,11 +39,11 @@ export function MasterLayout() {
         {/* Brand */}
         <div className="px-5 pt-7 pb-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20 text-primary">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.07] text-white/50">
               <Shield className="h-[18px] w-[18px]" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">Master</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">Master</p>
               <p className="text-[15px] font-bold leading-tight text-white">Painel Admin</p>
             </div>
           </div>
@@ -60,20 +60,17 @@ export function MasterLayout() {
               return (
                 <Link key={item.path} to={item.path} onClick={onNavigate}>
                   <div className={cn(
-                    "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150",
-                    active ? "bg-white/10 text-white" : "text-white/50 hover:bg-white/5 hover:text-white/80"
+                    "group flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-150",
+                    active ? "bg-white/[0.08] text-white" : "text-white/40 hover:bg-white/[0.04] hover:text-white/70"
                   )}>
                     <div className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
-                      active ? "bg-primary/70" : "bg-white/5 group-hover:bg-white/10"
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
+                      active ? "bg-white/10" : "bg-transparent group-hover:bg-white/[0.06]"
                     )}>
-                      <item.icon className="h-4 w-4" />
+                      <item.icon className="h-[15px] w-[15px]" />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium leading-none">{item.label}</p>
-                      <p className="mt-0.5 text-[11px] text-white/35">{item.desc}</p>
-                    </div>
-                    {active && <ChevronRight className="h-3.5 w-3.5 text-white/40" />}
+                    <p className="text-[13px] font-medium">{item.label}</p>
+                    {active && <ChevronRight className="ml-auto h-3 w-3 text-white/25" />}
                   </div>
                 </Link>
               );
@@ -118,7 +115,7 @@ export function MasterLayout() {
         {/* Footer */}
         <div className="border-t border-white/[0.07] px-3 py-4 space-y-2">
           <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/50 text-xs font-bold text-white">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-bold text-white">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
@@ -142,7 +139,7 @@ export function MasterLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-[#f4f4f5] text-foreground">
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 bg-ink lg:flex lg:flex-col">
+      <aside className="hidden w-60 shrink-0 bg-[#1a1a1f] lg:flex lg:flex-col">
         <SidebarContent />
       </aside>
 
@@ -151,7 +148,7 @@ export function MasterLayout() {
         <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <aside
-            className="absolute left-0 top-0 h-full w-60 bg-ink"
+            className="absolute left-0 top-0 h-full w-60 bg-[#1a1a1f]"
             onClick={(e) => e.stopPropagation()}
           >
             <SidebarContent onNavigate={() => setMobileOpen(false)} />
