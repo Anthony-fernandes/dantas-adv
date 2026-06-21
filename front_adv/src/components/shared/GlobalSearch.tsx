@@ -162,7 +162,7 @@ export function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex"
+        className="hidden w-[320px] items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex"
       >
         <span>Buscar...</span>
         <kbd className="pointer-events-none ml-4 hidden select-none rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[10px] font-medium opacity-70 sm:inline-flex">
