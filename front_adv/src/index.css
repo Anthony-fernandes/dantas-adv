@@ -55,7 +55,7 @@
     --input:       210 16% 88%;
     --ring:        220 43% 33%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
     /* Sidebar — navy escuro #181848 */
     --sidebar-background: 240 50% 19%;
@@ -68,8 +68,8 @@
     --shadow-sm:   0 1px 3px hsl(222 28% 10% / 0.06), 0 1px 2px hsl(222 28% 10% / 0.04);
     --shadow-md:   0 4px 6px -1px hsl(222 28% 10% / 0.07), 0 2px 4px -2px hsl(222 28% 10% / 0.05);
     --shadow-lg:   0 10px 15px -3px hsl(222 28% 10% / 0.08), 0 4px 6px -4px hsl(222 28% 10% / 0.05);
-    --shadow-card: 0 1px 3px hsl(222 28% 10% / 0.07), 0 4px 12px hsl(222 28% 10% / 0.05), 0 0 0 1px hsl(220 13% 88% / 0.7);
-    --shadow-elevated: 0 4px 6px -1px hsl(222 28% 10% / 0.08), 0 12px 28px -4px hsl(222 28% 10% / 0.1), 0 0 0 1px hsl(220 13% 88% / 0.5);
+    --shadow-card: 0 1px 2px hsl(222 28% 10% / 0.04), 0 2px 8px hsl(222 28% 10% / 0.06), 0 0 0 1px hsl(220 13% 91% / 0.9);
+    --shadow-elevated: 0 4px 6px -1px hsl(222 28% 10% / 0.08), 0 12px 28px -4px hsl(222 28% 10% / 0.12), 0 0 0 1px hsl(220 13% 88% / 0.6);
 
     --font-display: 'DM Serif Display', Georgia, serif;
     --font-body:    'Plus Jakarta Sans', system-ui, sans-serif;
@@ -244,32 +244,32 @@
     box-shadow: var(--shadow-card);
   }
 
-  .filter-bar { @apply flex flex-wrap items-center gap-3 border-b bg-muted/30 px-4 py-3; }
+  .filter-bar { @apply flex flex-wrap items-center gap-3 border-b border-border/50 bg-muted/20 px-4 py-3; }
 
   .table-editorial { width: 100%; border-collapse: collapse; font-size: 13px; }
 
   .table-editorial thead th {
-    font-family: var(--font-mono-ui);
-    font-size: 10px;
-    letter-spacing: 0.14em;
+    font-size: 11px;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: hsl(var(--muted-foreground));
-    font-weight: 500;
+    font-weight: 600;
     text-align: left;
-    padding: 0.625rem 1rem;
-    background: hsl(var(--muted) / 0.5);
-    border-bottom: 1px solid hsl(var(--border));
+    padding: 0.6rem 0.75rem;
+    background: hsl(var(--muted) / 0.4);
+    border-bottom: 1px solid hsl(var(--border) / 0.7);
   }
 
   .table-editorial tbody td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid hsl(var(--border) / 0.6);
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid hsl(var(--border) / 0.5);
     vertical-align: middle;
+    font-size: 13px;
   }
 
   .table-editorial tbody tr:last-child td { border-bottom: none; }
 
-  .table-editorial tbody tr:hover { background: hsl(var(--muted) / 0.4); }
+  .table-editorial tbody tr:hover { background: hsl(var(--muted) / 0.35); cursor: pointer; }
 
   /* Badges */
   .badge-status {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AlertTriangle,
   Download,
   Eye,
   FileText,
@@ -935,35 +936,44 @@ export default function ClientsWorkspace() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="shadow-card">
-          <CardHeader className="pb-2">
-            <CardDescription>Total da carteira</CardDescription>
-            <CardTitle className="text-3xl">{formatCount(stats.total)}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Clientes PF e PJ consolidados para operação jurídica.</CardContent>
+        <Card>
+          <CardContent className="flex items-start gap-4 p-5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Users className="h-5 w-5" /></div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Total da carteira</p>
+              <p className="text-2xl font-bold text-foreground">{formatCount(stats.total)}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Clientes PF e PJ consolidados para operação jurídica.</p>
+            </div>
+          </CardContent>
         </Card>
-        <Card className="shadow-card">
-          <CardHeader className="pb-2">
-            <CardDescription>Clientes ativos</CardDescription>
-            <CardTitle className="text-3xl">{formatCount(stats.active)}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Carteira atualmente em acompanhamento ativo.</CardContent>
+        <Card>
+          <CardContent className="flex items-start gap-4 p-5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600"><UserCheck className="h-5 w-5" /></div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Clientes ativos</p>
+              <p className="text-2xl font-bold text-foreground">{formatCount(stats.active)}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Carteira atualmente em acompanhamento ativo.</p>
+            </div>
+          </CardContent>
         </Card>
-        <Card className="shadow-card">
-          <CardHeader className="pb-2">
-            <CardDescription>Com processo ativo</CardDescription>
-            <CardTitle className="text-3xl">{formatCount(stats.withActiveProcess)}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Clientes com demanda jurídica em andamento.</CardContent>
+        <Card>
+          <CardContent className="flex items-start gap-4 p-5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600"><FolderOpen className="h-5 w-5" /></div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Com processo ativo</p>
+              <p className="text-2xl font-bold text-foreground">{formatCount(stats.withActiveProcess)}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Clientes com demanda jurídica em andamento.</p>
+            </div>
+          </CardContent>
         </Card>
-        <Card className="shadow-card">
-          <CardHeader className="pb-2">
-            <CardDescription>Portal e inadimplencia</CardDescription>
-            <CardTitle className="text-3xl">{formatCount(stats.withPortal)}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Portal ativo</span>
-            <span>{formatCount(stats.inadimplentes)} inadimplentes</span>
+        <Card>
+          <CardContent className="flex items-start gap-4 p-5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><AlertTriangle className="h-5 w-5" /></div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Portal e inadimplência</p>
+              <p className="text-2xl font-bold text-foreground">{formatCount(stats.withPortal)}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Portal ativo · <span className="text-destructive font-medium">{formatCount(stats.inadimplentes)} inadimplentes</span></p>
+            </div>
           </CardContent>
         </Card>
       </div>
