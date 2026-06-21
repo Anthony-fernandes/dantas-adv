@@ -27,13 +27,13 @@ export function TenantSwitcher() {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="h-12 min-w-[220px] max-w-[280px] justify-between gap-3 rounded-md border-border bg-card px-3 text-left shadow-card hover:bg-muted/45"
+          className="h-9 min-w-[180px] max-w-[240px] justify-between gap-2 rounded-md border-border/50 bg-transparent px-2.5 text-left shadow-none hover:bg-muted/50"
         >
           <span className="flex min-w-0 items-center gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-border bg-muted/50 font-display text-xs font-semibold italic text-foreground">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
               {getTenantMonogram(active?.name)}
             </span>
-            <span className="block min-w-0 truncate text-sm font-semibold text-foreground">
+            <span className="block min-w-0 truncate text-[13px] font-semibold text-foreground">
               {active?.name ?? 'Selecionar escritorio'}
             </span>
           </span>
