@@ -18,9 +18,6 @@ import {
   TrendingUp,
   Users,
   Wallet,
-  Plus,
-  CheckSquare,
-  Clock,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -1032,32 +1029,6 @@ export default function Dashboard() {
   return (
     <TooltipProvider delayDuration={120}>
       <div className="page-container space-y-8 animate-fade-in">
-
-        {/* Quick actions */}
-        <section>
-          <p className="eyebrow mb-3">Ações rápidas</p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { label: 'Novo processo', icon: Gavel, path: '/app/processos', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 border-blue-100 dark:bg-blue-950/30 dark:border-blue-900' },
-              { label: 'Novo cliente', icon: Users, path: '/app/clientes', color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-50 border-teal-100 dark:bg-teal-950/30 dark:border-teal-900' },
-              { label: 'Criar tarefa', icon: CheckSquare, path: '/app/tarefas', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 border-green-100 dark:bg-green-950/30 dark:border-green-900' },
-              { label: 'Lançar horas', icon: Clock, path: '/app/horas', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 border-indigo-100 dark:bg-indigo-950/30 dark:border-indigo-900' },
-            ].map((action) => (
-              <button
-                key={action.path}
-                type="button"
-                onClick={() => navigate(action.path)}
-                className={`flex items-center gap-3 rounded-lg border px-4 py-3.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-card ${action.bg}`}
-              >
-                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/70 dark:bg-black/20 ${action.color}`}>
-                  <action.icon className="h-4 w-4" />
-                </span>
-                <span className="text-sm font-medium text-foreground">{action.label}</span>
-                <Plus className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              </button>
-            ))}
-          </div>
-        </section>
 
         <section className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
