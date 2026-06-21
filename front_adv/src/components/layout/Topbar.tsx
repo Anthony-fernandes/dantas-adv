@@ -1,4 +1,4 @@
-import { Bell, LogOut, Menu, Moon, Sun, User, Search } from 'lucide-react';
+import { Bell, LogOut, Menu, Moon, Sun, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -86,35 +86,40 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-border/60 bg-background/95 backdrop-blur-md px-4 sm:px-6 gap-3">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-border/70 bg-white px-4 gap-3">
       {/* Hamburger (mobile) */}
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 shrink-0 rounded-lg border border-border/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground lg:hidden"
+        className="h-8 w-8 shrink-0 rounded-md text-muted-foreground hover:bg-muted lg:hidden"
         onClick={onOpenMenu}
       >
         <Menu className="h-4 w-4" />
       </Button>
 
-      {/* Page title */}
-      <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground">
+      {/* Search — center */}
+      <div className="hidden flex-1 justify-center lg:flex">
+        <GlobalSearch />
+      </div>
+
+      {/* Mobile: title */}
+      <h1 className="min-w-0 flex-1 truncate text-[14px] font-semibold text-foreground lg:hidden">
         {pageTitle}
       </h1>
 
       {/* Right group */}
-      <div className="flex shrink-0 items-center gap-2">
-        {/* Search + tenant switcher — desktop */}
-        <div className="hidden items-center gap-2 lg:flex">
-          <GlobalSearch />
-          {tenants.length > 0 && <TenantSwitcher />}
-        </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        {tenants.length > 0 && (
+          <div className="hidden lg:block">
+            <TenantSwitcher />
+          </div>
+        )}
 
         {/* Theme toggle */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-lg border border-border/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          className="h-8 w-8 rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground"
           onClick={() => setTheme(isDark ? 'light' : 'dark')}
         >
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -126,7 +131,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="relative h-8 w-8 rounded-lg border border-border/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+              className="relative h-8 w-8 rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground"
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
@@ -158,7 +163,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
                     )}
                   >
                     <div className="flex items-start gap-2">
-                      {!n.read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />}
+                      {!n.read && <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
                       <div className={cn('min-w-0', n.read && 'ml-3.5')}>
                         <p className="text-[13px] font-medium text-foreground">{n.title}</p>
                         {n.message && <p className="mt-0.5 text-[12px] text-muted-foreground">{n.message}</p>}
@@ -182,14 +187,14 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-2.5 py-1.5 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <Avatar className="h-6 w-6 border border-border/60">
+            <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <Avatar className="h-7 w-7">
                 {localAvatar && <AvatarImage src={localAvatar} alt={profile?.full_name || ''} className="object-cover" />}
                 <AvatarFallback className="bg-primary text-[10px] font-semibold text-white">{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden min-w-0 text-left md:block">
-                <p className="truncate text-[12.5px] font-medium leading-tight text-foreground">{profile?.full_name || 'Usuário'}</p>
-                <p className="truncate text-[10px] text-muted-foreground">{userMeta}</p>
+                <p className="truncate text-[12.5px] font-semibold leading-tight text-foreground">{profile?.full_name || 'Usuário'}</p>
+                <p className="truncate text-[10px] text-muted-foreground/70">{userMeta}</p>
               </div>
             </button>
           </DropdownMenuTrigger>
@@ -209,13 +214,6 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      {/* Mobile: tenant switcher below */}
-      {tenants.length > 0 && (
-        <div className="absolute left-0 right-0 top-14 border-b border-border/60 bg-background/95 px-4 py-2 lg:hidden">
-          <TenantSwitcher />
-        </div>
-      )}
     </header>
   );
 }

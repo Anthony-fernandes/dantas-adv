@@ -58,7 +58,7 @@ export function AppLayout() {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-paper">
         <Topbar onOpenMenu={() => setMobileOpen(true)} />
-        <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-6 sm:px-6 lg:px-8">
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-[#f5f6f8] px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1680px]">
             <Outlet />
           </div>
