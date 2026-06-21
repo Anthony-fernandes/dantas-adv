@@ -156,7 +156,7 @@ export function MasterLayout() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto bg-[#f5f6f8] p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-[#f5f6f8] p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
