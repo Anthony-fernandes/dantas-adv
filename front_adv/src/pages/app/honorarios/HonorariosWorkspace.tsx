@@ -626,28 +626,22 @@ export default function HonorariosWorkspace() {
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Total contratado', value: fmt(totalContratado), icon: Wallet, tone: 'default' },
-          { label: 'Recebido', value: fmt(totalRecebido), icon: CheckCircle2, tone: 'success' },
-          { label: 'A receber', value: fmt(totalAberto), icon: DollarSign, tone: 'default' },
-          { label: 'Vencidos', value: fmt(totalVencido), icon: AlertTriangle, tone: totalVencido > 0 ? 'danger' : 'default' },
+          { label: 'Total contratado', value: fmt(totalContratado), icon: Wallet, iconClass: 'bg-primary/10 text-primary', tone: '' },
+          { label: 'Recebido', value: fmt(totalRecebido), icon: CheckCircle2, iconClass: 'bg-emerald-500/10 text-emerald-600', tone: 'text-emerald-600' },
+          { label: 'A receber', value: fmt(totalAberto), icon: DollarSign, iconClass: 'bg-blue-500/10 text-blue-600', tone: '' },
+          { label: 'Vencidos', value: fmt(totalVencido), icon: AlertTriangle, iconClass: totalVencido > 0 ? 'bg-rose-500/10 text-rose-600' : 'bg-slate-500/10 text-slate-500', tone: totalVencido > 0 ? 'text-rose-600' : '' },
         ].map((kpi) => (
-          <div key={kpi.label} className="kpi">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="kpi-label">{kpi.label}</p>
-                {isLoading ? (
-                  <Skeleton className="mt-2 h-9 w-28" />
-                ) : (
-                  <p className={cn('kpi-value mt-2', kpi.tone === 'success' ? 'text-success' : kpi.tone === 'danger' ? 'text-destructive' : 'text-foreground')}>
-                    {kpi.value}
-                  </p>
-                )}
+          <Card key={kpi.label}>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', kpi.iconClass)}>
+                <kpi.icon className="h-5 w-5" />
               </div>
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
-                <kpi.icon className="h-5 w-5 text-muted-foreground" />
+              <div className="min-w-0">
+                {isLoading ? <Skeleton className="h-7 w-28" /> : <p className={cn('text-2xl font-semibold leading-none', kpi.tone)}>{kpi.value}</p>}
+                <p className="mt-1 text-sm font-medium text-foreground/80">{kpi.label}</p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 

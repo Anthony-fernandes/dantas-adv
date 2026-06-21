@@ -140,22 +140,24 @@ function KpiCard({
     success: 'text-success',
   }[tone];
 
+  const iconColorMap = {
+    default: 'bg-primary/10 text-primary',
+    danger: 'bg-rose-500/10 text-rose-600',
+    warning: 'bg-amber-500/10 text-amber-600',
+    success: 'bg-emerald-500/10 text-emerald-600',
+  };
   return (
-    <div className="kpi">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="kpi-label">{label}</p>
-          {loading ? (
-            <Skeleton className="mt-2 h-9 w-16" />
-          ) : (
-            <p className={cn('kpi-value mt-2', toneClass)}>{value}</p>
-          )}
+    <Card>
+      <CardContent className="flex items-center gap-4 p-5">
+        <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', iconColorMap[tone])}>
+          <Icon className="h-5 w-5" />
         </div>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
-          <Icon className="h-5 w-5 text-muted-foreground" />
+        <div className="min-w-0">
+          {loading ? <Skeleton className="h-7 w-16" /> : <p className={cn('text-2xl font-semibold leading-none', toneClass)}>{value}</p>}
+          <p className="mt-1 text-sm font-medium text-foreground/80">{label}</p>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 

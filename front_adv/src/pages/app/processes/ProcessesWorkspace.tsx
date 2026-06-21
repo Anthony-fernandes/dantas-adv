@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -642,11 +642,11 @@ export default function ProcessesWorkspace() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <ProcessStatCard title="Total de processos" value={formatCount(stats.total)} description="Carteira completa cadastrada no sistema." />
-        <ProcessStatCard title="Processos ativos" value={formatCount(stats.active)} description="Casos em andamento ou em fase pre-processual." />
-        <ProcessStatCard title="Encerrados" value={formatCount(stats.closed)} description="Encerrados ou arquivados para consulta." />
-        <ProcessStatCard title="Prazos hoje" value={formatCount(stats.dueToday)} description="Demandas que exigem atenção imediata." tone="warning" />
-        <ProcessStatCard title="Audiências próximas" value={formatCount(stats.upcomingHearings)} description="Processos com audiência hoje ou nos próximos 7 dias." tone="info" />
+        <ProcessStatCard title="Total de processos" value={formatCount(stats.total)} description="Carteira completa cadastrada no sistema." icon={Scale} color="primary" />
+        <ProcessStatCard title="Processos ativos" value={formatCount(stats.active)} description="Casos em andamento ou em fase pre-processual." icon={FolderKanban} color="emerald" />
+        <ProcessStatCard title="Encerrados" value={formatCount(stats.closed)} description="Encerrados ou arquivados para consulta." icon={Gavel} color="slate" />
+        <ProcessStatCard title="Prazos hoje" value={formatCount(stats.dueToday)} description="Demandas que exigem atenção imediata." icon={AlertTriangle} color="amber" />
+        <ProcessStatCard title="Audiências próximas" value={formatCount(stats.upcomingHearings)} description="Processos com audiência hoje ou nos próximos 7 dias." icon={CalendarClock} color="blue" />
       </div>
 
       <Card className="overflow-hidden border-border/60 shadow-card">
@@ -1035,31 +1035,33 @@ function ProcessStatCard({
   title,
   value,
   description,
-  tone = 'default',
+  icon: Icon,
+  color = 'primary',
 }: {
   title: string;
   value: string;
   description: string;
-  tone?: 'default' | 'warning' | 'info';
+  icon: React.ElementType;
+  color?: 'primary' | 'emerald' | 'slate' | 'amber' | 'blue';
 }) {
-  const toneClass =
-    tone === 'warning'
-      ? 'border-warning/20 bg-warning/10 text-warning'
-      : tone === 'info'
-        ? 'border-info/20 bg-info/10 text-info'
-        : 'border-border bg-accent/55 text-foreground';
-
+  const colorMap: Record<string, string> = {
+    primary: 'bg-primary/10 text-primary',
+    emerald: 'bg-emerald-500/10 text-emerald-600',
+    slate: 'bg-slate-500/10 text-slate-600',
+    amber: 'bg-amber-500/10 text-amber-600',
+    blue: 'bg-blue-500/10 text-blue-600',
+  };
   return (
-    <Card className="border-border/60 shadow-card">
-      <CardContent className="space-y-3 p-5">
-        <div className={cn('flex h-11 w-11 items-center justify-center rounded-md border', toneClass)}>
-          <Scale className="h-5 w-5" />
+    <Card>
+      <CardContent className="flex items-center gap-4 p-5">
+        <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', colorMap[color])}>
+          <Icon className="h-5 w-5" />
         </div>
-        <div>
-          <p className="kpi-label">{title}</p>
-          <p className="mt-2 font-display text-[2rem] font-semibold leading-none text-foreground">{value}</p>
+        <div className="min-w-0">
+          <p className="text-2xl font-semibold leading-none text-foreground">{value}</p>
+          <p className="mt-1 text-sm font-medium text-foreground/80">{title}</p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">{description}</p>
         </div>
-        <p className="text-xs leading-5 text-muted-foreground">{description}</p>
       </CardContent>
     </Card>
   );
