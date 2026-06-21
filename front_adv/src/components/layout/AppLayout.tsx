@@ -50,7 +50,7 @@ export function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-paper text-foreground">
+    <div className="flex h-screen w-full overflow-hidden bg-slate-50 dark:bg-background text-foreground">
       <AppSidebar
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
@@ -58,9 +58,9 @@ export function AppLayout() {
         onToggleCollapse={handleToggleCollapse}
       />
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-paper">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar onOpenMenu={() => setMobileOpen(true)} />
-        <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-background px-4 py-6 sm:px-6 lg:px-8">
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-slate-50 dark:bg-background px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1680px]">
             <Outlet />
           </div>

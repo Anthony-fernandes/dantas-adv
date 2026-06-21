@@ -1,4 +1,4 @@
-import { Bell, LogOut, Menu, Moon, Sun, User } from 'lucide-react';
+import { Bell, LogOut, Menu, Moon, Settings, Sun, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -84,12 +84,12 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-border bg-card px-4 gap-3 shadow-sm">
+    <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center border-b border-slate-200/60 dark:border-border bg-white dark:bg-card px-4 gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       {/* Hamburger (mobile) */}
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 shrink-0 rounded-md text-muted-foreground hover:bg-muted lg:hidden"
+        className="h-8 w-8 shrink-0 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 lg:hidden"
         onClick={onOpenMenu}
       >
         <Menu className="h-4 w-4" />
@@ -106,9 +106,9 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
       </h1>
 
       {/* Right group */}
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-1">
         {tenants.length > 0 && (
-          <div className="hidden lg:block">
+          <div className="hidden lg:block mr-1">
             <TenantSwitcher />
           </div>
         )}
@@ -117,10 +117,20 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground"
+          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
           onClick={() => setTheme(isDark ? 'light' : 'dark')}
         >
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
+
+        {/* Settings */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
+          onClick={() => navigate('/app/configuracoes')}
+        >
+          <Settings className="h-4 w-4" />
         </Button>
 
         {/* Notification bell */}
@@ -129,7 +139,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="relative h-8 w-8 rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground"
+              className="relative h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
@@ -182,24 +192,32 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           </PopoverContent>
         </Popover>
 
-        {/* User menu */}
+        {/* Logout */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
+          onClick={handleLogout}
+          title="Sair"
+        >
+          <LogOut className="h-4 w-4" />
+        </Button>
+
+        {/* User avatar dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <Avatar className="h-7 w-7">
+            <button className="ml-1 flex items-center rounded-full transition-colors hover:bg-slate-100 dark:hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring p-0.5">
+              <Avatar className="h-8 w-8">
                 {localAvatar && <AvatarImage src={localAvatar} alt={profile?.full_name || ''} className="object-cover" />}
                 <AvatarFallback className="bg-primary text-[10px] font-semibold text-white">{initials}</AvatarFallback>
               </Avatar>
-              <div className="hidden min-w-0 text-left md:block">
-                <p className="truncate text-[12.5px] font-semibold leading-tight text-foreground">{profile?.full_name || 'Usuário'}</p>
-                <p className="truncate text-[10px] text-muted-foreground/70">{userMeta}</p>
-              </div>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-52 shadow-lg border-border/60" align="end" sideOffset={8}>
             <DropdownMenuLabel className="pb-1">
               <p className="text-[13px] font-medium text-foreground">{profile?.full_name || 'Usuário'}</p>
               <p className="text-[11px] font-normal text-muted-foreground">{profile?.email || ''}</p>
+              <p className="text-[10px] font-normal text-muted-foreground/70">{userMeta}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 text-[13px]" onClick={() => navigate('/app/perfil')}>
