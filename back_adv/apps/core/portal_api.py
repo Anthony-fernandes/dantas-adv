@@ -325,3 +325,33 @@ class PortalMessagesView(generics.GenericAPIView):
             content=serializer.validated_data['content'].strip(),
         )
         return Response(PortalMessageSerializer(msg, context={'request': request}).data, status=201)
+
+
+class PortalMovementSerializer(serializers.ModelSerializer):
+    class Meta:
+        from apps.processes.models import Movement
+        model = Movement
+        fields = ['id', 'description', 'date', 'type', 'created_at']
+
+
+class PortalMovementsView(PortalProcessBase, generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsClient]
+    ordering = ['-date', '-created_at']
+
+    def get_serializer_class(self):
+        from rest_framework import serializers as s
+        from apps.processes.models import Movement
+
+        class Ser(s.ModelSerializer):
+            class Meta:
+                model = Movement
+                fields = ['id', 'description', 'date', 'type', 'created_at']
+        return Ser
+
+    def get_queryset(self):
+        process = self.get_object()
+        from apps.processes.models import Movement
+        return Movement.objects.filter(
+            tenant=self.request.tenant,
+            process=process,
+        ).order_by('-date', '-created_at')

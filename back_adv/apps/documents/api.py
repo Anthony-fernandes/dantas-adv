@@ -13,7 +13,7 @@ from apps.core.viewsets import TenantScopedModelViewSet
 from apps.accounts.models import UserRole
 from django.core.files.base import ContentFile
 
-from .models import Document, Contract, JobPosition, LegalTemplate, ProcessRichDocument, TemplateFormat
+from .models import Document, Contract, JobPosition, LegalTemplate, ProcessRichDocument, TemplateFormat, SignatureRequest
 from .services import RenderContext, build_template_context, render_rich_text, htmlish_to_pdf_bytes
 
 
@@ -318,6 +318,16 @@ class LegalTemplateViewSet(TenantScopedModelViewSet):
         obj.save(update_fields=['deleted_at'])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=['get'], url_path='versions')
+    def versions(self, request, *args, **kwargs):
+        obj = self.get_object()
+        qs = LegalTemplate.objects.filter(
+            tenant=request.tenant,
+            group_id=obj.group_id,
+            deleted_at__isnull=True,
+        ).order_by('-version')
+        return Response(LegalTemplateSerializer(qs, many=True).data)
+
 
 class TemplateGenerateSerializer(serializers.Serializer):
     process_id = serializers.UUIDField(required=False, allow_null=True)
@@ -526,3 +536,53 @@ class ProcessRichDocumentViewSet(TenantScopedModelViewSet):
 
 
 
+
+
+class SignatureRequestSignerSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    email = serializers.EmailField()
+    role = serializers.CharField(default='party')
+
+
+class SignatureRequestSerializer(serializers.ModelSerializer):
+    signers = SignatureRequestSignerSerializer(many=True, required=True)
+
+    class Meta:
+        model = SignatureRequest
+        fields = ('id', 'document', 'provider', 'deadline', 'status', 'signing_url', 'signers', 'created_at')
+        read_only_fields = ('id', 'status', 'signing_url', 'created_at')
+
+    def create(self, validated_data):
+        signers = validated_data.pop('signers')
+        return SignatureRequest.objects.create(
+            **validated_data,
+            signers=signers,
+            status=SignatureRequest.Status.SENT,
+        )
+
+
+class SignatureRequestViewSet(TenantScopedModelViewSet):
+    serializer_class = SignatureRequestSerializer
+    permission_classes = [IsTenantMember]
+    filterset_fields = ['document', 'status', 'provider']
+    http_method_names = ['get', 'post', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        return SignatureRequest.objects.filter(tenant=self.request.tenant)
+
+    def perform_create(self, serializer):
+        serializer.save(tenant=self.request.tenant, created_by=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = self.perform_create(serializer)
+        return Response(
+            {
+                'id': str(serializer.instance.id),
+                'status': serializer.instance.status,
+                'message': f'Solicitação enviada para {len(serializer.instance.signers)} signatário(s) via {serializer.instance.provider}.',
+                'signing_url': serializer.instance.signing_url,
+            },
+            status=status.HTTP_201_CREATED,
+        )

@@ -228,7 +228,7 @@ export default function ContractsPage() {
         const client = clients.find((c) => c.id === data.client);
         const clientName = client ? clientLabel(client) : 'Cliente';
         try {
-          await api.post('/financial/receivable/', {
+          await api.post('/accounts-receivable/', {
             client: data.client,
             amount: fixedValue,
             due_date: data.start_date,
