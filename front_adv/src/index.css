@@ -6,35 +6,35 @@
 
 @layer base {
   :root {
-    /* Neutral grays — clean, sem tom dourado */
-    --paper:       220 20% 97%;
-    --background:  220 20% 97%;
+    /* Paleta Dantas ADV — Navy + Amber */
+    --paper:       210 20% 97%;
+    --background:  210 20% 97%;
     --surface:     0 0% 100%;
-    --surface-2:   220 16% 95%;
-    --ink:         222 28% 10%;
-    --ink-soft:    220 12% 44%;
-    --rule:        220 13% 88%;
-    --gold:        252 82% 57%;
-    --gold-soft:   252 90% 95%;
+    --surface-2:   210 16% 95%;
+    --ink:         240 50% 19%;   /* #181848 — navy escuro */
+    --ink-soft:    210 22% 40%;
+    --rule:        210 16% 88%;
+    --gold:        40 88% 52%;    /* #F0A818 — âmbar */
+    --gold-soft:   40 88% 94%;
 
     --card:        0 0% 100%;
-    --card-foreground: 222 28% 10%;
+    --card-foreground: 220 25% 12%;
 
     --popover:     0 0% 100%;
-    --popover-foreground: 222 28% 10%;
+    --popover-foreground: 220 25% 12%;
 
-    /* Accent — violeta moderno */
-    --primary:     252 82% 57%;
+    /* Primary — azul navy #304878 */
+    --primary:     220 43% 33%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary:   220 16% 95%;
-    --secondary-foreground: 222 28% 10%;
+    --secondary:   210 16% 94%;
+    --secondary-foreground: 220 25% 12%;
 
-    --muted:       220 14% 93%;
-    --muted-foreground: 220 12% 50%;
+    --muted:       210 14% 93%;
+    --muted-foreground: 210 16% 48%;
 
-    --accent:      252 90% 95%;
-    --accent-foreground: 252 82% 40%;
+    --accent:      40 88% 94%;    /* âmbar suave */
+    --accent-foreground: 40 88% 28%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -42,26 +42,26 @@
     --success:     142 71% 38%;
     --success-foreground: 0 0% 100%;
 
-    --warning:     38 92% 50%;
-    --warning-foreground: 28 60% 12%;
+    --warning:     40 88% 52%;
+    --warning-foreground: 40 60% 12%;
 
-    --info:        213 93% 52%;
+    --info:        210 43% 45%;
     --info-foreground: 0 0% 100%;
 
-    --foreground:  222 28% 10%;
-    --foreground-soft: 220 12% 44%;
+    --foreground:  220 25% 12%;
+    --foreground-soft: 210 16% 44%;
 
-    --border:      220 13% 88%;
-    --input:       220 13% 88%;
-    --ring:        252 82% 57%;
+    --border:      210 16% 88%;
+    --input:       210 16% 88%;
+    --ring:        220 43% 33%;
 
     --radius: 0.625rem;
 
-    /* Sidebar permanece escura */
-    --sidebar-background: 224 30% 8%;
-    --sidebar-foreground: 220 16% 80%;
-    --sidebar-border: 224 20% 14%;
-    --sidebar-muted: 220 10% 48%;
+    /* Sidebar — navy escuro #181848 */
+    --sidebar-background: 240 50% 19%;
+    --sidebar-foreground: 210 22% 78%;
+    --sidebar-border: 240 40% 26%;
+    --sidebar-muted: 210 18% 52%;
 
     /* Sombras */
     --shadow-xs:   0 1px 2px hsl(222 28% 10% / 0.04);
@@ -77,36 +77,36 @@
   }
 
   .dark {
-    --paper:       224 30% 9%;
-    --background:  224 30% 9%;
-    --surface:     224 26% 12%;
-    --surface-2:   224 22% 15%;
-    --ink:         220 20% 93%;
-    --ink-soft:    220 12% 62%;
-    --rule:        224 18% 20%;
-    --gold:        252 78% 65%;
-    --gold-soft:   252 30% 20%;
+    --paper:       230 35% 8%;
+    --background:  230 35% 8%;
+    --surface:     230 30% 11%;
+    --surface-2:   230 26% 14%;
+    --ink:         210 22% 90%;
+    --ink-soft:    210 16% 58%;
+    --rule:        230 22% 18%;
+    --gold:        40 88% 52%;    /* #F0A818 âmbar */
+    --gold-soft:   40 60% 18%;
 
-    --foreground:  220 20% 93%;
-    --foreground-soft: 220 12% 62%;
+    --foreground:  210 22% 90%;
+    --foreground-soft: 210 16% 58%;
 
-    --card:        224 26% 12%;
-    --card-foreground: 220 20% 93%;
+    --card:        230 30% 11%;
+    --card-foreground: 210 22% 90%;
 
-    --popover:     224 26% 12%;
-    --popover-foreground: 220 20% 93%;
+    --popover:     230 30% 11%;
+    --popover-foreground: 210 22% 90%;
 
-    --primary:     252 78% 65%;
-    --primary-foreground: 224 30% 9%;
+    --primary:     220 50% 55%;   /* navy mais claro no dark */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary:   224 22% 16%;
-    --secondary-foreground: 220 20% 85%;
+    --secondary:   230 26% 16%;
+    --secondary-foreground: 210 22% 80%;
 
-    --muted:       224 22% 15%;
-    --muted-foreground: 220 12% 55%;
+    --muted:       230 24% 14%;
+    --muted-foreground: 210 14% 52%;
 
-    --accent:      252 30% 20%;
-    --accent-foreground: 252 78% 72%;
+    --accent:      40 60% 18%;    /* âmbar escuro */
+    --accent-foreground: 40 88% 65%;
 
     --destructive: 0 62% 58%;
     --destructive-foreground: 0 0% 100%;
@@ -114,20 +114,20 @@
     --success:     142 60% 42%;
     --success-foreground: 0 0% 100%;
 
-    --warning:     38 86% 55%;
-    --warning-foreground: 28 60% 10%;
+    --warning:     40 88% 52%;
+    --warning-foreground: 40 60% 10%;
 
-    --info:        213 86% 60%;
+    --info:        213 70% 58%;
     --info-foreground: 0 0% 100%;
 
-    --border:      224 18% 20%;
-    --input:       224 18% 20%;
-    --ring:        252 78% 65%;
+    --border:      230 22% 18%;
+    --input:       230 22% 18%;
+    --ring:        220 50% 55%;
 
-    --sidebar-background: 224 32% 6%;
-    --sidebar-foreground: 220 16% 78%;
-    --sidebar-border: 224 20% 13%;
-    --sidebar-muted: 220 10% 44%;
+    --sidebar-background: 240 50% 10%;  /* navy mais escuro */
+    --sidebar-foreground: 210 22% 72%;
+    --sidebar-border: 240 35% 18%;
+    --sidebar-muted: 210 14% 42%;
 
     --shadow-xs:   0 1px 2px hsl(0 0% 0% / 0.2);
     --shadow-sm:   0 1px 3px hsl(0 0% 0% / 0.25), 0 1px 2px hsl(0 0% 0% / 0.15);

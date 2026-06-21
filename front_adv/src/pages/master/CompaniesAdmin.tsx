@@ -32,7 +32,7 @@ type ListResponse<T> = T[] | Paginated<T>;
 
 const ROLES = ["OWNER", "ADMIN", "LAWYER", "FINANCE", "ASSISTANT", "CLIENT"] as const;
 const ROLE_META: Record<string, { label: string; desc: string; chip: string }> = {
-  OWNER:     { label: "Proprietário",  desc: "Controle total",          chip: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300" },
+  OWNER:     { label: "Proprietário",  desc: "Controle total",          chip: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
   ADMIN:     { label: "Administrador", desc: "Usuários e config.",       chip: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
   LAWYER:    { label: "Advogado",      desc: "Processos e docs",         chip: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
   FINANCE:   { label: "Financeiro",    desc: "Honorários e contas",      chip: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
@@ -115,7 +115,7 @@ function RoleCard({ role, checked, onChange }: { role: string; checked: boolean;
     )}>
       <div className="flex items-center justify-between">
         <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", m.chip)}>{m.label}</span>
-        <input type="checkbox" className="h-3.5 w-3.5 accent-violet-600" checked={checked} onChange={onChange} />
+        <input type="checkbox" className="h-3.5 w-3.5 accent-primary" checked={checked} onChange={onChange} />
       </div>
       <p className="text-[11px] leading-tight text-muted-foreground">{m.desc}</p>
     </label>
@@ -693,7 +693,7 @@ export default function CompaniesAdmin() {
                         const chk = inh || pPerms.includes(perm);
                         return (
                           <label key={perm} className={cn("flex items-center gap-3 rounded-lg border px-3.5 py-2.5 transition-colors", inh ? "cursor-not-allowed border-border/50 bg-muted/40 opacity-60" : "cursor-pointer border-border hover:bg-muted/40")}>
-                            <input type="checkbox" className="h-3.5 w-3.5 shrink-0 accent-violet-600" checked={chk} disabled={inh} onChange={() => setPPerms(p => toggle(p, perm))} />
+                            <input type="checkbox" className="h-3.5 w-3.5 shrink-0 accent-primary" checked={chk} disabled={inh} onChange={() => setPPerms(p => toggle(p, perm))} />
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium text-foreground">{PERM_LABEL[perm] || perm}</p>
                               <p className="font-mono text-[10px] text-muted-foreground">{perm}</p>

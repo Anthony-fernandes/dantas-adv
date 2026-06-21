@@ -33,7 +33,7 @@ export function AppLayout() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card px-5 py-3.5 shadow-sm">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-violet-500" />
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
           <span className="text-[13px] text-muted-foreground">Carregando ambiente interno...</span>
         </div>
       </div>

@@ -185,7 +185,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
             <button className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-2.5 py-1.5 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <Avatar className="h-6 w-6 border border-border/60">
                 {localAvatar && <AvatarImage src={localAvatar} alt={profile?.full_name || ''} className="object-cover" />}
-                <AvatarFallback className="bg-violet-600 text-[10px] font-semibold text-white">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-primary text-[10px] font-semibold text-white">{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden min-w-0 text-left md:block">
                 <p className="truncate text-[12.5px] font-medium leading-tight text-foreground">{profile?.full_name || 'Usuário'}</p>

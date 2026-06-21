@@ -28,7 +28,7 @@ type AppSidebarProps = {
 const navSections: NavSection[] = [
   {
     title: "Geral",
-    items: [{ label: "Painel", icon: LayoutDashboard, path: "/app/dashboard", color: "text-violet-400" }],
+    items: [{ label: "Painel", icon: LayoutDashboard, path: "/app/dashboard", color: "text-gold" }],
   },
   {
     title: "Jurídico",
@@ -90,7 +90,7 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
       return <img src={companyLogo} alt="Logo" className="h-8 w-8 shrink-0 rounded-lg object-cover ring-1 ring-white/20" />;
     }
     return (
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 font-bold text-sm text-white shadow-lg shadow-violet-900/30">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary font-bold text-sm text-white">
         {companyName.charAt(0).toUpperCase()}
       </div>
     );
