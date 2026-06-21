@@ -613,12 +613,12 @@ function KpiCard({ title, value, helper, icon: Icon, tone, comparison, onClick }
             <p className="text-3xl font-semibold tracking-tight">{value}</p>
             <p className="text-sm text-muted-foreground">{helper}</p>
           </div>
-          <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', {
-            emerald: 'bg-emerald-500/20 text-emerald-600',
-            amber: 'bg-amber-500/20 text-amber-600',
-            sky: 'bg-sky-500/20 text-sky-600',
-            slate: 'bg-slate-500/20 text-slate-600',
-            rose: 'bg-rose-500/20 text-rose-600',
+          <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm ring-4', {
+            emerald: 'bg-emerald-600 shadow-emerald-100 ring-emerald-100',
+            amber:   'bg-amber-500 shadow-amber-100 ring-amber-100',
+            sky:     'bg-sky-500 shadow-sky-100 ring-sky-100',
+            slate:   'bg-slate-500 shadow-slate-100 ring-slate-100',
+            rose:    'bg-rose-600 shadow-rose-100 ring-rose-100',
           }[tone])}>
             <Icon className="h-5 w-5" />
           </div>

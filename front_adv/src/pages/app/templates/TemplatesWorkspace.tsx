@@ -3,7 +3,7 @@ import { FileText, Plus, Search, Pencil, Trash2, Copy, Download, Loader2, Histor
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SignatureRequestDialog } from '@/components/documents/SignatureRequestDialog';
-import { Card, CardContent } from '@/components/ui/card';
+import { StatCard } from '@/components/shared/StatCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -492,22 +492,10 @@ export default function TemplatesWorkspace() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><FileText className="h-5 w-5" /></div>
-          <div><p className="text-2xl font-semibold leading-none">{totalCount}</p><p className="mt-1 text-sm font-medium text-foreground/80">Total de modelos</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600"><Tag className="h-5 w-5" /></div>
-          <div><p className="text-2xl font-semibold leading-none">{new Set(templates.map((t: any) => t.category)).size}</p><p className="mt-1 text-sm font-medium text-foreground/80">Categorias ativas</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600"><LayoutList className="h-5 w-5" /></div>
-          <div><p className="text-2xl font-semibold leading-none">{templates.filter((t: any) => t.format === 'RICH_TEXT').length}</p><p className="mt-1 text-sm font-medium text-foreground/80">Rich text</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-500/10 text-slate-600"><AlignLeft className="h-5 w-5" /></div>
-          <div><p className="text-2xl font-semibold leading-none">{templates.filter((t: any) => t.format === 'PLAIN_TEXT').length}</p><p className="mt-1 text-sm font-medium text-foreground/80">Texto simples</p></div>
-        </CardContent></Card>
+        <StatCard label="Total de modelos" value={totalCount} icon={FileText} color="indigo" />
+        <StatCard label="Categorias ativas" value={new Set(templates.map((t: any) => t.category)).size} icon={Tag} color="emerald" />
+        <StatCard label="Rich text" value={templates.filter((t: any) => t.format === 'RICH_TEXT').length} icon={LayoutList} color="sky" />
+        <StatCard label="Texto simples" value={templates.filter((t: any) => t.format === 'PLAIN_TEXT').length} icon={AlignLeft} color="slate" />
       </div>
 
       {/* Filters */}

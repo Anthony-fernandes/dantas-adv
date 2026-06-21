@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/shared/StatCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -625,24 +626,10 @@ export default function HonorariosWorkspace() {
 
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          { label: 'Total contratado', value: fmt(totalContratado), icon: Wallet, iconClass: 'bg-primary/10 text-primary', tone: '' },
-          { label: 'Recebido', value: fmt(totalRecebido), icon: CheckCircle2, iconClass: 'bg-emerald-500/10 text-emerald-600', tone: 'text-emerald-600' },
-          { label: 'A receber', value: fmt(totalAberto), icon: DollarSign, iconClass: 'bg-blue-500/10 text-blue-600', tone: '' },
-          { label: 'Vencidos', value: fmt(totalVencido), icon: AlertTriangle, iconClass: totalVencido > 0 ? 'bg-rose-500/10 text-rose-600' : 'bg-slate-500/10 text-slate-500', tone: totalVencido > 0 ? 'text-rose-600' : '' },
-        ].map((kpi) => (
-          <Card key={kpi.label}>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', kpi.iconClass)}>
-                <kpi.icon className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                {isLoading ? <Skeleton className="h-7 w-28" /> : <p className={cn('text-2xl font-semibold leading-none', kpi.tone)}>{kpi.value}</p>}
-                <p className="mt-1 text-sm font-medium text-foreground/80">{kpi.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <StatCard label="Total contratado" value={fmt(totalContratado)} icon={Wallet} color="indigo" />
+        <StatCard label="Recebido" value={fmt(totalRecebido)} icon={CheckCircle2} color="emerald" />
+        <StatCard label="A receber" value={fmt(totalAberto)} icon={DollarSign} color="sky" />
+        <StatCard label="Vencidos" value={fmt(totalVencido)} icon={AlertTriangle} color={totalVencido > 0 ? 'rose' : 'slate'} />
       </div>
 
       {/* Filters */}

@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 
 import { EmptyState } from '@/components/shared/EmptyState';
+import { StatCard } from '@/components/shared/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -936,46 +937,10 @@ export default function ClientsWorkspace() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-start gap-4 p-5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Users className="h-5 w-5" /></div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total da carteira</p>
-              <p className="text-2xl font-bold text-foreground">{formatCount(stats.total)}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">Clientes PF e PJ consolidados para operação jurídica.</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-start gap-4 p-5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600"><UserCheck className="h-5 w-5" /></div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Clientes ativos</p>
-              <p className="text-2xl font-bold text-foreground">{formatCount(stats.active)}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">Carteira atualmente em acompanhamento ativo.</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-start gap-4 p-5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600"><FolderOpen className="h-5 w-5" /></div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Com processo ativo</p>
-              <p className="text-2xl font-bold text-foreground">{formatCount(stats.withActiveProcess)}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">Clientes com demanda jurídica em andamento.</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-start gap-4 p-5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><AlertTriangle className="h-5 w-5" /></div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Portal e inadimplência</p>
-              <p className="text-2xl font-bold text-foreground">{formatCount(stats.withPortal)}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">Portal ativo · <span className="text-destructive font-medium">{formatCount(stats.inadimplentes)} inadimplentes</span></p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard label="Total da carteira" value={formatCount(stats.total)} description="Clientes PF e PJ consolidados." icon={Users} color="indigo" />
+        <StatCard label="Clientes ativos" value={formatCount(stats.active)} description="Em acompanhamento ativo." icon={UserCheck} color="emerald" />
+        <StatCard label="Com processo ativo" value={formatCount(stats.withActiveProcess)} description="Com demanda jurídica em andamento." icon={FolderOpen} color="sky" />
+        <StatCard label="Portal e inadimplência" value={formatCount(stats.withPortal)} description={`${formatCount(stats.inadimplentes)} inadimplentes`} icon={AlertTriangle} color="amber" />
       </div>
 
       <Card className="shadow-card">

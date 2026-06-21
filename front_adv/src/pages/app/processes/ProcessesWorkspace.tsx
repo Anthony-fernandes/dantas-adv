@@ -37,6 +37,7 @@ import {
 } from '@/services/workspaceState';
 import { invalidateProcessRelatedQueries } from '@/services/processQueryInvalidation';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { StatCard } from '@/components/shared/StatCard';
 import { ProcessEditModal } from '@/components/processes/ProcessEditModal';
 import type { ProcessFormValues } from '@/components/processes/ProcessValidation';
 import { probExitoVariant, processStatusVariant, StatusBadge } from '@/components/shared/status-badges';
@@ -642,11 +643,11 @@ export default function ProcessesWorkspace() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <ProcessStatCard title="Total de processos" value={formatCount(stats.total)} description="Carteira completa cadastrada no sistema." icon={Scale} color="primary" />
-        <ProcessStatCard title="Processos ativos" value={formatCount(stats.active)} description="Casos em andamento ou em fase pre-processual." icon={FolderKanban} color="emerald" />
-        <ProcessStatCard title="Encerrados" value={formatCount(stats.closed)} description="Encerrados ou arquivados para consulta." icon={Gavel} color="slate" />
-        <ProcessStatCard title="Prazos hoje" value={formatCount(stats.dueToday)} description="Demandas que exigem atenção imediata." icon={AlertTriangle} color="amber" />
-        <ProcessStatCard title="Audiências próximas" value={formatCount(stats.upcomingHearings)} description="Processos com audiência hoje ou nos próximos 7 dias." icon={CalendarClock} color="blue" />
+        <StatCard label="Total de processos" value={formatCount(stats.total)} description="Carteira completa cadastrada." icon={Scale} color="indigo" />
+        <StatCard label="Processos ativos" value={formatCount(stats.active)} description="Em andamento ou pré-processual." icon={FolderKanban} color="emerald" />
+        <StatCard label="Encerrados" value={formatCount(stats.closed)} description="Arquivados para consulta." icon={Gavel} color="slate" />
+        <StatCard label="Prazos hoje" value={formatCount(stats.dueToday)} description="Exigem atenção imediata." icon={AlertTriangle} color="amber" />
+        <StatCard label="Audiências próximas" value={formatCount(stats.upcomingHearings)} description="Próximos 7 dias." icon={CalendarClock} color="sky" />
       </div>
 
       <Card className="overflow-hidden border-border/60 shadow-card">
@@ -1031,41 +1032,6 @@ export default function ProcessesWorkspace() {
   );
 }
 
-function ProcessStatCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-  color = 'primary',
-}: {
-  title: string;
-  value: string;
-  description: string;
-  icon: React.ElementType;
-  color?: 'primary' | 'emerald' | 'slate' | 'amber' | 'blue';
-}) {
-  const colorMap: Record<string, string> = {
-    primary: 'bg-primary/10 text-primary',
-    emerald: 'bg-emerald-500/10 text-emerald-600',
-    slate: 'bg-slate-500/10 text-slate-600',
-    amber: 'bg-amber-500/10 text-amber-600',
-    blue: 'bg-blue-500/10 text-blue-600',
-  };
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', colorMap[color])}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-2xl font-semibold leading-none text-foreground">{value}</p>
-          <p className="mt-1 text-sm font-medium text-foreground/80">{title}</p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{description}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function ProcessTableRow({
   row,

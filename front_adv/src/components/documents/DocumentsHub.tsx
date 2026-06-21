@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { StatCard } from '@/components/shared/StatCard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -497,22 +498,10 @@ export function DocumentsHub({
             </CardHeader>
             <CardContent className="space-y-5 pt-6">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <div className="flex items-center gap-4 rounded-xl border border-border/60 bg-card p-5 shadow-card">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><FileText className="h-5 w-5" /></div>
-                  <div><p className="text-2xl font-semibold leading-none">{groups.length}</p><p className="mt-1 text-sm font-medium text-foreground/80">Documentos</p></div>
-                </div>
-                <div className="flex items-center gap-4 rounded-xl border border-border/60 bg-card p-5 shadow-card">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600"><GitBranch className="h-5 w-5" /></div>
-                  <div><p className="text-2xl font-semibold leading-none">{documents.length}</p><p className="mt-1 text-sm font-medium text-foreground/80">Versões</p></div>
-                </div>
-                <div className="flex items-center gap-4 rounded-xl border border-border/60 bg-card p-5 shadow-card">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600"><FolderOpen className="h-5 w-5" /></div>
-                  <div><p className="text-2xl font-semibold leading-none">{linkedProcessCount}</p><p className="mt-1 text-sm font-medium text-foreground/80">Processos ligados</p></div>
-                </div>
-                <div className="flex items-center gap-4 rounded-xl border border-border/60 bg-card p-5 shadow-card">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><Shield className="h-5 w-5" /></div>
-                  <div><p className="text-2xl font-semibold leading-none">{groups.filter((group) => group.latest.access_level === 'ROLES').length}</p><p className="mt-1 text-sm font-medium text-foreground/80">Restritos</p></div>
-                </div>
+                <StatCard label="Documentos" value={groups.length} icon={FileText} color="indigo" />
+                <StatCard label="Versões" value={documents.length} icon={GitBranch} color="sky" />
+                <StatCard label="Processos ligados" value={linkedProcessCount} icon={FolderOpen} color="emerald" />
+                <StatCard label="Restritos" value={groups.filter((group) => group.latest.access_level === 'ROLES').length} icon={Shield} color="amber" />
               </div>
 
               <div className="grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,180px))]">

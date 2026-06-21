@@ -1,68 +1,50 @@
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface StatCardProps {
-  title: string;
+export type StatColor = 'blue' | 'emerald' | 'amber' | 'rose' | 'violet' | 'sky' | 'slate' | 'indigo';
+
+const palette: Record<StatColor, { icon: string; glow: string }> = {
+  blue:    { icon: 'bg-blue-600 text-white',    glow: 'shadow-blue-100 ring-blue-100' },
+  indigo:  { icon: 'bg-indigo-600 text-white',  glow: 'shadow-indigo-100 ring-indigo-100' },
+  emerald: { icon: 'bg-emerald-600 text-white', glow: 'shadow-emerald-100 ring-emerald-100' },
+  amber:   { icon: 'bg-amber-500 text-white',   glow: 'shadow-amber-100 ring-amber-100' },
+  rose:    { icon: 'bg-rose-600 text-white',    glow: 'shadow-rose-100 ring-rose-100' },
+  violet:  { icon: 'bg-violet-600 text-white',  glow: 'shadow-violet-100 ring-violet-100' },
+  sky:     { icon: 'bg-sky-500 text-white',     glow: 'shadow-sky-100 ring-sky-100' },
+  slate:   { icon: 'bg-slate-500 text-white',   glow: 'shadow-slate-100 ring-slate-100' },
+};
+
+type Props = {
+  label: string;
   value: string | number;
-  icon: LucideIcon;
   description?: string;
-  trend?: { value: number; label: string };
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'destructive' | 'info';
-}
-
-const variantStyles: Record<NonNullable<StatCardProps['variant']>, string> = {
-  default: 'text-foreground',
-  primary: 'text-foreground',
-  success: 'text-success',
-  warning: 'text-warning',
-  destructive: 'text-destructive',
-  info: 'text-info',
+  icon: LucideIcon;
+  color?: StatColor;
+  className?: string;
+  onClick?: () => void;
 };
 
-const iconBgStyles: Record<NonNullable<StatCardProps['variant']>, string> = {
-  default: 'border-border bg-muted/45',
-  primary: 'border-border bg-accent/65',
-  success: 'border-success/20 bg-success/10',
-  warning: 'border-warning/20 bg-warning/10',
-  destructive: 'border-destructive/20 bg-destructive/10',
-  info: 'border-info/20 bg-info/10',
-};
-
-export function StatCard({ title, value, icon: Icon, description, trend, variant = 'default' }: StatCardProps) {
-  const trendPrefix = trend ? (trend.value >= 0 ? '+' : '-') : '';
-
+export function StatCard({ label, value, description, icon: Icon, color = 'blue', className, onClick }: Props) {
+  const { icon: iconCls, glow } = palette[color];
   return (
-    <div className="stat-card">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-3">
-          <p className="kpi-label">{title}</p>
-          <p className={cn('font-display text-[2.2rem] font-semibold leading-none', variantStyles[variant])}>
-            {typeof value === 'number' ? value.toLocaleString('pt-BR') : value}
-          </p>
-        </div>
-
-        <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-md border', iconBgStyles[variant])}>
-          <Icon className={cn('h-5 w-5', variantStyles[variant])} />
-        </div>
+    <div
+      className={cn(
+        'flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80 transition-all duration-150',
+        onClick && 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md',
+        className,
+      )}
+      onClick={onClick}
+    >
+      <div className={cn('flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-sm ring-4', iconCls, glow)}>
+        <Icon className="h-5 w-5" />
       </div>
-
-      {description || trend ? (
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px]">
-          {trend ? (
-            <span
-              className={cn(
-                'font-mono-ui font-medium uppercase tracking-[0.12em]',
-                trend.value >= 0 ? 'text-success' : 'text-destructive',
-              )}
-            >
-              {trendPrefix}
-              {Math.abs(trend.value)}%
-              {trend.label ? ` ${trend.label}` : ''}
-            </span>
-          ) : null}
-          {description ? <span className="text-muted-foreground">{description}</span> : null}
-        </div>
-      ) : null}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+        <p className="mt-0.5 text-3xl font-bold leading-none tracking-tight text-slate-800">
+          {typeof value === 'number' ? value.toLocaleString('pt-BR') : value}
+        </p>
+        {description && <p className="mt-1 line-clamp-1 text-xs text-slate-400">{description}</p>}
+      </div>
     </div>
   );
 }

@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { StatCard } from '@/components/shared/StatCard';
 import {
   useDeadlines,
   useCreateDeadline,
@@ -116,49 +117,6 @@ function toInputDate(iso: string) {
   const d = parseDue(iso);
   if (!d) return '';
   return d.toISOString().slice(0, 10);
-}
-
-/* ─── KPI Card ───────────────────────────────────────────────────────── */
-
-function KpiCard({
-  label,
-  value,
-  icon: Icon,
-  tone = 'default',
-  loading,
-}: {
-  label: string;
-  value: number;
-  icon: React.ElementType;
-  tone?: 'default' | 'danger' | 'warning' | 'success';
-  loading?: boolean;
-}) {
-  const toneClass = {
-    default: 'text-foreground',
-    danger: 'text-destructive',
-    warning: 'text-warning',
-    success: 'text-success',
-  }[tone];
-
-  const iconColorMap = {
-    default: 'bg-primary/10 text-primary',
-    danger: 'bg-rose-500/10 text-rose-600',
-    warning: 'bg-amber-500/10 text-amber-600',
-    success: 'bg-emerald-500/10 text-emerald-600',
-  };
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', iconColorMap[tone])}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0">
-          {loading ? <Skeleton className="h-7 w-16" /> : <p className={cn('text-2xl font-semibold leading-none', toneClass)}>{value}</p>}
-          <p className="mt-1 text-sm font-medium text-foreground/80">{label}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
 
 /* ─── Deadline Row ───────────────────────────────────────────────────── */
@@ -564,10 +522,10 @@ export default function DeadlinesWorkspace() {
 
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Vencidos" value={overduePrazos.length} icon={AlertTriangle} tone="danger" loading={isLoading} />
-        <KpiCard label="Vencem hoje" value={todayPrazos.length} icon={Timer} tone={todayPrazos.length > 0 ? 'danger' : 'default'} loading={isLoading} />
-        <KpiCard label="Próximos 7 dias" value={week7.length} icon={Clock} tone={week7.length > 0 ? 'warning' : 'default'} loading={isLoading} />
-        <KpiCard label="Concluídos" value={done.length} icon={CheckCircle2} tone="success" loading={isLoading} />
+        <StatCard label="Vencidos" value={overduePrazos.length} icon={AlertTriangle} color="rose" />
+        <StatCard label="Vencem hoje" value={todayPrazos.length} icon={Timer} color={todayPrazos.length > 0 ? 'rose' : 'slate'} />
+        <StatCard label="Próximos 7 dias" value={week7.length} icon={Clock} color={week7.length > 0 ? 'amber' : 'slate'} />
+        <StatCard label="Concluídos" value={done.length} icon={CheckCircle2} color="emerald" />
       </div>
 
       {/* Filters */}
