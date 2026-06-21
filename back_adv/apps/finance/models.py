@@ -140,3 +140,93 @@ class ReceivableInstallment(models.Model):
             models.Index(fields=['tenant', 'status', 'due_date']),
         ]
         unique_together = [('receivable', 'number')]
+
+
+class NFSe(models.Model):
+    class Status(models.TextChoices):
+        RASCUNHO = 'rascunho', 'Rascunho'
+        EMITIDA = 'emitida', 'Emitida'
+        CANCELADA = 'cancelada', 'Cancelada'
+        ERRO = 'erro', 'Erro'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='nfses')
+    invoice = models.ForeignKey(Invoice, on_delete=models.SET_NULL, null=True, blank=True, related_name='nfses')
+    receivable = models.ForeignKey(AccountsReceivable, on_delete=models.SET_NULL, null=True, blank=True, related_name='nfses')
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True, related_name='nfses')
+    provider = models.CharField(max_length=20, default='nuvemfiscal')
+    external_id = models.CharField(max_length=255, blank=True, null=True)
+    numero_nota = models.CharField(max_length=50, blank=True, null=True)
+    serie = models.CharField(max_length=10, blank=True, null=True)
+    valor_servico = models.DecimalField(max_digits=15, decimal_places=2)
+    descricao_servico = models.TextField()
+    codigo_servico = models.CharField(max_length=20, blank=True, null=True)
+    aliquota_iss = models.DecimalField(max_digits=5, decimal_places=4, null=True, blank=True)
+    competencia = models.DateField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.RASCUNHO)
+    pdf_url = models.URLField(blank=True, null=True)
+    xml_url = models.URLField(blank=True, null=True)
+    error_message = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='nfses_created')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['tenant', 'status', 'created_at']),
+            models.Index(fields=['tenant', 'competencia']),
+        ]
+
+
+class PlanoContas(models.Model):
+    TIPO = [
+        ('ativo', 'Ativo'),
+        ('passivo', 'Passivo'),
+        ('receita', 'Receita'),
+        ('despesa', 'Despesa'),
+        ('patrimonio', 'Patrimônio'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='plano_contas')
+    codigo = models.CharField(max_length=20)
+    nome = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPO)
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='filhos')
+    is_synthetic = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('tenant', 'codigo')]
+        ordering = ['codigo']
+
+
+class LancamentoContabil(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='lancamentos_contabeis')
+    data = models.DateField()
+    historico = models.TextField()
+    receivable = models.ForeignKey(AccountsReceivable, on_delete=models.SET_NULL, null=True, blank=True, related_name='lancamentos')
+    payable = models.ForeignKey(AccountsPayable, on_delete=models.SET_NULL, null=True, blank=True, related_name='lancamentos')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='lancamentos_created')
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-data', '-created_at']
+        indexes = [
+            models.Index(fields=['tenant', 'data']),
+        ]
+
+
+class LancamentoLinha(models.Model):
+    NATUREZA = [('debito', 'Débito'), ('credito', 'Crédito')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    lancamento = models.ForeignKey(LancamentoContabil, on_delete=models.CASCADE, related_name='linhas')
+    conta = models.ForeignKey(PlanoContas, on_delete=models.PROTECT, related_name='linhas')
+    natureza = models.CharField(max_length=10, choices=NATUREZA)
+    valor = models.DecimalField(max_digits=15, decimal_places=2)

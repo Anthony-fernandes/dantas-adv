@@ -13,7 +13,7 @@ from apps.core.viewsets import TenantScopedModelViewSet
 from apps.accounts.models import UserRole
 from django.core.files.base import ContentFile
 
-from .models import Document, Contract, JobPosition, LegalTemplate, ProcessRichDocument, TemplateFormat
+from .models import Document, Contract, JobPosition, LegalTemplate, ProcessRichDocument, TemplateFormat, SignatureRequest
 from .services import RenderContext, build_template_context, render_rich_text, htmlish_to_pdf_bytes
 
 
@@ -473,5 +473,165 @@ class ProcessRichDocumentViewSet(TenantScopedModelViewSet):
             return Response({'detail': f'Falha ao exportar PDF: {exc}'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class SignatureRequestSignerSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    email = serializers.EmailField()
+    role = serializers.CharField(default='party')
 
 
+class SignatureRequestSerializer(serializers.ModelSerializer):
+    signers = SignatureRequestSignerSerializer(many=True, required=True)
+
+    class Meta:
+        model = SignatureRequest
+        fields = ('id', 'document', 'provider', 'deadline', 'status', 'signing_url', 'external_id', 'signers', 'created_at')
+        read_only_fields = ('id', 'status', 'signing_url', 'external_id', 'created_at')
+
+    def create(self, validated_data):
+        signers = validated_data.pop('signers')
+        return SignatureRequest.objects.create(
+            **validated_data,
+            signers=signers,
+            status=SignatureRequest.Status.PENDING,
+        )
+
+
+class SignatureRequestViewSet(TenantScopedModelViewSet):
+    serializer_class = SignatureRequestSerializer
+    permission_classes = [IsTenantMember]
+    filterset_fields = ['document', 'status', 'provider']
+    http_method_names = ['get', 'post', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        return SignatureRequest.objects.filter(tenant=self.request.tenant)
+
+    def _get_clicksign_service(self):
+        from .integrations.clicksign import ClicksignService
+        tenant_settings = self.request.tenant.settings or {}
+        api_key = tenant_settings.get('clicksign_api_key', '')
+        base_url = tenant_settings.get('clicksign_base_url', 'https://sandbox.clicksign.com/api/v1')
+        return ClicksignService(api_key=api_key, base_url=base_url)
+
+    def _get_d4sign_service(self):
+        from .integrations.d4sign import D4SignService
+        tenant_settings = self.request.tenant.settings or {}
+        return D4SignService(
+            token_api=tenant_settings.get('d4sign_token', ''),
+            crypt_key=tenant_settings.get('d4sign_crypt_key', ''),
+        )
+
+    def perform_create(self, serializer):
+        tenant = self.request.tenant
+        tenant_settings = tenant.settings or {}
+        provider = tenant_settings.get('signature_provider', 'internal')
+
+        instance = serializer.save(
+            tenant=tenant,
+            created_by=self.request.user,
+            provider=provider,
+        )
+
+        if provider == 'clicksign':
+            try:
+                svc = self._get_clicksign_service()
+                pdf_bytes = htmlish_to_pdf_bytes(
+                    title=instance.document.title,
+                    rendered=instance.document.content_html,
+                )
+                doc_result = svc.create_document(pdf_bytes, f"{instance.document.title}.pdf")
+                doc_key = doc_result['external_id']
+                for signer in instance.signers:
+                    svc.add_signer(doc_key, signer['name'], signer['email'], signer.get('role', 'party'))
+                svc.finalize_list(doc_key)
+                instance.external_id = doc_key
+                instance.signing_url = doc_result.get('signing_url')
+                instance.status = SignatureRequest.Status.SENT
+                instance.save(update_fields=['external_id', 'signing_url', 'status'])
+            except Exception as exc:
+                instance.status = SignatureRequest.Status.PENDING
+                instance.save(update_fields=['status'])
+                raise serializers.ValidationError({'detail': f'Clicksign error: {exc}'})
+
+        elif provider == 'd4sign':
+            try:
+                svc = self._get_d4sign_service()
+                safe_uuid = tenant_settings.get('d4sign_safe_uuid', '')
+                pdf_bytes = htmlish_to_pdf_bytes(
+                    title=instance.document.title,
+                    rendered=instance.document.content_html,
+                )
+                up_result = svc.upload_document(pdf_bytes, f"{instance.document.title}.pdf", safe_uuid)
+                doc_uuid = up_result['external_id']
+                for signer in instance.signers:
+                    svc.add_signer(doc_uuid, signer['email'], signer['name'])
+                send_result = svc.send_to_signers(doc_uuid)
+                instance.external_id = doc_uuid
+                instance.signing_url = send_result.get('signing_url')
+                instance.status = SignatureRequest.Status.SENT
+                instance.save(update_fields=['external_id', 'signing_url', 'status'])
+            except Exception as exc:
+                instance.status = SignatureRequest.Status.PENDING
+                instance.save(update_fields=['status'])
+                raise serializers.ValidationError({'detail': f'D4Sign error: {exc}'})
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(
+            {
+                'id': str(serializer.instance.id),
+                'status': serializer.instance.status,
+                'message': f'Solicitação enviada para {len(serializer.instance.signers)} signatário(s) via {serializer.instance.provider}.',
+                'signing_url': serializer.instance.signing_url,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=['post'], url_path='cancel')
+    def cancel(self, request, pk=None):
+        instance = self.get_object()
+        if instance.status == SignatureRequest.Status.CANCELLED:
+            return Response({'detail': 'Solicitação já cancelada.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if instance.provider == 'clicksign' and instance.external_id:
+            try:
+                svc = self._get_clicksign_service()
+                svc.cancel_document(instance.external_id)
+            except Exception as exc:
+                return Response({'detail': f'Erro ao cancelar no Clicksign: {exc}'}, status=status.HTTP_502_BAD_GATEWAY)
+
+        instance.status = SignatureRequest.Status.CANCELLED
+        instance.save(update_fields=['status'])
+        return Response({'id': str(instance.id), 'status': instance.status})
+
+    @action(detail=False, methods=['post'], url_path='webhook/clicksign', permission_classes=[])
+    def webhook_clicksign(self, request):
+        payload = request.data
+        event = payload.get('event', {})
+        doc_key = (payload.get('document') or {}).get('key') or event.get('document_key')
+        if not doc_key:
+            return Response({'detail': 'missing document key'}, status=status.HTTP_400_BAD_REQUEST)
+
+        qs = SignatureRequest.objects.filter(external_id=doc_key)
+        event_name = event.get('name', '')
+        if 'finish' in event_name or 'signed' in event_name:
+            qs.update(status=SignatureRequest.Status.COMPLETED)
+        elif 'cancel' in event_name:
+            qs.update(status=SignatureRequest.Status.CANCELLED)
+        return Response({'received': True})
+
+    @action(detail=False, methods=['post'], url_path='webhook/d4sign', permission_classes=[])
+    def webhook_d4sign(self, request):
+        payload = request.data
+        doc_uuid = payload.get('uuid') or payload.get('uuidDoc')
+        if not doc_uuid:
+            return Response({'detail': 'missing uuid'}, status=status.HTTP_400_BAD_REQUEST)
+
+        type_post = str(payload.get('type_post', ''))
+        qs = SignatureRequest.objects.filter(external_id=doc_uuid)
+        if type_post == '2':
+            qs.update(status=SignatureRequest.Status.COMPLETED)
+        elif type_post == '4':
+            qs.update(status=SignatureRequest.Status.CANCELLED)
+        return Response({'received': True})

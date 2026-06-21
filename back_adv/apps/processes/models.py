@@ -236,3 +236,30 @@ class DeadlineAlert(models.Model):
 
     def __str__(self) -> str:
         return f"{self.deadline_id} @ {self.window_hours}h"
+
+
+class TribunalSync(models.Model):
+    class Provider(models.TextChoices):
+        PJE = 'pje', 'PJe'
+        ESAJ = 'esaj', 'e-SAJ'
+        PROJUDI = 'projudi', 'Projudi'
+        MANUAL = 'manual', 'Manual'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='tribunal_syncs')
+    process = models.ForeignKey(Process, on_delete=models.CASCADE, related_name='tribunal_syncs')
+    provider = models.CharField(max_length=20, choices=Provider.choices)
+    external_process_number = models.CharField(max_length=50)
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    sync_status = models.CharField(max_length=20, default='pending')
+    error_message = models.TextField(blank=True, null=True)
+    raw_response = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['tenant', 'process']),
+            models.Index(fields=['tenant', 'sync_status']),
+        ]

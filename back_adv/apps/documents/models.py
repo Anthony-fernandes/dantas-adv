@@ -257,3 +257,27 @@ class JobPosition(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class SignatureRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        SENT = 'sent', 'Sent'
+        COMPLETED = 'completed', 'Completed'
+        CANCELLED = 'cancelled', 'Cancelled'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey('core.Tenant', on_delete=models.CASCADE, related_name='signature_requests')
+    document = models.ForeignKey(ProcessRichDocument, on_delete=models.CASCADE, related_name='signature_requests')
+    provider = models.CharField(max_length=30, default='internal')
+    deadline = models.DateField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    signing_url = models.URLField(blank=True, null=True)
+    external_id = models.CharField(max_length=255, blank=True, null=True)
+    signers = models.JSONField(default=list)
+    created_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, related_name='created_signature_requests')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']

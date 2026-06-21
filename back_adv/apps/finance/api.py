@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from django.http import HttpResponse
 from django.utils import timezone
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -399,3 +399,233 @@ class FinanceReportView(APIView):
         resp = HttpResponse(out.getvalue(), content_type='text/csv; charset=utf-8')
         resp['Content-Disposition'] = f'attachment; filename="{filename}"'
         return resp
+
+
+from decimal import Decimal as _Decimal
+from django.db.models import Sum
+from .models import NFSe, PlanoContas, LancamentoContabil, LancamentoLinha
+from apps.core.viewsets import TenantScopedModelViewSet
+
+
+class NFSeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NFSe
+        fields = '__all__'
+        read_only_fields = ('id', 'tenant', 'created_by', 'created_at', 'updated_at', 'external_id',
+                            'numero_nota', 'serie', 'pdf_url', 'xml_url', 'error_message')
+
+
+class NFSeViewSet(TenantScopedModelViewSet):
+    serializer_class = NFSeSerializer
+    permission_classes = [IsTenantMember, IsFinance]
+    filterset_fields = ['status', 'provider', 'client', 'invoice', 'receivable']
+    ordering_fields = ['created_at', 'competencia', 'valor_servico']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        return NFSe.objects.filter(tenant=self.request.tenant).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(tenant=self.request.tenant, created_by=self.request.user)
+
+    def _get_nuvemfiscal_service(self):
+        from .integrations.nuvemfiscal import NuvemFiscalService
+        ts = self.request.tenant.settings or {}
+        return NuvemFiscalService(
+            client_id=ts.get('nuvemfiscal_client_id', ''),
+            client_secret=ts.get('nuvemfiscal_client_secret', ''),
+        )
+
+    @action(detail=True, methods=['post'], url_path='emitir')
+    def emitir(self, request, pk=None):
+        instance = self.get_object()
+        if instance.status == NFSe.Status.EMITIDA:
+            return Response({'detail': 'Nota já emitida.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            svc = self._get_nuvemfiscal_service()
+            data = {
+                "ambiente": "homologacao",
+                "referencia": str(instance.id),
+                "prestador": {"cpf_cnpj": (request.tenant.settings or {}).get('cnpj', '')},
+                "servico": {
+                    "discriminacao": instance.descricao_servico,
+                    "valor_servicos": float(instance.valor_servico),
+                    "codigo_tributacao_municipio": instance.codigo_servico or '',
+                    "aliquota": float(instance.aliquota_iss or 0),
+                },
+                "competencia": instance.competencia.isoformat(),
+            }
+            result = svc.emitir_nfse(data)
+            instance.external_id = result.get('external_id')
+            instance.numero_nota = result.get('numero_nota')
+            instance.serie = result.get('serie')
+            instance.pdf_url = result.get('pdf_url')
+            instance.xml_url = result.get('xml_url')
+            instance.status = NFSe.Status.EMITIDA
+            instance.error_message = None
+            instance.save(update_fields=['external_id', 'numero_nota', 'serie', 'pdf_url', 'xml_url', 'status', 'error_message'])
+        except Exception as exc:
+            instance.status = NFSe.Status.ERRO
+            instance.error_message = str(exc)
+            instance.save(update_fields=['status', 'error_message'])
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response(NFSeSerializer(instance).data)
+
+    @action(detail=True, methods=['post'], url_path='cancelar')
+    def cancelar(self, request, pk=None):
+        instance = self.get_object()
+        if instance.status == NFSe.Status.CANCELADA:
+            return Response({'detail': 'Nota já cancelada.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if instance.external_id:
+            try:
+                svc = self._get_nuvemfiscal_service()
+                svc.cancelar_nfse(instance.external_id)
+            except Exception as exc:
+                return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        instance.status = NFSe.Status.CANCELADA
+        instance.save(update_fields=['status'])
+        return Response(NFSeSerializer(instance).data)
+
+
+class PlanoContasSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlanoContas
+        fields = '__all__'
+        read_only_fields = ('id', 'tenant', 'created_at')
+
+
+class PlanoContasViewSet(TenantScopedModelViewSet):
+    serializer_class = PlanoContasSerializer
+    permission_classes = [IsTenantMember, IsFinance]
+    filterset_fields = ['tipo', 'parent', 'is_synthetic']
+    search_fields = ['codigo', 'nome']
+    ordering_fields = ['codigo', 'nome', 'tipo']
+
+    def get_queryset(self):
+        return PlanoContas.objects.filter(tenant=self.request.tenant, deleted_at__isnull=True).order_by('codigo')
+
+    def perform_create(self, serializer):
+        serializer.save(tenant=self.request.tenant)
+
+
+class LancamentoLinhaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LancamentoLinha
+        fields = ('id', 'conta', 'natureza', 'valor')
+
+
+class LancamentoContabilSerializer(serializers.ModelSerializer):
+    linhas = LancamentoLinhaSerializer(many=True, required=True)
+
+    class Meta:
+        model = LancamentoContabil
+        fields = '__all__'
+        read_only_fields = ('id', 'tenant', 'created_by', 'created_at', 'updated_at')
+
+    def validate_linhas(self, value):
+        if not value:
+            raise serializers.ValidationError('Informe ao menos uma linha.')
+        debitos = sum(l['valor'] for l in value if l['natureza'] == 'debito')
+        creditos = sum(l['valor'] for l in value if l['natureza'] == 'credito')
+        if debitos != creditos:
+            raise serializers.ValidationError(f'Débitos ({debitos}) devem ser iguais a créditos ({creditos}).')
+        return value
+
+    def create(self, validated_data):
+        linhas_data = validated_data.pop('linhas')
+        lancamento = LancamentoContabil.objects.create(**validated_data)
+        for linha in linhas_data:
+            LancamentoLinha.objects.create(lancamento=lancamento, **linha)
+        return lancamento
+
+    def update(self, instance, validated_data):
+        linhas_data = validated_data.pop('linhas', None)
+        for attr, val in validated_data.items():
+            setattr(instance, attr, val)
+        instance.save()
+        if linhas_data is not None:
+            instance.linhas.all().delete()
+            for linha in linhas_data:
+                LancamentoLinha.objects.create(lancamento=instance, **linha)
+        return instance
+
+
+class LancamentoContabilViewSet(TenantScopedModelViewSet):
+    serializer_class = LancamentoContabilSerializer
+    permission_classes = [IsTenantMember, IsFinance]
+    filterset_fields = ['receivable', 'payable', 'created_by']
+    search_fields = ['historico']
+    ordering_fields = ['data', 'created_at']
+
+    def get_queryset(self):
+        qs = LancamentoContabil.objects.filter(
+            tenant=self.request.tenant, deleted_at__isnull=True
+        ).prefetch_related('linhas__conta').order_by('-data', '-created_at')
+
+        data_inicio = self.request.query_params.get('data_inicio')
+        data_fim = self.request.query_params.get('data_fim')
+        if data_inicio:
+            qs = qs.filter(data__gte=data_inicio)
+        if data_fim:
+            qs = qs.filter(data__lte=data_fim)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(tenant=self.request.tenant, created_by=self.request.user)
+
+    @action(detail=False, methods=['get'], url_path='dre')
+    def dre(self, request):
+        tenant = request.tenant
+        data_inicio = request.query_params.get('data_inicio')
+        data_fim = request.query_params.get('data_fim')
+
+        qs = LancamentoLinha.objects.filter(
+            lancamento__tenant=tenant,
+            lancamento__deleted_at__isnull=True,
+            conta__tipo__in=['receita', 'despesa'],
+        )
+        if data_inicio:
+            qs = qs.filter(lancamento__data__gte=data_inicio)
+        if data_fim:
+            qs = qs.filter(lancamento__data__lte=data_fim)
+
+        receitas = []
+        despesas = []
+
+        contas_receita = PlanoContas.objects.filter(tenant=tenant, tipo='receita', deleted_at__isnull=True)
+        contas_despesa = PlanoContas.objects.filter(tenant=tenant, tipo='despesa', deleted_at__isnull=True)
+
+        total_receitas = _Decimal('0')
+        total_despesas = _Decimal('0')
+
+        for conta in contas_receita:
+            linhas = qs.filter(conta=conta)
+            creditos = linhas.filter(natureza='credito').aggregate(s=Sum('valor'))['s'] or _Decimal('0')
+            debitos = linhas.filter(natureza='debito').aggregate(s=Sum('valor'))['s'] or _Decimal('0')
+            valor = creditos - debitos
+            if valor != 0:
+                receitas.append({'conta': conta.codigo, 'nome': conta.nome, 'valor': str(valor)})
+                total_receitas += valor
+
+        for conta in contas_despesa:
+            linhas = qs.filter(conta=conta)
+            debitos = linhas.filter(natureza='debito').aggregate(s=Sum('valor'))['s'] or _Decimal('0')
+            creditos = linhas.filter(natureza='credito').aggregate(s=Sum('valor'))['s'] or _Decimal('0')
+            valor = debitos - creditos
+            if valor != 0:
+                despesas.append({'conta': conta.codigo, 'nome': conta.nome, 'valor': str(valor)})
+                total_despesas += valor
+
+        resultado = total_receitas - total_despesas
+        return Response({
+            'periodo': {'data_inicio': data_inicio, 'data_fim': data_fim},
+            'receitas': receitas,
+            'total_receitas': str(total_receitas),
+            'despesas': despesas,
+            'total_despesas': str(total_despesas),
+            'resultado': str(resultado),
+        })

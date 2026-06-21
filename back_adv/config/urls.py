@@ -66,17 +66,20 @@ from apps.core.portal_api import (
     PortalTimelineView,
 )
 from apps.core.workspace_state_api import WorkspaceStateRecordView, WorkspaceStateView
-from apps.documents.api import ContractViewSet, DocumentViewSet, JobPositionViewSet, ProcessRichDocumentViewSet
+from apps.documents.api import ContractViewSet, DocumentViewSet, JobPositionViewSet, ProcessRichDocumentViewSet, SignatureRequestViewSet
 from apps.finance.api import (
     AccountsPayableViewSet,
     AccountsReceivableViewSet,
     FinanceReportView,
     InvoiceViewSet,
+    NFSeViewSet,
     PaymentViewSet,
+    PlanoContasViewSet,
+    LancamentoContabilViewSet,
     ReceivableInstallmentViewSet,
 )
 from apps.notifications.api import NotificationViewSet
-from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessViewSet
+from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessViewSet, TribunalSyncViewSet
 
 
 class EmailOrUsernameTokenView(TokenObtainPairView):
@@ -100,6 +103,11 @@ router.register(r"accounts-payable", AccountsPayableViewSet, basename="accountsp
 router.register(r"invoices", InvoiceViewSet, basename="invoice")
 router.register(r"payments", PaymentViewSet, basename="payment")
 router.register(r"notifications", NotificationViewSet, basename="notification")
+router.register(r"signature-requests", SignatureRequestViewSet, basename="signature-request")
+router.register(r"nfse", NFSeViewSet, basename="nfse")
+router.register(r"plano-contas", PlanoContasViewSet, basename="plano-contas")
+router.register(r"lancamentos", LancamentoContabilViewSet, basename="lancamento")
+router.register(r"tribunal-syncs", TribunalSyncViewSet, basename="tribunal-sync")
 router.register(r"documents", DocumentViewSet, basename="document")
 router.register(r"editor-documents", ProcessRichDocumentViewSet, basename="editor-document")
 router.register(r"contracts", ContractViewSet, basename="contract")

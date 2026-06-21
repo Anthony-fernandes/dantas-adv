@@ -10,7 +10,7 @@ from apps.core.viewsets import TenantAuditedModelViewSet
 from apps.core.models import AuditEvent
 from apps.core.services.audit import audit_event
 from apps.accounts.models import UserRole
-from .models import Process, Movement, Deadline, Hearing, LegalCause
+from .models import Process, Movement, Deadline, Hearing, LegalCause, TribunalSync
 from apps.documents.models import Document
 from apps.documents.api import DocumentSerializer, DocumentUploadSerializer
 from apps.billing.limits import assert_can_create_process
@@ -407,3 +407,97 @@ class HearingViewSet(TenantAuditedModelViewSet):
     search_fields = ['type', 'location', 'notes', 'process__cnj', 'process__subject']
     ordering_fields = ['hearing_date', 'created_at', 'status']
     ordering = ['hearing_date']
+
+
+class TribunalSyncSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TribunalSync
+        fields = '__all__'
+        read_only_fields = ('id', 'tenant', 'last_synced_at', 'sync_status', 'error_message', 'raw_response', 'created_at', 'updated_at')
+
+
+class TribunalSyncViewSet(TenantAuditedModelViewSet):
+    serializer_class = TribunalSyncSerializer
+    permission_classes = [IsTenantMember, IsLegal]
+    filterset_fields = ['process', 'provider', 'sync_status']
+    search_fields = ['external_process_number']
+    ordering_fields = ['created_at', 'last_synced_at']
+    ordering = ['-created_at']
+
+    audit_enabled = False
+
+    def get_queryset(self):
+        return TribunalSync.objects.filter(tenant=self.request.tenant).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(tenant=self.request.tenant)
+
+    @action(detail=True, methods=['post'], url_path='sincronizar')
+    def sincronizar(self, request, pk=None):
+        sync = self.get_object()
+        sync.sync_status = 'running'
+        sync.save(update_fields=['sync_status'])
+
+        try:
+            provider = sync.provider
+            tenant_settings = request.tenant.settings or {}
+
+            if provider == TribunalSync.Provider.ESAJ:
+                from .integrations.esaj import eSAJService
+                svc = eSAJService()
+                result = svc.consultar_processo(sync.external_process_number)
+            elif provider == TribunalSync.Provider.PJE:
+                from .integrations.pje import PJeService
+                tribunal_url = tenant_settings.get('pje_tribunal_url', '')
+                if not tribunal_url:
+                    raise ValueError('pje_tribunal_url não configurado nas configurações do tenant.')
+                svc = PJeService()
+                result = svc.consultar_processo(sync.external_process_number, tribunal_url)
+            else:
+                raise ValueError(f'Provider "{provider}" não suporta sincronização automática.')
+
+            movimentos = result.get('movimentos', [])
+            status_tribunal = result.get('status', '')
+
+            existing_descriptions = set(
+                sync.process.movements.values_list('description', flat=True)
+            )
+
+            import datetime
+            new_count = 0
+            for mov in movimentos:
+                if mov.get('descricao') and mov['descricao'] not in existing_descriptions:
+                    try:
+                        data_mov = datetime.date.fromisoformat(mov['data'])
+                    except Exception:
+                        data_mov = datetime.date.today()
+                    Movement.objects.create(
+                        tenant=request.tenant,
+                        process=sync.process,
+                        type='outro',
+                        description=mov['descricao'],
+                        date=data_mov,
+                    )
+                    new_count += 1
+
+            if status_tribunal and sync.process.status != status_tribunal:
+                pass
+
+            from django.utils import timezone as tz
+            sync.last_synced_at = tz.now()
+            sync.sync_status = 'success'
+            sync.raw_response = result
+            sync.error_message = None
+            sync.save(update_fields=['last_synced_at', 'sync_status', 'raw_response', 'error_message'])
+
+            return Response({
+                'sync_status': sync.sync_status,
+                'movimentos_importados': new_count,
+                'status_tribunal': status_tribunal,
+            })
+
+        except Exception as exc:
+            sync.sync_status = 'error'
+            sync.error_message = str(exc)
+            sync.save(update_fields=['sync_status', 'error_message'])
+            return Response({'detail': str(exc), 'sync_status': 'error'}, status=status.HTTP_502_BAD_GATEWAY)
