@@ -213,12 +213,53 @@ export default function ContractsPage() {
       if (editTarget) {
         return api.patch(`/contracts/${editTarget.id}/`, payload);
       }
-      return api.post('/contracts/', payload);
+
+      const contract: any = await api.post('/contracts/', payload);
+
+      // Auto-create accounts receivable for fixed-value contracts
+      const fixedValue = Number(data.fixed_value ?? 0);
+      if (
+        !editTarget &&
+        contract?.id &&
+        data.status === 'vigente' &&
+        (data.type === 'fixo' || data.type === 'retainer' || data.type === 'misto') &&
+        fixedValue > 0
+      ) {
+        const client = clients.find((c) => c.id === data.client);
+        const clientName = client ? clientLabel(client) : 'Cliente';
+        try {
+          await api.post('/financial/receivable/', {
+            client: data.client,
+            amount: fixedValue,
+            due_date: data.start_date,
+            description: `Honorários — ${typeLabel(data.type ?? '')} (${clientName})`,
+            contract: contract.id,
+            status: 'pending',
+          });
+        } catch {
+          // Non-critical: contract was saved, financial entry creation failed silently
+        }
+      }
+
+      return contract;
     },
-    onSuccess: () => {
-      toast.success(editTarget ? 'Contrato atualizado.' : 'Contrato criado.');
+    onSuccess: (_data, variables) => {
+      const isNew = !editTarget;
+      const hasReceivable =
+        isNew &&
+        Number(variables.fixed_value ?? 0) > 0 &&
+        (variables.type === 'fixo' || variables.type === 'retainer' || variables.type === 'misto') &&
+        variables.status === 'vigente';
+      toast.success(
+        editTarget
+          ? 'Contrato atualizado.'
+          : hasReceivable
+          ? 'Contrato criado e conta a receber gerada automaticamente.'
+          : 'Contrato criado.',
+      );
       setDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      if (hasReceivable) queryClient.invalidateQueries({ queryKey: ['financial'] });
     },
     onError: (e: any) => {
       toast.error(e?.message || 'Erro ao salvar contrato.');

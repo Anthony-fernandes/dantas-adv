@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/integrations/api/client';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Timeline } from '@/components/shared/Timeline';
-import { ArrowLeft, Download, FileText, Gavel } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Gavel, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type ProcessDetail = {
@@ -38,6 +39,13 @@ type Doc = {
   download_url?: string | null;
 };
 
+type Movement = {
+  id: string;
+  date: string;
+  description: string;
+  source?: string | null;
+};
+
 type Paginated<T> = { results: T[]; count: number; next: string | null; previous: string | null };
 
 const STATUS_CLASS: Record<string, string> = {
@@ -46,6 +54,38 @@ const STATUS_CLASS: Record<string, string> = {
   ARCHIVED: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/20 dark:text-slate-500',
   SUSPENDED: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400',
 };
+
+function MovementCard({ m }: { m: Movement }) {
+  const [expanded, setExpanded] = useState(false);
+  const long = (m.description?.length ?? 0) > 200;
+  const text = long && !expanded ? m.description.slice(0, 200) + '…' : m.description;
+
+  return (
+    <div className="rounded-xl border border-border bg-card px-4 py-3.5">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted/40">
+          <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-mono-ui text-[11px] font-medium text-muted-foreground">
+            {new Date(m.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+            {m.source && <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[10px]">{m.source}</span>}
+          </p>
+          <p className="mt-1 text-sm text-foreground leading-relaxed">{text}</p>
+          {long && (
+            <button
+              type="button"
+              onClick={() => setExpanded((e) => !e)}
+              className="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              {expanded ? <><ChevronUp className="h-3 w-3" /> Menos</> : <><ChevronDown className="h-3 w-3" /> Mais</>}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function PortalProcessDetail() {
   const { id } = useParams();
@@ -66,6 +106,12 @@ export default function PortalProcessDetail() {
   const { data: docsData, isLoading: loadingDocs } = useQuery({
     queryKey: ['portal-process-docs', processId],
     queryFn: async () => api.get<Paginated<Doc>>(`/portal/processes/${processId}/documents/`),
+    enabled: !!processId,
+  });
+
+  const { data: movementsData, isLoading: loadingMovements } = useQuery({
+    queryKey: ['portal-process-movements', processId],
+    queryFn: async () => api.get<Paginated<Movement>>(`/portal/processes/${processId}/movements/`),
     enabled: !!processId,
   });
 
@@ -136,6 +182,14 @@ export default function PortalProcessDetail() {
       <Tabs defaultValue="timeline">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="timeline">Linha do tempo</TabsTrigger>
+          <TabsTrigger value="movements">
+            Movimentações
+            {(movementsData?.count ?? 0) > 0 && (
+              <span className="ml-1.5 rounded-full bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
+                {movementsData!.count}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="docs">
             Documentos
             {(docsData?.count ?? 0) > 0 && (
@@ -159,6 +213,27 @@ export default function PortalProcessDetail() {
             <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-14 text-center">
               <Gavel className="h-8 w-8 text-muted-foreground/40" />
               <p className="text-sm text-muted-foreground">Nenhum evento disponível ainda.</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="movements" className="mt-4">
+          {loadingMovements ? (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : (movementsData?.results?.length ?? 0) > 0 ? (
+            <div className="space-y-2">
+              {movementsData!.results.map((m) => (
+                <MovementCard key={m.id} m={m} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-14 text-center">
+              <Activity className="h-8 w-8 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">Nenhuma movimentação registrada ainda.</p>
             </div>
           )}
         </TabsContent>
