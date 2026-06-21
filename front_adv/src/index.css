@@ -76,8 +76,8 @@
     --font-mono-ui: 'JetBrains Mono', ui-monospace, monospace;
 
     /* Nimbus gradient + glow */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent, var(--primary))));
-    --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.15), 0 10px 40px -10px hsl(var(--primary) / 0.35);
+    --gradient-primary: linear-gradient(135deg, hsl(220 43% 33%), hsl(220 43% 45%));
+    --shadow-glow: 0 0 0 1px hsl(220 43% 33% / 0.20), 0 4px 16px -4px hsl(220 43% 33% / 0.35);
 
     /* Shadcn sidebar tokens */
     --sidebar: hsl(var(--card));
