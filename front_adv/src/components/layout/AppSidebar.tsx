@@ -5,7 +5,6 @@ import {
   BriefcaseBusiness, UserCog, UserSquare2, Gavel, Globe2, FolderKanban,
   CalendarDays, FileStack, FileSignature, FolderOpen, X, ChevronLeft,
   ChevronRight, BarChart3, Timer, Banknote, CheckSquare, Clock,
-  MessageSquare, Shield, FileText, Settings, LogOut,
   MessageSquare, Shield, FileText, Settings, LogOut, Receipt, BookOpenCheck,
 } from "lucide-react";
 
@@ -53,9 +52,6 @@ const navSections: NavSection[] = [
   {
     title: "Financeiro",
     items: [
-      { label: "Financeiro",  icon: DollarSign, path: "/app/financeiro",  roles: ["OWNER","ADMIN","FINANCE"] },
-      { label: "Honorários",  icon: Banknote,   path: "/app/honorarios",  roles: ["OWNER","ADMIN","FINANCE","LAWYER"] },
-      { label: "Relatórios",  icon: BarChart3,  path: "/app/relatorios",  roles: ["OWNER","ADMIN","FINANCE"] },
       { label: "Financeiro",    icon: DollarSign,    path: "/app/financeiro",    roles: ["OWNER","ADMIN","FINANCE"] },
       { label: "Honorários",    icon: Banknote,      path: "/app/honorarios",    roles: ["OWNER","ADMIN","FINANCE","LAWYER"] },
       { label: "NFS-e",         icon: Receipt,       path: "/app/nfse",          roles: ["OWNER","ADMIN","FINANCE"] },
