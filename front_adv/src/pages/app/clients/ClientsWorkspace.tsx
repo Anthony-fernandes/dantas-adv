@@ -943,12 +943,12 @@ export default function ClientsWorkspace() {
         <StatCard label="Portal e inadimplência" value={formatCount(stats.withPortal)} description={`${formatCount(stats.inadimplentes)} inadimplentes`} icon={AlertTriangle} color="amber" />
       </div>
 
-      <Card className="shadow-card">
-        <CardHeader className="space-y-4">
+      <div className="space-y-4">
+        <div className="space-y-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <CardTitle>Carteira de clientes</CardTitle>
-              <CardDescription>Busque, filtre e acione rapidamente processos, documentos, financeiro e portal.</CardDescription>
+              <h2 className="text-lg font-semibold text-foreground">Carteira de clientes</h2>
+              <p className="text-sm text-muted-foreground">Busque, filtre e acione rapidamente processos, documentos, financeiro e portal.</p>
             </div>
             <div className="flex items-center gap-2 self-start lg:self-auto">
               <Button variant={view === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setView('table')}>
@@ -1030,8 +1030,8 @@ export default function ClientsWorkspace() {
             <Button variant={inadimplenciaOnly ? 'default' : 'outline'} size="sm" onClick={() => setInadimplenciaOnly((current) => !current)}>Inadimplentes</Button>
             <Button variant="ghost" size="sm" onClick={clearFilters}>Limpar filtros</Button>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        </div>
+        <div className="space-y-4">
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map((index) => <div key={index} className="h-20 animate-pulse rounded-xl bg-muted" />)}
@@ -1129,7 +1129,7 @@ export default function ClientsWorkspace() {
               ))}
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border">
+            <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
               <div className="overflow-x-auto pb-2">
                 <Table className="min-w-[1840px] table-fixed">
                   <TableHeader>
@@ -1235,8 +1235,8 @@ export default function ClientsWorkspace() {
               </div>
             </div>
           ) : null}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

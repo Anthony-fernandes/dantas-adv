@@ -650,8 +650,8 @@ export default function ProcessesWorkspace() {
         <StatCard label="Audiências próximas" value={formatCount(stats.upcomingHearings)} description="Próximos 7 dias." icon={CalendarClock} color="sky" />
       </div>
 
-      <Card className="overflow-hidden border-border/60 shadow-card">
-        <CardContent className="space-y-4 p-4">
+      <div className="space-y-4">
+        <div className="space-y-4">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_auto_auto]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -768,8 +768,8 @@ export default function ProcessesWorkspace() {
               <p className="text-xs text-muted-foreground">Filtros combinaveis para localizar o processo certo com rapidez.</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {view === 'table' ? (
         <Card className="overflow-hidden border-border/60 shadow-card">

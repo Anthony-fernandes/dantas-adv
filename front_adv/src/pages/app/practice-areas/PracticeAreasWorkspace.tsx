@@ -650,8 +650,7 @@ export default function PracticeAreasWorkspace() {
         </Button>
       </div>
 
-      <Card className="overflow-hidden border-border/60 shadow-card">
-        <CardContent className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -698,8 +697,7 @@ export default function PracticeAreasWorkspace() {
               <List className="h-4 w-4" />
             </Button>
           </div>
-        </CardContent>
-      </Card>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard

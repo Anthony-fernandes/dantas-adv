@@ -489,14 +489,14 @@ export function DocumentsHub({
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_420px]">
         <div className="space-y-6">
-          <Card className="border-border/70 shadow-sm">
-            <CardHeader className="border-b bg-muted/20">
-              <CardTitle className="text-xl">Central de documentos</CardTitle>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Central de documentos</h2>
               <p className="text-sm text-muted-foreground">
                 Visualize arquivos reais, filtre por processo ou cliente e acompanhe versões sem sair do fluxo jurídico.
               </p>
-            </CardHeader>
-            <CardContent className="space-y-5 pt-6">
+            </div>
+            <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <StatCard label="Documentos" value={groups.length} icon={FileText} color="indigo" />
                 <StatCard label="Versões" value={documents.length} icon={GitBranch} color="sky" />
@@ -615,7 +615,7 @@ export function DocumentsHub({
                     const clientName = getClientName(latest) || 'Sem cliente vinculado';
 
                     return (
-                      <div key={group.key} className="rounded-2xl border bg-background p-4">
+                      <div key={group.key} className="rounded-2xl border bg-card p-4 shadow-sm">
                         <div className="flex items-start justify-between gap-3">
                           <button type="button" className="flex min-w-0 flex-1 items-start gap-3 text-left" onClick={() => setPreviewKey(group.key)}>
                             <div className="rounded-xl bg-primary/10 p-3 text-primary">
@@ -714,8 +714,8 @@ export function DocumentsHub({
                   })}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-6">
