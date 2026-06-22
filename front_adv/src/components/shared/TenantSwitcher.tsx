@@ -34,7 +34,7 @@ export function TenantSwitcher() {
               {getTenantMonogram(active?.name)}
             </span>
             <span className="block min-w-0 truncate text-[13px] font-semibold text-foreground">
-              {active?.name ?? 'Selecionar escritorio'}
+              {active?.name ?? 'Selecionar escritório'}
             </span>
           </span>
           <ChevronsUpDown className="h-4 w-4 opacity-60" />
@@ -43,9 +43,9 @@ export function TenantSwitcher() {
 
       <PopoverContent className="w-[320px] border-border p-0 shadow-elevated" align="start">
         <Command className="rounded-md">
-          <CommandInput placeholder="Buscar escritorio..." />
+          <CommandInput placeholder="Buscar escritório..." />
           <CommandList>
-            <CommandEmpty>Nenhum escritorio encontrado.</CommandEmpty>
+            <CommandEmpty>Nenhum escritório encontrado.</CommandEmpty>
             <CommandGroup heading="Escritorios">
               {tenants.map((tenant) => (
                 <CommandItem

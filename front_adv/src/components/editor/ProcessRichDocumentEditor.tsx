@@ -44,12 +44,12 @@ export function ProcessRichDocumentEditor({ processId, clientId }: { processId: 
   const activeTenantId = getActiveTenantId();
   const editorRef = React.useRef<HTMLDivElement | null>(null);
   const [selectedId, setSelectedId] = React.useState<string>("");
-  const [title, setTitle] = React.useState("Relatorio do Processo");
+  const [title, setTitle] = React.useState("Relatório do Processo");
   const [category, setCategory] = React.useState("relatorio");
   const [status, setStatus] = React.useState<"DRAFT" | "FINAL">("DRAFT");
   const [accessLevel, setAccessLevel] = React.useState<"TENANT" | "ROLES">("TENANT");
   const [allowedRolesText, setAllowedRolesText] = React.useState("");
-  const [contentHtml, setContentHtml] = React.useState("<p>Comece seu relatorio aqui...</p>");
+  const [contentHtml, setContentHtml] = React.useState("<p>Comece seu relatório aqui...</p>");
   const [previewHtml, setPreviewHtml] = React.useState("");
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [isDirty, setIsDirty] = React.useState(false);
@@ -88,7 +88,7 @@ export function ProcessRichDocumentEditor({ processId, clientId }: { processId: 
 
   React.useEffect(() => {
     if (!selectedDoc) return;
-    setTitle(selectedDoc.title || "Relatorio do Processo");
+    setTitle(selectedDoc.title || "Relatório do Processo");
     setCategory(selectedDoc.category || "relatorio");
     setStatus(selectedDoc.status || "DRAFT");
     setAccessLevel(selectedDoc.access_level || "TENANT");
@@ -111,7 +111,7 @@ export function ProcessRichDocumentEditor({ processId, clientId }: { processId: 
       return await editorDocumentService.create({
         process: processId,
         client: clientId || undefined,
-        title: "Novo Relatorio",
+        title: "Novo Relatório",
         category: "relatorio",
         content_html: "<p>Novo documento...</p>",
         status: "DRAFT",
@@ -131,7 +131,7 @@ export function ProcessRichDocumentEditor({ processId, clientId }: { processId: 
     mutationFn: async () => {
       if (!selectedId) return null;
       const payload = {
-        title: title.trim() || "Relatorio do Processo",
+        title: title.trim() || "Relatório do Processo",
         category: category.trim() || "relatorio",
         status,
         access_level: accessLevel,
@@ -162,16 +162,16 @@ export function ProcessRichDocumentEditor({ processId, clientId }: { processId: 
     mutationFn: async () => {
       if (!selectedId) return null;
       return await editorDocumentService.newVersion(selectedId, {
-        title: `${title.trim() || "Relatorio"} v${(selectedDoc?.version ?? 0) + 1}`,
+        title: `${title.trim() || "Relatório"} v${(selectedDoc?.version ?? 0) + 1}`,
         content_html: contentHtml,
       });
     },
     onSuccess: async (created: any) => {
       await queryClient.invalidateQueries({ queryKey: ["editor-documents", activeTenantId, processId] });
       if (created?.id) setSelectedId(created.id);
-      toast.success("Nova versao criada.");
+      toast.success("Nova versão criada.");
     },
-    onError: (e: any) => toast.error(e?.message || "Falha ao criar nova versao."),
+    onError: (e: any) => toast.error(e?.message || "Falha ao criar nova versão."),
   });
 
   const previewMutation = useMutation({
@@ -190,7 +190,7 @@ export function ProcessRichDocumentEditor({ processId, clientId }: { processId: 
     mutationFn: async () => {
       if (!selectedId) return null;
       return await editorDocumentService.exportPdf(selectedId, {
-        title: `${title.trim() || "Relatorio"} Final`,
+        title: `${title.trim() || "Relatório"} Final`,
         category: category.trim() || "relatorio",
       });
     },
@@ -231,7 +231,7 @@ export function ProcessRichDocumentEditor({ processId, clientId }: { processId: 
     <Card className="shadow-card">
       <CardHeader>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <CardTitle>Editor de Relatorios (Word-like)</CardTitle>
+          <CardTitle>Editor de Relatórios (Word-like)</CardTitle>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>
               <FilePlus2 className="mr-2 h-4 w-4" /> Novo
@@ -240,7 +240,7 @@ export function ProcessRichDocumentEditor({ processId, clientId }: { processId: 
               <Save className="mr-2 h-4 w-4" /> Salvar
             </Button>
             <Button variant="outline" size="sm" onClick={() => newVersionMutation.mutate()} disabled={!selectedId || newVersionMutation.isPending}>
-              Nova versao
+              Nova versão
             </Button>
             <Button variant="outline" size="sm" onClick={() => previewMutation.mutate()} disabled={!selectedId || previewMutation.isPending}>
               <Eye className="mr-2 h-4 w-4" /> Preview

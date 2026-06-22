@@ -564,7 +564,7 @@ export default function AdminUsers() {
       ]}
       headerAside={isSuperuser ? (
         <div className="space-y-1">
-          <Label>Escritorio ativo</Label>
+          <Label>Escritório ativo</Label>
           <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={selectedTenantId} onChange={(event) => setSelectedTenantId(event.target.value)} disabled={scopedCompaniesQuery.isLoading}>
             <option value="">{scopedCompaniesQuery.isLoading ? "Carregando escritórios..." : "Selecione o escritório"}</option>
             {companies.map((company) => <option key={company.id} value={company.id}>{company.name || company.id}</option>)}

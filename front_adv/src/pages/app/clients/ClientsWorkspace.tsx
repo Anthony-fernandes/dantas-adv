@@ -832,7 +832,7 @@ export default function ClientsWorkspace() {
                           <Input value={form.street} onChange={(event) => setForm((previous) => ({ ...previous, street: event.target.value }))} />
                         </div>
                         <div className="space-y-2">
-                          <Label>Numero</Label>
+                          <Label>Número</Label>
                           <Input value={form.number} onChange={(event) => setForm((previous) => ({ ...previous, number: event.target.value }))} />
                         </div>
                         <div className="space-y-2 md:col-span-2">
@@ -1145,7 +1145,7 @@ export default function ClientsWorkspace() {
                       <TableHead className="w-[150px] whitespace-nowrap">Financeiro</TableHead>
                       <TableHead className="w-[140px] whitespace-nowrap">Portal</TableHead>
                       <TableHead className="w-[120px] whitespace-nowrap">Status</TableHead>
-                      <TableHead className="sticky right-0 z-20 w-[88px] bg-background text-right whitespace-nowrap">Acoes</TableHead>
+                      <TableHead className="sticky right-0 z-20 w-[88px] bg-background text-right whitespace-nowrap">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

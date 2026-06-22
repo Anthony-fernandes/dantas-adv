@@ -80,8 +80,8 @@ export default function BlogArticle() {
           <CardContent className="p-6">
             <EmptyState
               icon={BookOpenText}
-              title="Artigo nao encontrado"
-              description="Esse conteudo nao esta publicado ou o endereco informado nao existe."
+              title="Artigo não encontrado"
+              description="Esse conteúdo não está publicado ou o endereço informado não existe."
               action={{ label: "Voltar ao site", onClick: () => (window.location.href = "/") }}
             />
           </CardContent>

@@ -535,7 +535,7 @@ export default function LandingBlog() {
       <Card className="border-border/70 shadow-sm">
         <CardHeader className="border-b bg-muted/20">
           <CardTitle>Categorias editoriais</CardTitle>
-          <CardDescription>Organize os artigos por tema juridico para facilitar SEO, filtragem e navegacao publica.</CardDescription>
+          <CardDescription>Organize os artigos por tema jurídico para facilitar SEO, filtragem e navegação pública.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-5">
           {categories.length ? <div className="flex flex-wrap gap-2">{categories.map((category) => <div key={category.slug} className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1.5 text-sm"><span>{category.label}</span><span className="text-xs text-muted-foreground">{category.usageCount} artigo(s)</span></div>)}</div> : <p className="text-sm text-muted-foreground">Ainda nao ha categorias cadastradas. Crie as primeiras para orientar o planejamento editorial do escritorio.</p>}
@@ -564,7 +564,7 @@ export default function LandingBlog() {
                     <TableHead>Categoria</TableHead>
                     <TableHead>Visualizacoes</TableHead>
                     <TableHead>Destaque</TableHead>
-                    <TableHead className="text-right">Acoes</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -577,7 +577,7 @@ export default function LandingBlog() {
                       <TableCell>{formatDateLabel(post.published_at, true)}</TableCell>
                       <TableCell>{post.category_label || "Sem categoria"}</TableCell>
                       <TableCell>{post.view_count_resolved.toLocaleString("pt-BR")}</TableCell>
-                      <TableCell>{post.is_featured_resolved ? "Sim" : "Nao"}</TableCell>
+                      <TableCell>{post.is_featured_resolved ? "Sim" : "Não"}</TableCell>
                       <TableCell><div className="flex justify-end gap-2"><Button variant="outline" size="sm" onClick={() => setPreviewArticle(post)}><Eye className="h-4 w-4" /></Button>{post.slug && post.publication_status === "PUBLICADO" ? <Button variant="outline" size="sm" asChild><a href={`/blog/${post.slug}`} target="_blank" rel="noreferrer"><Globe className="h-4 w-4" /></a></Button> : null}<Button variant="outline" size="sm" onClick={() => openPostDialog(post)} disabled={!canEdit}><Pencil className="h-4 w-4" /></Button><Button variant="outline" size="sm" onClick={() => openDuplicateDraft(post)} disabled={!canEdit}><Copy className="h-4 w-4" /></Button><Button variant="outline" size="sm" onClick={() => rowActionMutation.mutate({ type: post.publication_status === "PUBLICADO" ? "despublicar" : "publicar", post })} disabled={!canEdit || rowActionMutation.isPending}>{post.publication_status === "PUBLICADO" ? "Rascunho" : "Publicar"}</Button><Button variant="ghost" size="sm" onClick={() => rowActionMutation.mutate({ type: "excluir", post })} disabled={!canEdit || rowActionMutation.isPending}><Trash2 className="h-4 w-4" /></Button></div></TableCell>
                     </TableRow>
                   ))}

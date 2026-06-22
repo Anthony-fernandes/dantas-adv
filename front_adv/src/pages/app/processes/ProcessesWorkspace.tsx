@@ -396,7 +396,7 @@ export default function ProcessesWorkspace() {
         { value: 'civel', label: 'Direito Civil' },
         { value: 'trabalhista', label: 'Direito Trabalhista' },
         { value: 'criminal', label: 'Direito Penal' },
-        { value: 'tributario', label: 'Direito Tributario' },
+        { value: 'tributario', label: 'Direito Tributário' },
         { value: 'empresarial', label: 'Direito Empresarial' },
         { value: 'familia', label: 'Direito de Familia' },
       ];
@@ -716,7 +716,7 @@ export default function ProcessesWorkspace() {
             <Select value={responsibleFilter} onValueChange={setResponsibleFilter}>
               <SelectTrigger><SelectValue placeholder="Responsável" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos os responsaveis</SelectItem>
+                <SelectItem value="all">Todos os responsáveis</SelectItem>
                 {responsibleOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                 ))}
@@ -765,7 +765,7 @@ export default function ProcessesWorkspace() {
 
             <div className="rounded-lg border border-dashed border-border/70 px-4 py-3">
               <p className="text-sm font-medium text-foreground">{formatCount(filteredRows.length)} resultados</p>
-              <p className="text-xs text-muted-foreground">Filtros combinaveis para localizar o processo certo com rapidez.</p>
+              <p className="text-xs text-muted-foreground">Filtros combináveis para localizar o processo certo com rapidez.</p>
             </div>
           </div>
         </div>
@@ -796,7 +796,7 @@ export default function ProcessesWorkspace() {
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="w-[220px]">Nº CNJ</TableHead>
                       <TableHead className="w-[200px]">Cliente</TableHead>
-                      <TableHead className="w-[170px]">Parte contraria</TableHead>
+                      <TableHead className="w-[170px]">Parte contrária</TableHead>
                       <TableHead className="w-[180px]">Vara / Tribunal</TableHead>
                       <TableHead className="w-[150px]">Área</TableHead>
                       <TableHead className="w-[150px]">Fase</TableHead>
@@ -804,7 +804,7 @@ export default function ProcessesWorkspace() {
                       <TableHead className="w-[110px] text-right">Valor</TableHead>
                       <TableHead className="w-[120px]">Probabilidade</TableHead>
                       <TableHead className="w-[150px]">Próxima audiência</TableHead>
-                      <TableHead className="w-[150px]">Proximo prazo</TableHead>
+                      <TableHead className="w-[150px]">Próximo prazo</TableHead>
                       <TableHead className="w-[140px]">Status</TableHead>
                       <TableHead className="sticky right-0 z-20 w-[72px] bg-background shadow-[-12px_0_18px_-18px_hsl(var(--foreground)/0.35)]" />
                     </TableRow>
@@ -907,7 +907,7 @@ export default function ProcessesWorkspace() {
             </div>
 
             <div className="space-y-2">
-              <Label>Parte contraria</Label>
+              <Label>Parte contrária</Label>
               <Input value={form.defendant} onChange={(event) => setForm((current) => ({ ...current, defendant: event.target.value }))} />
             </div>
             <div className="space-y-2">
@@ -1190,7 +1190,7 @@ function ProcessCard({
 
         <div className="grid gap-3 sm:grid-cols-2">
           <AlertBlock label="Próxima audiência" value={formatDateTime(row.nextHearing?.hearing_date)} description={row.nextHearing?.type || 'Sem audiência agendada'} tone={row.hearingToday ? 'info' : row.hearingSoon ? 'warning' : 'neutral'} />
-          <AlertBlock label="Proximo prazo" value={formatDateTime(row.nextDeadline?.due_date)} description={row.nextDeadline?.description || 'Sem prazo vinculado'} tone={row.deadlineOverdue ? 'danger' : row.deadlineToday || row.deadlineSoon ? 'warning' : 'neutral'} />
+          <AlertBlock label="Próximo prazo" value={formatDateTime(row.nextDeadline?.due_date)} description={row.nextDeadline?.description || 'Sem prazo vinculado'} tone={row.deadlineOverdue ? 'danger' : row.deadlineToday || row.deadlineSoon ? 'warning' : 'neutral'} />
         </div>
 
         <div className="flex flex-wrap gap-2">

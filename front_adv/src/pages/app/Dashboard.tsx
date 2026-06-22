@@ -914,7 +914,7 @@ export default function Dashboard() {
       onClick: () => navigate("/app/processos"),
     },
     {
-      title: "Prazos no periodo",
+      title: "Prazos no período",
       value: deadlinesInRange.length,
       description: `Pendencias previstas entre ${formatDate(range.start)} e ${formatDate(range.end)}.`,
       icon: Clock3,
@@ -934,12 +934,12 @@ export default function Dashboard() {
       onClick: () => navigate("/app/processos"),
     },
     {
-      title: "Audiencias no periodo",
+      title: "Audiências no período",
       value: hearingsInRange.length,
       description: "Compromissos previstos na janela monitorada.",
       icon: CalendarClock,
       tone: "info" as const,
-      tooltip: "Total de audiencias agendadas no periodo selecionado.",
+      tooltip: "Total de audiências agendadas no período selecionado.",
       comparison: buildComparison(hearingsInRange.length, previousHearingsInRange.length, "down"),
       onClick: () => navigate("/app/audiencias"),
     },
@@ -949,7 +949,7 @@ export default function Dashboard() {
       description: "Agenda imediata do dia para a equipe juridica.",
       icon: Gavel,
       tone: "warning" as const,
-      tooltip: "Total de audiencias marcadas para hoje.",
+      tooltip: "Total de audiências marcadas para hoje.",
       comparison: buildComparison(hearingsToday.length, hearingsSameDayLastWeek.length, "down"),
       onClick: () => navigate("/app/audiencias"),
     },
@@ -963,7 +963,7 @@ export default function Dashboard() {
           description: "Valores vencidos que pressionam o caixa.",
           icon: ShieldAlert,
           tone: "danger" as const,
-          tooltip: "Soma das cobrancas vencidas e ainda nao liquidadas.",
+          tooltip: "Soma das cobranças vencidas e ainda não liquidadas.",
           comparison: buildComparison(inadimplencia, inadimplenciaAnterior, "down", formatCompactCurrency),
           onClick: () => navigate("/app/financeiro"),
         },
@@ -973,7 +973,7 @@ export default function Dashboard() {
           description: "Volume gerado em contas a receber no mes corrente.",
           icon: TrendingUp,
           tone: "success" as const,
-          tooltip: "Soma das cobrancas emitidas para o mes atual.",
+          tooltip: "Soma das cobranças emitidas para o mês atual.",
           comparison: buildComparison(faturamentoMes, faturamentoMesAnterior, "up", formatCompactCurrency),
           onClick: () => navigate("/app/financeiro"),
         },
@@ -983,7 +983,7 @@ export default function Dashboard() {
           description: "Entradas efetivamente registradas no caixa.",
           icon: Wallet,
           tone: "info" as const,
-          tooltip: "Total de pagamentos recebidos no mes atual.",
+          tooltip: "Total de pagamentos recebidos no mês atual.",
           comparison: buildComparison(recebimentosMes, recebimentosMesAnterior, "up", formatCompactCurrency),
           onClick: () => navigate("/app/financeiro"),
         },
@@ -993,7 +993,7 @@ export default function Dashboard() {
           description: "Saidas previstas no fluxo financeiro mensal.",
           icon: TrendingDown,
           tone: "warning" as const,
-          tooltip: "Soma das contas a pagar previstas para o mes atual.",
+          tooltip: "Soma das contas a pagar previstas para o mês atual.",
           comparison: buildComparison(despesasMes, despesasMesAnterior, "down", formatCompactCurrency),
           onClick: () => navigate("/app/financeiro"),
         },
@@ -1062,7 +1062,7 @@ export default function Dashboard() {
 
         {canSeeFinance ? (
           <section className="space-y-4">
-            <SectionHeader title="Resumo financeiro" description="Leitura objetiva do caixa, cobrancas e movimentacao do periodo." />
+            <SectionHeader title="Resumo financeiro" description="Leitura objetiva do caixa, cobranças e movimentação do período." />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {financeKpis.map((item) => (
                 <DashboardKpiCard key={item.title} {...item} />
@@ -1074,7 +1074,7 @@ export default function Dashboard() {
         <div className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
           <Card className="border-border bg-card shadow-card">
             <CardContent className="p-6">
-              <SectionHeader title="Agenda visual dos proximos dias" description="Leitura consolidada de prazos e audiencias dentro da janela selecionada." actionLabel="Abrir agenda" onAction={() => navigate("/app/agenda")} />
+              <SectionHeader title="Agenda visual dos próximos dias" description="Leitura consolidada de prazos e audiências dentro da janela selecionada." actionLabel="Abrir agenda" onAction={() => navigate("/app/agenda")} />
               <div className="mt-6 h-[320px]">
                 {agendaSeries.some((item) => item.prazos > 0 || item.audiencias > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -1085,11 +1085,11 @@ export default function Dashboard() {
                       <RechartsTooltip />
                       <Legend />
                       <Line type="monotone" dataKey="prazos" name="Prazos" stroke="#374151" strokeWidth={3} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="audiencias" name="Audiencias" stroke="#9ca3af" strokeWidth={3} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="audiencias" name="Audiências" stroke="#9ca3af" strokeWidth={3} dot={{ r: 3 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <EmptyState icon={CalendarClock} title="Sem agenda critica no periodo" description="A janela filtrada nao encontrou prazos ou audiencias para exibir em linha do tempo." />
+                  <EmptyState icon={CalendarClock} title="Sem agenda crítica no período" description="A janela filtrada não encontrou prazos ou audiências para exibir em linha do tempo." />
                 )}
               </div>
             </CardContent>
@@ -1112,7 +1112,7 @@ export default function Dashboard() {
                       <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                     </div>
                   </button>
-                )) : <EmptyState icon={CheckCircle2} title="Operacao sem alertas criticos" description="Nenhum prazo vencido, audiencia imediata ou cobranca critica apareceu com os filtros atuais." />}
+                )) : <EmptyState icon={CheckCircle2} title="Operação sem alertas críticos" description="Nenhum prazo vencido, audiência imediata ou cobrança crítica apareceu com os filtros atuais." />}
               </div>
             </CardContent>
           </Card>
@@ -1184,11 +1184,11 @@ export default function Dashboard() {
 
         {canSeeFinance ? (
           <section className="space-y-4">
-            <SectionHeader title="Analises financeiras" description="Evolucao dos indicadores mensais de cobranca e fluxo de caixa." />
+            <SectionHeader title="Análises financeiras" description="Evolução dos indicadores mensais de cobrança e fluxo de caixa." />
             <div className="grid gap-4 xl:grid-cols-2">
               <Card className="border-border bg-card shadow-card">
                 <CardContent className="p-6">
-                  <SectionHeader title="Faturamento x inadimplencia" description="Evolucao mensal das cobrancas geradas e do volume vencido." actionLabel="Ir ao financeiro" onAction={() => navigate("/app/financeiro")} />
+                  <SectionHeader title="Faturamento x inadimplência" description="Evolução mensal das cobranças geradas e do volume vencido." actionLabel="Ir ao financeiro" onAction={() => navigate("/app/financeiro")} />
                   <div className="mt-6 h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={faturamentoSeries}>
@@ -1229,7 +1229,7 @@ export default function Dashboard() {
 
         <Card className="border-border bg-card shadow-card">
           <CardContent className="p-6">
-            <SectionHeader title="Painel de atividade recente" description="Ultimos processos, andamentos, documentos, audiencias e recebimentos do escritorio." actionLabel="Abrir modulo" onAction={() => navigate("/app/processos")} />
+            <SectionHeader title="Painel de atividade recente" description="Últimos processos, andamentos, documentos, audiências e recebimentos do escritório." actionLabel="Abrir módulo" onAction={() => navigate("/app/processos")} />
             <div className="mt-6 space-y-3">
               {recentActivity.length > 0 ? recentActivity.map((item) => {
                 const Icon = activityIcon(item.type);
@@ -1248,7 +1248,7 @@ export default function Dashboard() {
                     <div className="shrink-0 font-mono-ui text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{formatDateTime(item.date)}</div>
                   </button>
                 );
-              }) : <EmptyState icon={Activity} title="Sem atividade recente" description="Ainda nao houve registros suficientes para montar uma trilha operacional do escritorio." />}
+              }) : <EmptyState icon={Activity} title="Sem atividade recente" description="Ainda não houve registros suficientes para montar uma trilha operacional do escritório." />}
             </div>
           </CardContent>
         </Card>

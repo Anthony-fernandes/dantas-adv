@@ -175,7 +175,7 @@ export function ProcessForm({
             <Input
               value={values.parteContraria}
               disabled={disabled}
-              placeholder="Nome da parte contraria"
+              placeholder="Nome da parte contrária"
               onBlur={() => onBlur('parteContraria')}
               onChange={(event) => onChange('parteContraria', event.target.value)}
             />
@@ -195,7 +195,7 @@ export function ProcessForm({
             <Input
               value={values.className}
               disabled={disabled}
-              placeholder="Ex.: Acao de cobranca"
+              placeholder="Ex.: Ação de cobrança"
               onBlur={() => onBlur('className')}
               onChange={(event) => onChange('className', event.target.value)}
             />
@@ -331,7 +331,7 @@ export function ProcessForm({
 
       <ProcessFormSection
         icon={BriefcaseBusiness}
-        title="Gestao interna"
+        title="Gestão interna"
         description="Controle interno e financeiro do processo."
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -370,12 +370,12 @@ export function ProcessForm({
             />
           </Field>
 
-          <Field label="Observacoes" className="md:col-span-2">
+          <Field label="Observações" className="md:col-span-2">
             <Textarea
               rows={5}
               value={values.observations}
               disabled={disabled}
-              placeholder="Contexto juridico, estrategia, ponto de atencao ou resumo relevante para o time."
+              placeholder="Contexto jurídico, estratégia, ponto de atenção ou resumo relevante para o time."
               onBlur={() => onBlur('observations')}
               onChange={(event) => onChange('observations', event.target.value)}
             />
