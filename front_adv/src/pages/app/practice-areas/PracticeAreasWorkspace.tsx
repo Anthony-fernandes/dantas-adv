@@ -834,7 +834,7 @@ export default function PracticeAreasWorkspace() {
             </div>
 
             <div className="space-y-2">
-              <Label>Classificacao base</Label>
+              <Label>Classificação base</Label>
               <Select value={form.code} onValueChange={(value) => setForm((current) => ({ ...current, code: value }))}>
                 <SelectTrigger>
                   <SelectValue />

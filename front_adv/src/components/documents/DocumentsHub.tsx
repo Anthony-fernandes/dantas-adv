@@ -443,7 +443,7 @@ export function DocumentsHub({
     if (!deleteTarget) return;
     await Promise.all(deleteTarget.versions.map((version) => deleteDocument(version.id)));
     await invalidateDocuments();
-    toast.success('Documento removido com todas as versoes.');
+    toast.success('Documento removido com todas as versões.');
     setDeleteTargetKey(null);
     setPreviewKey(null);
   };
@@ -451,7 +451,7 @@ export function DocumentsHub({
   const handleShare = async (document: DocumentFile) => {
     const url = getDocumentUrl(document);
     if (!url) {
-      toast.error('Documento sem link disponivel.');
+      toast.error('Documento sem link disponível.');
       return;
     }
     try {

@@ -375,7 +375,7 @@ export default function CompaniesAdmin() {
                   <div>
                     <FLabel>Site</FLabel>
                     <IconInput icon={Globe}>
-                      <Input className={iconInputCls} placeholder="https://escritorio.adv.br" value={cWebsite} onChange={(e) => setCWebsite(e.target.value)} />
+                      <Input className={iconInputCls} placeholder="https://escritório.adv.br" value={cWebsite} onChange={(e) => setCWebsite(e.target.value)} />
                     </IconInput>
                   </div>
                   <div className="sm:col-span-2">
@@ -408,7 +408,7 @@ export default function CompaniesAdmin() {
                   <div>
                     <FLabel required>E-mail do escritório</FLabel>
                     <IconInput icon={Mail}>
-                      <Input type="email" className={iconInputCls} placeholder="contato@escritorio.adv.br" value={cEmail} onChange={(e) => setCEmail(e.target.value)} required />
+                      <Input type="email" className={iconInputCls} placeholder="contato@escritório.adv.br" value={cEmail} onChange={(e) => setCEmail(e.target.value)} required />
                     </IconInput>
                   </div>
                   <div>
@@ -483,7 +483,7 @@ export default function CompaniesAdmin() {
                   <div>
                     <FLabel required>E-mail de acesso</FLabel>
                     <IconInput icon={Mail}>
-                      <Input type="email" className={iconInputCls} placeholder="joao@escritorio.adv.br" value={aEmail} onChange={(e) => setAEmail(e.target.value)} required />
+                      <Input type="email" className={iconInputCls} placeholder="joao@escritório.adv.br" value={aEmail} onChange={(e) => setAEmail(e.target.value)} required />
                     </IconInput>
                   </div>
                   <div>
@@ -579,7 +579,7 @@ export default function CompaniesAdmin() {
                     <div>
                       <FLabel required>E-mail</FLabel>
                       <IconInput icon={Mail}>
-                        <Input type="email" className={iconInputCls} placeholder="maria@escritorio.adv.br" value={uEmail} onChange={(e) => setUEmail(e.target.value)} required />
+                        <Input type="email" className={iconInputCls} placeholder="maria@escritório.adv.br" value={uEmail} onChange={(e) => setUEmail(e.target.value)} required />
                       </IconInput>
                     </div>
                     <div>

@@ -564,7 +564,7 @@ export default function LandingCmsBuilder() {
 
   const [areaDialogOpen, setAreaDialogOpen] = useState(false);
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null);
-  const [areaForm, setAreaForm] = useState<AreaFormState>(EMPTY_AREA);
+  const [areaForm, setAreaForm] = useState<AreaFormState>(EMPTY_Área);
 
   const [differentialDialogOpen, setDifferentialDialogOpen] = useState(false);
   const [editingDifferentialId, setEditingDifferentialId] = useState<string | null>(null);

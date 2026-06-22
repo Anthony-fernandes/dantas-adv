@@ -189,7 +189,7 @@ export default function AppLogin() {
                   type="email"
                   autoComplete="email"
                   autoFocus
-                  placeholder="nome@escritorio.com.br"
+                  placeholder="nome@escritório.com.br"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);

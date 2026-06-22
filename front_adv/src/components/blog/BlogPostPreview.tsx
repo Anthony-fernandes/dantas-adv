@@ -95,7 +95,7 @@ export function BlogPostPreview({
 
       <div
         className="prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary"
-        dangerouslySetInnerHTML={{ __html: article.body_html || "<p>Sem conteudo.</p>" }}
+        dangerouslySetInnerHTML={{ __html: article.body_html || "<p>Sem conteúdo.</p>" }}
       />
 
       {article.gallery_urls.length ? (

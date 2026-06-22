@@ -742,7 +742,7 @@ export default function ProcessesWorkspace() {
               <SelectContent>
                 <SelectItem value="all">Todas as probabilidades</SelectItem>
                 <SelectItem value="alta">Alta</SelectItem>
-                <SelectItem value="media">Media</SelectItem>
+                <SelectItem value="media">Média</SelectItem>
                 <SelectItem value="baixa">Baixa</SelectItem>
               </SelectContent>
             </Select>
@@ -980,7 +980,7 @@ export default function ProcessesWorkspace() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="alta">Alta</SelectItem>
-                  <SelectItem value="media">Media</SelectItem>
+                  <SelectItem value="media">Média</SelectItem>
                   <SelectItem value="baixa">Baixa</SelectItem>
                 </SelectContent>
               </Select>

@@ -132,7 +132,7 @@ export function ProcessEditModal({
                 <div className="flex min-h-[280px] items-center justify-center">
                   <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Carregando dados do processo para edicao...
+                    Carregando dados do processo para edição...
                   </div>
                 </div>
               ) : (
@@ -172,7 +172,7 @@ export function ProcessEditModal({
               Descartar alteracoes?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Existem mudancas nao salvas neste formulario. Se voce sair agora, os ajustes feitos no modal serao descartados.
+              Existem mudancas não salvas neste formulario. Se você sair agora, os ajustes feitos no modal serão descartados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

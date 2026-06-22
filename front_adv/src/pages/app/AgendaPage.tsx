@@ -833,7 +833,7 @@ export default function AgendaPage() {
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 className="pl-10"
-                placeholder="Buscar por evento, cliente, processo ou responsavel"
+                placeholder="Buscar por evento, cliente, processo ou responsável"
               />
             </div>
 

@@ -45,7 +45,7 @@ export function ProcessRichDocumentEditor({ processId, clientId }: { processId: 
   const editorRef = React.useRef<HTMLDivElement | null>(null);
   const [selectedId, setSelectedId] = React.useState<string>("");
   const [title, setTitle] = React.useState("Relatório do Processo");
-  const [category, setCategory] = React.useState("relatorio");
+  const [category, setCategory] = React.useState("relatório");
   const [status, setStatus] = React.useState<"DRAFT" | "FINAL">("DRAFT");
   const [accessLevel, setAccessLevel] = React.useState<"TENANT" | "ROLES">("TENANT");
   const [allowedRolesText, setAllowedRolesText] = React.useState("");

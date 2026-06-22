@@ -1610,7 +1610,7 @@ function FinancialChartsSection({
       <div className="grid gap-6 xl:grid-cols-[1.6fr_0.9fr]">
         <Card className="border-border/60 shadow-card">
           <CardHeader>
-            <CardTitle>Recebimentos e despesas por mes</CardTitle>
+            <CardTitle>Recebimentos e despesas por mês</CardTitle>
             <CardDescription>Volume previsto nos últimos seis meses para contas a receber e contas a pagar.</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
@@ -1679,7 +1679,7 @@ function FinancialChartsSection({
 
         <Card className="border-border/60 shadow-card">
           <CardHeader>
-            <CardTitle>Distribuicao do contas a receber</CardTitle>
+            <CardTitle>Distribuição do contas a receber</CardTitle>
             <CardDescription>Status financeiro das cobranças monitoradas.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">

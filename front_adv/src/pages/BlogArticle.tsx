@@ -61,9 +61,9 @@ export default function BlogArticle() {
         <Card className="w-full max-w-lg border-border/70 shadow-sm">
           <CardContent className="space-y-4 p-6">
             <div className="space-y-2">
-              <h1 className="text-xl font-semibold">Nao foi possivel carregar o artigo</h1>
+              <h1 className="text-xl font-semibold">Não foi possível carregar o artigo</h1>
               <p className="text-sm text-muted-foreground">
-                Verifique a conexao com a API e tente novamente.
+                Verifique a conexão com a API e tente novamente.
               </p>
             </div>
             <Button onClick={() => window.location.reload()}>Tentar novamente</Button>

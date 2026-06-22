@@ -46,7 +46,7 @@ export function TenantSwitcher() {
           <CommandInput placeholder="Buscar escritório..." />
           <CommandList>
             <CommandEmpty>Nenhum escritório encontrado.</CommandEmpty>
-            <CommandGroup heading="Escritorios">
+            <CommandGroup heading="Escritórios">
               {tenants.map((tenant) => (
                 <CommandItem
                   key={tenant.id}

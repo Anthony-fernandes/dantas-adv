@@ -1033,12 +1033,12 @@ export default function Dashboard() {
         <section className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <h2 className="text-[1.4rem] font-bold tracking-[-0.02em] text-foreground">Resumo juridico</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Indicadores centrais da operacao juridica organizados por prioridade.</p>
+              <h2 className="text-[1.4rem] font-bold tracking-[-0.02em] text-foreground">Resumo jurídico</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Indicadores centrais da operação jurídica organizados por prioridade.</p>
             </div>
 
             <div className="w-full lg:w-[220px]">
-              <label className="eyebrow mb-2 block">Periodo</label>
+              <label className="eyebrow mb-2 block">Período</label>
               <Select value={period === "custom" ? "7d" : period} onValueChange={(value) => setPeriod(value as PeriodPreset)}>
                 <SelectTrigger className="bg-card">
                   <SelectValue />
@@ -1119,11 +1119,11 @@ export default function Dashboard() {
         </div>
 
         <section className="space-y-4">
-          <SectionHeader title="Analises da carteira" description="Distribuicao da operacao por status, area e perfil de cliente." />
+          <SectionHeader title="Análises da carteira" description="Distribuição da operação por status, área e perfil de cliente." />
           <div className="grid gap-4 xl:grid-cols-3">
             <Card className="border-border bg-card shadow-card">
               <CardContent className="p-6">
-                <SectionHeader title="Processos por status" description="Distribuicao atual da carteira juridica." actionLabel="Abrir processos" onAction={() => navigate("/app/processos")} />
+                <SectionHeader title="Processos por status" description="Distribuição atual da carteira jurídica." actionLabel="Abrir processos" onAction={() => navigate("/app/processos")} />
                 <div className="mt-6 h-[280px]">
                   {processesByStatus.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -1135,14 +1135,14 @@ export default function Dashboard() {
                         <Bar dataKey="total" fill="#334155" radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
-                  ) : <EmptyState icon={Scale} title="Sem processos para este recorte" description="Ajuste os filtros para visualizar a distribuicao por status." />}
+                  ) : <EmptyState icon={Scale} title="Sem processos para este recorte" description="Ajuste os filtros para visualizar a distribuição por status." />}
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-border bg-card shadow-card">
               <CardContent className="p-6">
-                <SectionHeader title="Processos por area" description="Especialidades com maior densidade operacional." actionLabel="Ver areas" onAction={() => navigate("/app/areas")} />
+                <SectionHeader title="Processos por área" description="Especialidades com maior densidade operacional." actionLabel="Ver áreas" onAction={() => navigate("/app/areas")} />
                 <div className="mt-6 h-[280px]">
                   {processesByArea.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
@@ -1156,7 +1156,7 @@ export default function Dashboard() {
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
-                  ) : <EmptyState icon={BriefcaseBusiness} title="Sem densidade por area" description="Nao ha processos suficientes para distribuir por especialidade com os filtros atuais." />}
+                  ) : <EmptyState icon={BriefcaseBusiness} title="Sem densidade por área" description="Não há processos suficientes para distribuir por especialidade com os filtros atuais." />}
                 </div>
               </CardContent>
             </Card>
@@ -1175,7 +1175,7 @@ export default function Dashboard() {
                         <Legend />
                       </PieChart>
                     </ResponsiveContainer>
-                  ) : <EmptyState icon={Users} title="Sem clientes neste recorte" description="A carteira filtrada ainda nao gera distribuicao entre PF e PJ." />}
+                  ) : <EmptyState icon={Users} title="Sem clientes neste recorte" description="A carteira filtrada ainda não gera distribuição entre PF e PJ." />}
                 </div>
               </CardContent>
             </Card>
@@ -1198,7 +1198,7 @@ export default function Dashboard() {
                         <RechartsTooltip formatter={(value: number) => formatCurrency(Number(value))} />
                         <Legend />
                         <Bar dataKey="faturamento" name="Faturamento" fill="#374151" radius={[8, 8, 0, 0]} />
-                        <Bar dataKey="inadimplencia" name="Inadimplencia" fill="#9ca3af" radius={[8, 8, 0, 0]} />
+                        <Bar dataKey="inadimplencia" name="Inadimplência" fill="#9ca3af" radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

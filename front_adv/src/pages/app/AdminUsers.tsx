@@ -698,7 +698,7 @@ export default function AdminUsers() {
                 </div>
                 <div className="rounded-2xl border bg-muted/30 px-4 py-3 text-sm">
                   <p className="font-medium">Modelo de acesso</p>
-                  <p className="mt-1 max-w-sm text-muted-foreground">Perfis definem o padrao. Permissoes extras refinam o acesso de forma pontual e controlada.</p>
+                  <p className="mt-1 max-w-sm text-muted-foreground">Perfis definem o padrão. Permissões extras refinam o acesso de forma pontual e controlada.</p>
                 </div>
               </div>
             </DialogHeader>
@@ -799,7 +799,7 @@ export default function AdminUsers() {
                     <Card className="flex min-h-0 flex-col">
                       <CardHeader className="space-y-3 pb-3">
                         <div>
-                          <CardTitle className="text-base">Permissoes herdadas e extras</CardTitle>
+                          <CardTitle className="text-base">Permissões herdadas e extras</CardTitle>
                           <p className="text-sm text-muted-foreground">As permissões herdadas aparecem como bloqueadas. Use overrides para refinar o acesso além do padrão do perfil.</p>
                         </div>
                         <div className="grid gap-3 rounded-2xl border bg-muted/20 p-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
@@ -915,7 +915,7 @@ export default function AdminUsers() {
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="usuario@exemplo.com"
+                  placeholder="usuário@exemplo.com"
                 />
               </div>
               <div className="grid gap-1.5">

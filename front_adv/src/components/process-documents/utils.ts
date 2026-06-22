@@ -243,7 +243,7 @@ export async function uploadGlobalDocumentWithProgress(
 
 export async function fetchDocumentAsFile(document: DocumentFile, fallbackName?: string) {
   const url = getDocumentUrl(document);
-  if (!url) throw new Error('Documento sem arquivo disponivel.');
+  if (!url) throw new Error('Documento sem arquivo disponível.');
 
   const response = await fetch(url, {
     headers: buildAuthHeaders(),

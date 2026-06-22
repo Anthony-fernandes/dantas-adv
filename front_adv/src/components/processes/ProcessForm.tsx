@@ -114,10 +114,10 @@ export function ProcessForm({
       <ProcessFormSection
         icon={Scale}
         title="Identificacao"
-        description="Dados centrais para localizar o processo e manter a ficha juridica consistente entre as telas."
+        description="Dados centrais para localizar o processo e manter a ficha jurídica consistente entre as telas."
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Numero CNJ" required error={errors.cnj}>
+          <Field label="Número CNJ" required error={errors.cnj}>
             <div className="flex gap-2">
               <Input
                 value={values.cnj}
@@ -215,11 +215,11 @@ export function ProcessForm({
 
       <ProcessFormSection
         icon={ShieldCheck}
-        title="Classificacao juridica"
-        description="Informacoes usadas em filtros, indicadores e futuras integracoes com API e automacoes do sistema."
+        title="Classificação jurídica"
+        description="Informações usadas em filtros, indicadores e futuras integrações com API e automacoes do sistema."
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Area" required error={errors.area}>
+          <Field label="Área" required error={errors.area}>
             <Select
               value={values.area}
               disabled={disabled}
@@ -229,7 +229,7 @@ export function ProcessForm({
               }}
             >
               <SelectTrigger className={fieldClassName(errors.area)}>
-                <SelectValue placeholder="Selecione a area" />
+                <SelectValue placeholder="Selecione a área" />
               </SelectTrigger>
               <SelectContent>
                 {areaOptions.map((area) => (
@@ -335,7 +335,7 @@ export function ProcessForm({
         description="Controle interno e financeiro do processo."
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Advogado responsavel">
+          <Field label="Advogado responsável">
             <Select
               value={values.responsibleId || '__none'}
               disabled={disabled}

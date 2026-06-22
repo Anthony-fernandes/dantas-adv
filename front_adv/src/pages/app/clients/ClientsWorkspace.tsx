@@ -859,7 +859,7 @@ export default function ClientsWorkspace() {
                     <section className="space-y-4 rounded-2xl border p-4">
                       <div>
                         <p className="text-sm font-semibold">Relacionamento</p>
-                        <p className="text-xs text-muted-foreground">Contexto interno para operacao e acompanhamento.</p>
+                        <p className="text-xs text-muted-foreground">Contexto interno para operação e acompanhamento.</p>
                       </div>
 
                       <div className="space-y-4">

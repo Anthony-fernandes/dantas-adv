@@ -132,7 +132,7 @@ export function BlogRichEditor({ value, onChange, placeholder = "Escreva o artig
           <UnderlineIcon className="h-4 w-4" />
         </ToolbarButton>
         <ToolbarButton
-          title="Titulo secundario"
+          title="Título secundario"
           active={editor.isActive("heading", { level: 2 })}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         >

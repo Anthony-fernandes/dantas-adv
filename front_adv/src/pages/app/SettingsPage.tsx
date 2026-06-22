@@ -345,7 +345,7 @@ export default function SettingsPage() {
                 value={form.email}
                 onChange={(e) => setField('email', e.target.value)}
                 disabled={!canEdit}
-                placeholder="contato@escritorio.adv.br"
+                placeholder="contato@escritório.adv.br"
               />
             </div>
 
@@ -520,7 +520,7 @@ export default function SettingsPage() {
                 type="email"
                 value={notif.email_recipient}
                 onChange={(e) => setNotifField('email_recipient', e.target.value)}
-                placeholder="ex: diretor@escritorio.com.br"
+                placeholder="ex: diretor@escritório.com.br"
               />
               <p className="text-xs text-muted-foreground">
                 Os alertas também serão enviados para este endereço além dos e-mails dos membros da equipe.

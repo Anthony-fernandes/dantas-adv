@@ -267,7 +267,7 @@ export function AgendaEventFormDialog({
               </div>
               <div className="space-y-2">
                 <Label>Comarca</Label>
-                <Input value={form.district} onChange={(event) => updateField('district', event.target.value)} placeholder="Ex: Sao Paulo/SP" />
+                <Input value={form.district} onChange={(event) => updateField('district', event.target.value)} placeholder="Ex: São Paulo/SP" />
               </div>
             </section>
 

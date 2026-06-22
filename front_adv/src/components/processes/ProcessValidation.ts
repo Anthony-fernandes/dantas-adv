@@ -35,7 +35,7 @@ export type ProcessFormValues = {
 export type ProcessFormErrors = Partial<Record<keyof ProcessFormValues, string>>;
 
 export const PROCESS_FIELD_LABELS: Record<keyof ProcessFormValues, string> = {
-  cnj: 'Numero CNJ',
+  cnj: 'Número CNJ',
   clientId: 'Cliente',
   parteContraria: 'Parte contraria',
   poloAtivo: 'Polo ativo',
@@ -54,7 +54,7 @@ export const PROCESS_FIELD_LABELS: Record<keyof ProcessFormValues, string> = {
   causeValue: 'Valor da causa',
   observations: 'Observacoes',
   internalNotes: 'Notas internas',
-  internalNumber: 'Numero interno',
+  internalNumber: 'Número interno',
   origin: 'Origem do processo',
   distributionDate: 'Data de distribuicao',
   closingDate: 'Data de encerramento',
@@ -108,7 +108,7 @@ function parseNumberFromCurrency(value: string) {
 
 function humanizeOptionValue(value: string) {
   const normalized = asText(value).replaceAll('_', ' ');
-  if (!normalized) return 'Opcao atual';
+  if (!normalized) return 'Opção atual';
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
@@ -245,12 +245,12 @@ export function validateProcessForm(values: ProcessFormValues): ProcessFormError
   const cnjDigits = values.cnj.replace(/\D/g, '');
 
   if (!cnjDigits) {
-    errors.cnj = 'Informe o numero CNJ do processo.';
+    errors.cnj = 'Informe o número CNJ do processo.';
   } else if (cnjDigits.length !== 20) {
     errors.cnj = 'Use o formato CNJ 0000000-00.0000.0.00.0000.';
   }
 
-  if (!asText(values.area)) errors.area = 'Selecione a area juridica.';
+  if (!asText(values.area)) errors.area = 'Selecione a área jurídica.';
   if (!asText(values.status)) errors.status = 'Selecione o status do processo.';
   if (!asText(values.phase)) errors.phase = 'Selecione a fase processual.';
 

@@ -667,7 +667,7 @@ export default function HonorariosWorkspace() {
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
         </div>
-      ) : honorarios.length === 0 ? (
+      ) : honorários.length === 0 ? (
         <EmptyState
           icon={DollarSign}
           title="Nenhum honorário cadastrado"
