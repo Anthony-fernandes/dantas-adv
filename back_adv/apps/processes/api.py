@@ -517,6 +517,22 @@ class HearingViewSet(TenantAuditedModelViewSet):
     audit_enabled = True
     audit_entity_type = 'Hearing'
 
+    def perform_create(self, serializer):
+        instance = super().perform_create(serializer)
+        hearing = serializer.instance
+        if hearing and hearing.process_id:
+            from apps.notifications.services import notify_portal_client
+            when = hearing.hearing_date.strftime('%d/%m/%Y às %H:%M') if hearing.hearing_date else ''
+            notify_portal_client(
+                tenant=self.request.tenant,
+                process=hearing.process,
+                notif_type='hearing',
+                title='Nova audiência marcada',
+                message=f'Audiência de {hearing.type or "instrução"} marcada para {when}.',
+                payload={'process_id': str(hearing.process_id), 'hearing_id': str(hearing.id)},
+            )
+        return instance
+
     filterset_fields = {'process': ['exact'], 'status': ['exact'], 'modality': ['exact'], 'responsible': ['exact']}
     search_fields = ['type', 'location', 'notes', 'process__cnj', 'process__subject']
     ordering_fields = ['hearing_date', 'created_at', 'status']

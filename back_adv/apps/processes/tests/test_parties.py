@@ -298,3 +298,29 @@ class ContractReceivablesTests(BaseTenantTestCase):
             format='json',
         )
         self.assertEqual(response.status_code, 404)
+
+
+class PortalNotificationTests(PortalUploadTests):
+    def test_hearing_creation_notifies_portal_client(self):
+        from apps.notifications.models import Notification
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.post('/api/hearings/', {
+            'process': str(self.process_a.id),
+            'hearing_date': '2026-09-10T14:00:00Z',
+            'type': 'Conciliação',
+        }, format='json')
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertTrue(
+            Notification.objects.filter(user=self.portal_user, type='hearing').exists()
+        )
+
+    def test_portal_client_can_list_own_notifications(self):
+        from apps.notifications.models import Notification
+        Notification.objects.create(tenant=self.tenant_a, user=self.portal_user, type='document', title='Doc', message='m')
+        Notification.objects.create(tenant=self.tenant_a, user=self.lawyer_a, type='document', title='Privada', message='m')
+        client = self.client_for(self.portal_user, self.tenant_a)
+        response = client.get('/api/notifications/')
+        self.assertEqual(response.status_code, 200, response.content)
+        titles = {n['title'] for n in response.json().get('results', response.json())}
+        self.assertIn('Doc', titles)
+        self.assertNotIn('Privada', titles)

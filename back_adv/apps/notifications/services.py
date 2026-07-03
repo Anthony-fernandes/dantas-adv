@@ -85,3 +85,23 @@ def _safe_send_email(
             )
     except Exception:
         return
+
+
+def notify_portal_client(*, tenant, process, notif_type: str, title: str, message: str, payload=None):
+    """Notifica o usuário do portal vinculado ao cliente de um processo.
+
+    No-op silencioso quando o processo não tem cliente ou o cliente não
+    tem acesso ao portal — nunca interrompe o fluxo principal.
+    """
+    try:
+        client = getattr(process, 'client', None)
+        portal_user = getattr(client, 'portal_user', None) if client else None
+        if not portal_user:
+            return None
+        return create_notification(
+            tenant=tenant,
+            user=portal_user,
+            spec=NotificationSpec(type=notif_type, title=title, message=message, payload=payload or {}),
+        )
+    except Exception:
+        return None

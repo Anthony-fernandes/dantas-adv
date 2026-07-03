@@ -177,4 +177,4 @@
 * [x] P1 — Recorrência de eventos (diária/semanal/mensal/anual + fim)
 * [x] P1 — Central admin de integrações de tribunal (status/logs/retry + doc de ativação + comando sync_tribunals)
 * [x] P2 — Contratos: gerar recebíveis do contrato
-* [ ] P2 — Portal: notificações para papel CLIENT
+* [x] P2 — Portal: notificações para papel CLIENT (hooks de audiência/documento + sino no PortalLayout)

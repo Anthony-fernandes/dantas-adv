@@ -179,6 +179,21 @@ class DocumentViewSet(TenantScopedModelViewSet):
                 instance.version = int(max_ver) + 1
                 instance.save(update_fields=['version'])
 
+        # Notifica o cliente do portal quando a equipe disponibiliza documento no processo dele.
+        if instance.process_id and instance.access_level == 'TENANT':
+            from apps.notifications.services import notify_portal_client
+            process = instance.process
+            portal_user = getattr(getattr(process, 'client', None), 'portal_user', None) if process else None
+            if portal_user and portal_user != self.request.user:
+                notify_portal_client(
+                    tenant=self.request.tenant,
+                    process=process,
+                    notif_type='document',
+                    title='Novo documento disponível',
+                    message=f'O escritório disponibilizou "{instance.title or instance.filename}" no seu processo.',
+                    payload={'process_id': str(instance.process_id), 'document_id': str(instance.id)},
+                )
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)

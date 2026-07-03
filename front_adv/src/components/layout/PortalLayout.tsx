@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   DollarSign, FileText, Home, LogOut, Menu, MessageSquare, Scale, X,
 } from "lucide-react";
+import { PortalNotificationsBell } from '@/components/portal/PortalNotificationsBell';
 import { useAuth } from "@/contexts/AuthContext";
 import { firstText } from "@/lib/brandTheme";
 import { cn } from "@/lib/utils";
@@ -112,6 +113,7 @@ export function PortalLayout() {
                 Conta ativa
               </p>
             </div>
+            <PortalNotificationsBell />
           </div>
           <button
             type="button"
