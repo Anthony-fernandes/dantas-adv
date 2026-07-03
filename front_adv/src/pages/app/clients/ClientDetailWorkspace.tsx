@@ -177,7 +177,7 @@ function isOpenFinanceStatus(value?: string | null) {
 
 function clientStatusBadgeClass(value?: string | null) {
   const status = normalizeStatus(value);
-  if (status === 'inativo') return 'border-slate-200 bg-slate-100 text-slate-700';
+  if (status === 'inativo') return 'border-border bg-muted text-muted-foreground';
   if (status === 'prospecto') return 'border-amber-200 bg-amber-50 text-amber-700';
   return 'border-emerald-200 bg-emerald-50 text-emerald-700';
 }
@@ -570,7 +570,7 @@ export default function ClientDetailWorkspace() {
               <h1 className="text-3xl font-semibold tracking-tight">{displayName}</h1>
               <Badge className={typeBadgeClass(client.type)}>{String(client.type || 'PF').toUpperCase()}</Badge>
               <Badge className={clientStatusBadgeClass(client.status)}>{formatClientStatus(client.status)}</Badge>
-              <Badge className={portalEnabled ? 'border-primary/20 bg-primary/10 text-primary' : 'border-slate-200 bg-slate-100 text-slate-700'}>
+              <Badge className={portalEnabled ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground'}>
                 {portalEnabled ? 'Portal ativo' : 'Portal não ativo'}
               </Badge>
               <Badge className={inadimplencia > 0 ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}>
@@ -775,7 +775,7 @@ export default function ClientDetailWorkspace() {
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-lg font-semibold">{process.cnj || 'Processo sem CNJ'}</p>
                         <Badge className="border-sky-200 bg-sky-50 text-sky-700">{process.area || 'Área não definida'}</Badge>
-                        <Badge className="border-slate-200 bg-slate-100 text-slate-700">{process.phase || 'Fase não definida'}</Badge>
+                        <Badge className="border-border bg-muted text-muted-foreground">{process.phase || 'Fase não definida'}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">{[process.court, process.court_division].filter(Boolean).join(' - ') || 'Tribunal e vara não informados'}</p>
                       <p className="text-xs text-muted-foreground">Última atualização: {formatDateTime(process.updated_at || process.created_at)}</p>
@@ -825,7 +825,7 @@ export default function ClientDetailWorkspace() {
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="font-semibold">{document.title || document.filename || 'Documento'}</p>
-                          <Badge className="border-slate-200 bg-slate-100 text-slate-700">{document.category || 'geral'}</Badge>
+                          <Badge className="border-border bg-muted text-muted-foreground">{document.category || 'geral'}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">{document.filename || 'Arquivo sem nome exibivel'}</p>
                         <p className="text-xs text-muted-foreground">{formatDocumentDate(document.created_at)} - {formatFileSize(document.file_size)}</p>
@@ -922,7 +922,7 @@ export default function ClientDetailWorkspace() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className={portalEnabled ? 'border-primary/20 bg-primary/10 text-primary' : 'border-slate-200 bg-slate-100 text-slate-700'}>
+                  <Badge className={portalEnabled ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground'}>
                     {portalEnabled ? 'Portal ativo' : 'Portal pendente'}
                   </Badge>
                   <Badge className={client.email ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}>

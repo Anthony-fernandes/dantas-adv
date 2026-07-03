@@ -506,8 +506,8 @@ function statusBadgeClass(status?: string | null) {
   if (tone === 'danger') return 'border-rose-200 bg-rose-50 text-rose-700';
   if (tone === 'warning') return 'border-amber-200 bg-amber-50 text-amber-700';
   if (tone === 'info') return 'border-sky-200 bg-sky-50 text-sky-700';
-  if (tone === 'muted') return 'border-slate-200 bg-slate-100 text-slate-700';
-  return 'border-slate-200 bg-white text-slate-700';
+  if (tone === 'muted') return 'border-border bg-muted text-muted-foreground';
+  return 'border-border bg-card text-muted-foreground';
 }
 
 function urgencyMatches(filters: FinanceFilters, dueDate?: string | null, paid?: boolean) {
@@ -1340,7 +1340,7 @@ export default function FinancialWorkspace() {
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="border-primary/30 bg-primary/5 text-primary">Financeiro jurídico</Badge>
-                <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">
+                <Badge variant="outline" className="border-border bg-muted text-muted-foreground">
                   {formatCount(receivableRows.length + payableRows.length)} lançamentos monitorados
                 </Badge>
               </div>

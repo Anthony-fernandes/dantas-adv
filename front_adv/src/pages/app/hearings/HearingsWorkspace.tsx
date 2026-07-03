@@ -245,7 +245,7 @@ function modalityClasses(value?: string | null) {
   const normalized = String(value || '').toLowerCase();
   if (normalized === 'online') return 'bg-violet-50 text-violet-700 ring-violet-200';
   if (normalized === 'hibrida') return 'bg-indigo-50 text-indigo-700 ring-indigo-200';
-  return 'bg-slate-100 text-slate-700 ring-slate-200';
+  return 'bg-muted text-muted-foreground ring-border';
 }
 
 function mapBackendStatusToWorkflow(value?: string | null): WorkflowStatus {
@@ -279,7 +279,7 @@ function hearingAttention(hearingDate?: string | null, workflowStatus?: Workflow
   if (diff <= 1000 * 60 * 60 * 24 * 2) {
     return { label: 'Próxima', helper: 'Compromisso em menos de 48 horas.', classes: 'bg-yellow-50 text-yellow-700 ring-yellow-200' };
   }
-  return { label: 'Programada', helper: 'Audiência dentro do fluxo previsto.', classes: 'bg-slate-100 text-slate-700 ring-slate-200' };
+  return { label: 'Programada', helper: 'Audiência dentro do fluxo previsto.', classes: 'bg-muted text-muted-foreground ring-border' };
 }
 
 function SectionCard({
@@ -1022,7 +1022,7 @@ export default function HearingsWorkspace() {
         {selectedHearing ? (
           <div className="space-y-6">
             <Card className="border-border/80 shadow-sm">
-              <CardHeader className="border-b bg-gradient-to-r from-slate-50 via-background to-primary/5">
+              <CardHeader className="border-b bg-muted/20">
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                   <div className="space-y-4">
                     <div className="flex flex-wrap items-center gap-2">

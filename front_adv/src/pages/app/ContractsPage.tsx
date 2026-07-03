@@ -100,9 +100,9 @@ const STATUS_OPTIONS = [
 
 const STATUS_STYLE: Record<string, string> = {
   vigente: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900/40',
-  encerrado: 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400',
+  encerrado: 'bg-muted text-muted-foreground border-border',
   suspenso: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/40',
-  rascunho: 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/40',
+  rascunho: 'bg-info/12 text-info border-info/25',
 };
 
 function currency(value?: string | number | null) {
