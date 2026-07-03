@@ -44,8 +44,10 @@ import {
   Sparkles,
   TimerReset,
   UserCircle2,
+  Users,
   Trash2,
 } from 'lucide-react';
+import { ProcessPartiesTab } from '@/components/processes/ProcessPartiesTab';
 import { useTenant } from '@/contexts/TenantContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks, useUpdateTask, useTimeEntries } from '@/hooks/useApiData';
@@ -1533,6 +1535,10 @@ export default function ProcessDetail() {
             <Gavel className="mr-2 h-4 w-4" />
             Audiências
           </TabsTrigger>
+          <TabsTrigger value="partes">
+            <Users className="mr-2 h-4 w-4" />
+            Partes
+          </TabsTrigger>
           <TabsTrigger value="documents">
             <FileText className="mr-2 h-4 w-4" />
             Documentos
@@ -1554,6 +1560,10 @@ export default function ProcessDetail() {
             Tribunal
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="partes">
+          <ProcessPartiesTab processId={id!} />
+        </TabsContent>
 
         <TabsContent value="movements">
           <div className="grid gap-4 xl:grid-cols-[400px_minmax(0,1fr)]">

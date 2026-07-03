@@ -11,15 +11,15 @@
 * [x] Testes backend: isolamento multi-tenant
 * [x] Testes backend: validação CNJ
 * [x] Testes backend: RBAC/permissões
-* [ ] CI (lint + typecheck + testes) — GitHub Actions
+* [x] CI (lint + typecheck + testes) — GitHub Actions
 * [x] Logs estruturados no backend
-* [ ] Auditoria ampliada (login/logout/export)
+* [x] Auditoria ampliada (login/logout/export)
 
 ## Regras de negócio jurídicas
 
 * [x] Validação de dígito verificador CNJ (backend)
 * [x] Máscara + validação CNJ (frontend)
-* [ ] Partes do processo (N partes com papel: autor/réu/terceiro; documento; advogado)
+* [x] Partes do processo (N partes com papel: autor/réu/terceiro; documento; advogado)
 * [ ] Advogados do processo como M2M (substituir JSONField team_members)
 * [ ] Custas processuais vinculadas ao processo
 
@@ -41,8 +41,8 @@
 ## Processos
 
 * [x] Cadastro com área, fase, status, probabilidade
-* [ ] CNJ validado (depende de item acima)
-* [ ] Partes múltiplas
+* [x] CNJ validado (backend + frontend)
+* [x] Partes múltiplas
 * [x] Movimentações + linha do tempo
 * [x] Prazos com prioridade/alertas
 * [x] Audiências com modalidade/status

@@ -84,7 +84,14 @@ class Tenant(TimeStampedModel):
 
 class AuditEvent(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey("Tenant", on_delete=models.CASCADE, related_name="audit_events")
+    tenant = models.ForeignKey(
+        "Tenant",
+        on_delete=models.CASCADE,
+        related_name="audit_events",
+        null=True,
+        blank=True,
+        help_text="Nulo para eventos de conta (login/logout) anteriores à seleção de tenant.",
+    )
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

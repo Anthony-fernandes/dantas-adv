@@ -84,7 +84,7 @@ from apps.billing.api import BillingViewSet
 from apps.core.audit_api import AuditEventViewSet
 from apps.chat.api import ChatMessageViewSet
 from apps.notifications.api import NotificationViewSet, PushSubscriptionViewSet
-from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessViewSet, TaskViewSet, TimeEntryViewSet, TribunalSyncViewSet
+from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessPartyViewSet, ProcessViewSet, TaskViewSet, TimeEntryViewSet, TribunalSyncViewSet
 
 
 class EmailOrUsernameTokenView(TokenObtainPairView):
@@ -100,6 +100,7 @@ router.register(r"clients", ClientViewSet, basename="client")
 router.register(r"processes", ProcessViewSet, basename="process")
 router.register(r"causes", LegalCauseViewSet, basename="cause")
 router.register(r"movements", MovementViewSet, basename="movement")
+router.register(r"process-parties", ProcessPartyViewSet, basename="process-party")
 router.register(r"deadlines", DeadlineViewSet, basename="deadline")
 router.register(r"hearings", HearingViewSet, basename="hearing")
 router.register(r"tasks", TaskViewSet, basename="task")

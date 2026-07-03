@@ -89,6 +89,56 @@ class Process(models.Model):
         return self.cnj or str(self.id)
 
 
+class PartyRole(models.TextChoices):
+    """Polo/papel da parte no processo, alinhado à prática forense."""
+
+    AUTOR = "autor", "Autor / Requerente"
+    REU = "reu", "Réu / Requerido"
+    TERCEIRO = "terceiro", "Terceiro interessado"
+    ASSISTENTE = "assistente", "Assistente"
+    TESTEMUNHA = "testemunha", "Testemunha"
+    PERITO = "perito", "Perito"
+    MP = "mp", "Ministério Público"
+    OUTRO = "outro", "Outro"
+
+
+class ProcessParty(models.Model):
+    """Parte do processo (N por processo), com papel, documento e advogado.
+
+    Substitui o modelo simplista plaintiff/defendant por uma estrutura
+    equivalente à de plataformas como ProJuris e Legal One.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="process_parties")
+    process = models.ForeignKey("Process", on_delete=models.CASCADE, related_name="parties")
+    role = models.CharField(max_length=20, choices=PartyRole.choices, default=PartyRole.AUTOR)
+    name = models.CharField(max_length=255)
+    doc = models.CharField(max_length=60, blank=True, null=True, help_text="CPF/CNPJ")
+    is_client = models.BooleanField(default=False, help_text="Parte representada pelo escritório")
+    client = models.ForeignKey(
+        Client, on_delete=models.SET_NULL, blank=True, null=True, related_name="process_parties"
+    )
+    lawyer_name = models.CharField(max_length=255, blank=True, default="", help_text="Advogado da parte (quando adverso)")
+    lawyer_oab = models.CharField(max_length=40, blank=True, default="", help_text="Inscrição OAB (ex.: SP 123456)")
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=50, blank=True, null=True)
+    notes = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["role", "name"]
+        indexes = [
+            models.Index(fields=["tenant", "process"]),
+            models.Index(fields=["tenant", "name"]),
+            models.Index(fields=["tenant", "doc"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_role_display()}: {self.name}"
+
+
 class MovementType(models.TextChoices):
     DESPACHO = "despacho", "Despacho"
     DECISAO = "decisao", "Decisao"

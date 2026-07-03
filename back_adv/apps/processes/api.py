@@ -11,7 +11,7 @@ from apps.core.models import AuditEvent
 from apps.core.services.audit import audit_event
 from apps.accounts.models import UserRole
 from .cnj import format_cnj, is_valid_cnj
-from .models import Process, Movement, Deadline, Hearing, LegalCause, Task, TimeEntry, TribunalSync
+from .models import Process, ProcessParty, Movement, Deadline, Hearing, LegalCause, Task, TimeEntry, TribunalSync
 from apps.documents.models import Document
 from apps.documents.api import DocumentSerializer, DocumentUploadSerializer
 from apps.billing.limits import assert_can_create_process
@@ -376,6 +376,36 @@ class ProcessViewSet(TenantAuditedModelViewSet):
             payload={'after': {'id': str(obj.id), 'process_id': str(process.id), 'hearing_date': obj.hearing_date.isoformat(), 'status': obj.status, 'modality': obj.modality}},
         )
         return Response(ser.data, status=status.HTTP_201_CREATED)
+
+
+class ProcessPartySerializer(TenantScopedSerializerMixin, serializers.ModelSerializer):
+    role_label = serializers.CharField(source='get_role_display', read_only=True)
+
+    def validate(self, attrs):
+        if attrs.get('process'):
+            self._validate_process(attrs['process'])
+        if attrs.get('client'):
+            self._validate_client(attrs['client'])
+        return attrs
+
+    class Meta:
+        model = ProcessParty
+        fields = '__all__'
+        read_only_fields = ('id', 'tenant', 'created_at', 'updated_at')
+
+
+class ProcessPartyViewSet(TenantAuditedModelViewSet):
+    queryset = ProcessParty.objects.select_related('process', 'client').all().order_by('role', 'name')
+    serializer_class = ProcessPartySerializer
+    permission_classes = [IsTenantMember, IsLegal]
+
+    audit_enabled = True
+    audit_entity_type = 'ProcessParty'
+
+    filterset_fields = {'process': ['exact'], 'role': ['exact'], 'is_client': ['exact']}
+    search_fields = ['name', 'doc', 'lawyer_name', 'lawyer_oab', 'process__cnj']
+    ordering_fields = ['name', 'role', 'created_at']
+    ordering = ['role', 'name']
 
 
 class MovementViewSet(TenantAuditedModelViewSet):

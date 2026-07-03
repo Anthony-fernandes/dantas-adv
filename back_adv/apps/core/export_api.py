@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from apps.accounts.models import AppRole, UserRole
 from apps.core.permissions import IsTenantMember
+from apps.core.services.audit import audit_event
 from apps.clients.models import Client
 from apps.processes.models import Process, Deadline, Hearing, Movement, LegalCause
 from apps.finance.models import AccountsReceivable, AccountsPayable, Invoice, Payment, ReceivableInstallment
@@ -81,6 +82,16 @@ class TenantExportView(APIView):
 
         content = json.dumps(payload, cls=DjangoJSONEncoder, ensure_ascii=False)
         filename = f"tenant_export_{tenant.slug or tenant.id}_{timezone.now().date().isoformat()}.json"
+
+        audit_event(
+            tenant=tenant,
+            actor=request.user,
+            event_type='data.export',
+            entity_type='Tenant',
+            entity_id=tenant.id,
+            summary=f'Exportação LGPD completa do escritório por {getattr(request.user, "email", "")}',
+        )
+
         resp = HttpResponse(content, content_type='application/json; charset=utf-8')
         resp['Content-Disposition'] = f'attachment; filename="{filename}"'
         return resp

@@ -24,7 +24,10 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h.strip()] or ['localhost', '127.0.0.1', 'testserver']
 
 # --- Segurança de produção (ativada quando atrás de HTTPS; controlável por env) ---
-_HTTPS_ON = os.getenv('SECURE_SSL', '0' if DEBUG else '1') == '1'
+import sys
+
+_TESTING = 'test' in sys.argv
+_HTTPS_ON = (not _TESTING) and os.getenv('SECURE_SSL', '0' if DEBUG else '1') == '1'
 if _HTTPS_ON:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', '1') == '1'

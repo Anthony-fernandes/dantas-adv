@@ -18,6 +18,7 @@ from apps.accounts.jwt import EmailOrUsernameTokenObtainPairSerializer
 from apps.accounts.access import ACCESS_PERMISSION_CODES
 from apps.accounts.models import Profile, UserRole, AppRole, TenantInvite, UserAccessPermission, Employee
 from apps.core.models import Tenant
+from apps.core.services.audit import audit_auth_event
 from apps.clients.models import Client
 from apps.billing.services import ensure_subscription_for_tenant
 from apps.billing.limits import assert_can_create_user
@@ -98,6 +99,21 @@ class LoginView(TokenObtainPairView):
 
     serializer_class = EmailOrUsernameTokenObtainPairSerializer
 
+    def post(self, request, *args, **kwargs):
+        identifier = (request.data.get('email') or request.data.get('username') or '').strip().lower()
+        try:
+            response = super().post(request, *args, **kwargs)
+        except Exception:
+            # Credenciais inválidas levantam AuthenticationFailed antes do retorno.
+            audit_auth_event(user=None, event_type='auth.login_failed', request=request, summary=f'Falha de login para {identifier}')
+            raise
+        if response.status_code == 200:
+            user = User.objects.filter(email__iexact=identifier).first() if identifier else None
+            audit_auth_event(user=user, event_type='auth.login', request=request, summary=f'Login de {identifier}')
+        else:
+            audit_auth_event(user=None, event_type='auth.login_failed', request=request, summary=f'Falha de login para {identifier}')
+        return response
+
 
 class LogoutView(APIView):
     """Invalidate refresh token when provided."""
@@ -111,6 +127,7 @@ class LogoutView(APIView):
                 RefreshToken(refresh_token).blacklist()
             except Exception:
                 pass
+        audit_auth_event(user=request.user, event_type='auth.logout', request=request, summary=f'Logout de {getattr(request.user, "email", "")}')
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
