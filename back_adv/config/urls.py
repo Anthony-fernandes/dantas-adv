@@ -33,6 +33,7 @@ from apps.clients.api import ClientViewSet
 from apps.core.calendar_api import CalendarEventViewSet
 from apps.core.dashboard_api import LegalDashboardView
 from apps.core.export_api import TenantExportView
+from apps.core.search_api import GlobalSearchView
 from apps.core.landing_api import (
     LandingPageManageView,
     PublicContactView,
@@ -146,6 +147,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/login/", LoginView.as_view(), name="auth_login"),
     path("api/conflict-check/", ConflictCheckView.as_view(), name="conflict_check"),
+    path("api/search/", GlobalSearchView.as_view(), name="global_search"),
     path("api/portal/login/", LoginView.as_view(), name="portal_login"),
     path("api/auth/logout/", LogoutView.as_view(), name="auth_logout"),
     path("api/auth/accept-invite/", AcceptInviteView.as_view(), name="auth_accept_invite"),

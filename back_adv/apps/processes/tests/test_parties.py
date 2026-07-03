@@ -96,3 +96,32 @@ class ConflictCheckTests(BaseTenantTestCase):
         client = self.client_for(self.lawyer_a, self.tenant_a)
         response = client.get('/api/conflict-check/')
         self.assertEqual(response.status_code, 400)
+
+
+class GlobalSearchTests(BaseTenantTestCase):
+    def test_search_finds_process_by_subject(self):
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/search/', {'q': 'Caso A'})
+        self.assertEqual(response.status_code, 200, response.content)
+        body = response.json()
+        self.assertTrue(any(p['subject'] == 'Caso A' for p in body['processes']))
+
+    def test_search_finds_client_by_name(self):
+        from apps.clients.models import Client as ClientModel
+        ClientModel.objects.create(tenant=self.tenant_a, name='Construtora Horizonte Ltda')
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/search/', {'q': 'Horizonte'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(any(c['name'] == 'Construtora Horizonte Ltda' for c in response.json()['clients']))
+
+    def test_search_does_not_leak_other_tenant(self):
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/search/', {'q': 'Caso B'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['processes'], [])
+
+    def test_short_query_returns_empty(self):
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/search/', {'q': 'a'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'processes': [], 'clients': [], 'documents': [], 'tasks': []})
