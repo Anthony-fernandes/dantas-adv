@@ -32,6 +32,7 @@ const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
 // App jurídico (um chunk por módulo)
 const Dashboard = lazy(() => import("@/pages/app/Dashboard"));
 const ProcessesWorkspace = lazy(() => import("@/pages/app/processes/ProcessesWorkspace"));
+const ProcessCreatePage = lazy(() => import("@/pages/app/processes/ProcessCreatePage"));
 const ProcessDetail = lazy(() => import("@/pages/app/ProcessDetail"));
 const PracticeAreas = lazy(() => import("@/pages/app/PracticeAreas"));
 const ClientsWorkspace = lazy(() => import("@/pages/app/clients/ClientsWorkspace"));
@@ -295,6 +296,7 @@ const App = () => (
                 <Route index element={<AppIndexRedirect />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="processos" element={<RequireRole roles={RoleGroups.LEGAL}><ProcessesWorkspace /></RequireRole>} />
+                <Route path="processos/novo" element={<RequireRole roles={RoleGroups.LEGAL}><ProcessCreatePage /></RequireRole>} />
                 <Route path="processos/:id" element={<RequireRole roles={RoleGroups.LEGAL}><ProcessDetail /></RequireRole>} />
                 <Route path="areas" element={<RequireRole roles={RoleGroups.LEGAL}><PracticeAreas /></RequireRole>} />
                 <Route path="causas" element={<Navigate to="/app/areas" replace />} />
