@@ -523,7 +523,7 @@ export default function TemplatesWorkspace() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-lg border border-border bg-card">
+      <div className="overflow-x-auto rounded-lg border border-border bg-card">
         <table className="table-editorial w-full">
           <thead>
             <tr>

@@ -21,7 +21,7 @@
 * [x] Máscara + validação CNJ (frontend)
 * [x] Partes do processo (N partes com papel: autor/réu/terceiro; documento; advogado)
 * [ ] Advogados do processo como M2M (substituir JSONField team_members)
-* [ ] Custas processuais vinculadas ao processo
+* [x] Custas processuais vinculadas ao processo (AccountsPayable categoria 'custas' + FK processo; visíveis no financeiro)
 
 ## Dashboard
 
@@ -35,7 +35,7 @@
 * [x] Cadastro completo PF/PJ (docs, endereço, contatos, portal)
 * [x] Tabela + cards com filtros combinados
 * [x] Detalhe com abas (processos, financeiro, documentos, portal, histórico)
-* [ ] Timeline consolidada do cliente
+* [x] Timeline consolidada do cliente (aba Histórico: interações + processos + audiências + documentos + financeiro)
 * [x] Conflito de interesses (checagem de parte contrária na base)
 
 ## Processos
@@ -115,4 +115,4 @@
 * [x] Tabelas em widgets brancos sem card duplo (padrão Nimbus)
 * [x] Ortografia/acentuação corrigidas em toda a UI
 * [x] Acessibilidade (aria-labels em botões-ícone)
-* [ ] Responsividade auditada em todas as telas ≤ 768px
+* [x] Responsividade auditada (tabelas com scroll horizontal; chat empilha no mobile)
