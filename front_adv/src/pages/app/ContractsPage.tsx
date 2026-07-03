@@ -46,6 +46,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { DataTable, RowActions, type Column } from '@/components/ds';
 
 type Client = { id: string; name?: string | null; full_name?: string | null; razao_social?: string | null };
 type Contract = {
@@ -306,6 +307,50 @@ export default function ContractsPage() {
 
   const isLoading = contractsQuery.isLoading;
 
+  const contractColumns: Column<Contract>[] = [
+    {
+      key: 'client',
+      header: 'Cliente',
+      cell: (c) => {
+        const client = clientMap.get(c.client ?? '');
+        return <span className="font-medium text-foreground">{client ? clientLabel(client) : (c.client_name || 'Cliente')}</span>;
+      },
+    },
+    { key: 'type', header: 'Tipo', cell: (c) => <span className="text-muted-foreground">{typeLabel(c.type)}</span> },
+    {
+      key: 'value',
+      header: 'Valor',
+      align: 'right',
+      cell: (c) => <span className="tabular-nums text-foreground">{valueDescription(c) || '—'}</span>,
+    },
+    { key: 'start', header: 'Início', cell: (c) => <span className="text-muted-foreground">{formatDate(c.start_date)}</span> },
+    { key: 'end', header: 'Término', cell: (c) => <span className="text-muted-foreground">{c.end_date ? formatDate(c.end_date) : '—'}</span> },
+    {
+      key: 'status',
+      header: 'Status',
+      cell: (c) => (
+        <span className={cn('inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium', STATUS_STYLE[c.status] ?? 'bg-muted text-muted-foreground border-border')}>
+          {STATUS_OPTIONS.find((s) => s.value === c.status)?.label || c.status}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      width: '56px',
+      cell: (c) => (
+        <RowActions
+          actions={[
+            { label: 'Editar', icon: <Pencil className="h-4 w-4" />, onClick: () => openEdit(c) },
+            { label: 'Gerar cobranças', icon: <CircleDollarSign className="h-4 w-4" />, onClick: () => { setBillingTarget(c); setBillingInstallments('1'); } },
+            { label: 'Excluir', icon: <Trash2 className="h-4 w-4" />, danger: true, separatorBefore: true, onClick: () => setDeleteTarget(c) },
+          ]}
+        />
+      ),
+    },
+  ];
+
   return (
     <div className="page-container animate-fade-in">
       {/* Header */}
@@ -355,84 +400,25 @@ export default function ContractsPage() {
       </div>
 
       {/* Content */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-[80px] w-full rounded-xl" />)}
-        </div>
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={FileSignature}
-          title={search || statusFilter !== 'all' ? 'Nenhum contrato encontrado' : 'Nenhum contrato cadastrado'}
-          description={
-            search || statusFilter !== 'all'
-              ? 'Tente ajustar os filtros.'
-              : 'Clique em "Novo contrato" para registrar o primeiro contrato de honorários.'
-          }
-          action={!search && statusFilter === 'all' ? { label: 'Novo contrato', onClick: openCreate } : undefined}
-        />
-      ) : (
-        <div className="space-y-2">
-          {filtered.map((c) => {
-            const client = clientMap.get(c.client ?? '');
-            const statusCls = STATUS_STYLE[c.status] ?? 'bg-muted text-muted-foreground border-border';
-            const valueStr = valueDescription(c);
-
-            return (
-              <div
-                key={c.id}
-                className="group flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 shadow-card transition-all hover:border-foreground/20 hover:shadow-elevated"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
-                  <FileSignature className="h-4 w-4 text-muted-foreground" />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {client ? clientLabel(client) : (c.client_name || 'Cliente')}
-                    </p>
-                    <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-medium', statusCls)}>
-                      {STATUS_OPTIONS.find((s) => s.value === c.status)?.label || c.status}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                    <span>{typeLabel(c.type)}</span>
-                    {valueStr && <span className="font-medium text-foreground">{valueStr}</span>}
-                    <span>Início: {formatDate(c.start_date)}</span>
-                    {c.end_date && <span>Término: {formatDate(c.end_date)}</span>}
-                  </div>
-                </div>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="Abrir menu de ações" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openEdit(c)}>
-                      <Pencil className="mr-2 h-3.5 w-3.5" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setBillingTarget(c); setBillingInstallments('1'); }}>
-                      <CircleDollarSign className="mr-2 h-3.5 w-3.5" />
-                      Gerar cobranças
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => setDeleteTarget(c)}
-                    >
-                      <Trash2 className="mr-2 h-3.5 w-3.5" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <DataTable
+        columns={contractColumns}
+        rows={filtered}
+        getRowKey={(c) => c.id}
+        loading={isLoading}
+        minWidth={880}
+        empty={
+          <EmptyState
+            icon={FileSignature}
+            title={search || statusFilter !== 'all' ? 'Nenhum contrato encontrado' : 'Nenhum contrato cadastrado'}
+            description={
+              search || statusFilter !== 'all'
+                ? 'Tente ajustar os filtros.'
+                : 'Clique em "Novo contrato" para registrar o primeiro contrato de honorários.'
+            }
+            action={!search && statusFilter === 'all' ? { label: 'Novo contrato', onClick: openCreate } : undefined}
+          />
+        }
+      />
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
