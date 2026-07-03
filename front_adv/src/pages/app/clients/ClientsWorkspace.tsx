@@ -950,16 +950,6 @@ export default function ClientsWorkspace() {
               <h2 className="text-lg font-semibold text-foreground">Carteira de clientes</h2>
               <p className="text-sm text-muted-foreground">Busque, filtre e acione rapidamente processos, documentos, financeiro e portal.</p>
             </div>
-            <div className="flex items-center gap-2 self-start lg:self-auto">
-              <Button variant={view === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setView('table')}>
-                <TableProperties className="mr-2 h-4 w-4" />
-                Tabela
-              </Button>
-              <Button variant={view === 'cards' ? 'default' : 'outline'} size="sm" onClick={() => setView('cards')}>
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                Cards
-              </Button>
-            </div>
           </div>
 
           <div className="grid gap-3 xl:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]">
@@ -1043,7 +1033,7 @@ export default function ClientsWorkspace() {
               description="Crie clientes PF ou PJ, relacione processos e use este painel como sua carteira jurídica do dia a dia."
               action={{ label: 'Cadastrar cliente', onClick: openCreate }}
             />
-          ) : view === 'cards' ? (
+          ) : false ? (
             <div className="grid gap-4 xl:grid-cols-2">
               {pagedRows.map((row) => (
                 <Card key={row.id} className="overflow-hidden border-border/70 shadow-sm transition-shadow hover:shadow-card">
