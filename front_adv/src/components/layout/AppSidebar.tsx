@@ -5,7 +5,7 @@ import {
   BriefcaseBusiness, UserCog, UserSquare2, Gavel, Globe2, FolderKanban,
   CalendarDays, FileStack, FileSignature, FolderOpen, X, ChevronLeft,
   ChevronRight, BarChart3, Timer, Banknote, CheckSquare, Clock,
-  MessageSquare, Shield, FileText, Settings, Receipt, BookOpenCheck,
+  MessageSquare, Plug, Shield, FileText, Settings, Receipt, BookOpenCheck,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -69,6 +69,7 @@ const navSections: NavSection[] = [
       { label: "Site institucional",icon: Globe2,            path: "/app/landing",       roles: ["OWNER","ADMIN"] },
       { label: "Blog",              icon: BookOpenText,      path: "/app/blog",          roles: ["OWNER","ADMIN"] },
       { label: "Auditoria",         icon: Shield,            path: "/app/auditoria",     roles: ["OWNER","ADMIN"] },
+      { label: "Integrações",       icon: Plug,              path: "/app/integracoes",   roles: ["OWNER","ADMIN"] },
       { label: "Configurações",     icon: Settings,          path: "/app/configuracoes", roles: ["OWNER","ADMIN"] },
     ],
   },

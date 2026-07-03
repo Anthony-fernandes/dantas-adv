@@ -175,6 +175,6 @@
 * [x] P1 — Agenda: visão diária (verificado: já existia — AGENDA_VIEW_OPTIONS inclui 'day' com renderização própria)
 * [x] P1 — Agenda: filtro por responsável (verificado: já existia — AgendaFilters.tsx:116 + filterAgendaEvents)
 * [x] P1 — Recorrência de eventos (diária/semanal/mensal/anual + fim)
-* [ ] P1 — Central admin de integrações de tribunal (status/logs/retry + doc de ativação)
+* [x] P1 — Central admin de integrações de tribunal (status/logs/retry + doc de ativação + comando sync_tribunals)
 * [ ] P2 — Contratos: gerar recebíveis do contrato
 * [ ] P2 — Portal: notificações para papel CLIENT

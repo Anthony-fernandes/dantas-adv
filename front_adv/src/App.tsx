@@ -60,6 +60,7 @@ const ContractsPage = lazy(() => import("@/pages/app/ContractsPage"));
 const ContabilidadePage = lazy(() => import("@/pages/app/ContabilidadePage"));
 const NFSeWorkspace = lazy(() => import("@/pages/app/financial/NFSeWorkspace"));
 const LGPD = lazy(() => import("@/pages/app/LGPD"));
+const IntegrationsPage = lazy(() => import("@/pages/app/IntegrationsPage"));
 const SetupTenant = lazy(() => import("@/pages/app/SetupTenant"));
 const SelectTenant = lazy(() => import("@/pages/app/SelectTenant"));
 
@@ -316,6 +317,7 @@ const App = () => (
                 <Route path="landing" element={<RequireRole roles={RoleGroups.ADMIN}><LandingCms /></RequireRole>} />
                 <Route path="blog" element={<RequireRole roles={RoleGroups.ADMIN}><LandingBlog /></RequireRole>} />
                 <Route path="auditoria" element={<RequireRole roles={RoleGroups.ADMIN}><AuditLogPage /></RequireRole>} />
+                <Route path="integracoes" element={<RequireRole roles={RoleGroups.ADMIN}><IntegrationsPage /></RequireRole>} />
                 <Route path="contratos" element={<RequireRole roles={RoleGroups.LEGAL}><ContractsPage /></RequireRole>} />
                 <Route path="modelos" element={<RequireRole roles={RoleGroups.LEGAL}><TemplatesPage /></RequireRole>} />
                 <Route path="perfil" element={<ProfilePage />} />

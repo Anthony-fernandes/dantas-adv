@@ -39,6 +39,7 @@ function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/landing')) return 'Site institucional';
   if (pathname.startsWith('/app/blog')) return 'Blog';
   if (pathname.startsWith('/app/auditoria')) return 'Log de Auditoria';
+  if (pathname.startsWith('/app/integracoes')) return 'Integrações';
   if (pathname.startsWith('/app/contratos')) return 'Contratos';
   if (pathname.startsWith('/app/modelos')) return 'Modelos';
   if (pathname.startsWith('/app/perfil')) return 'Meu perfil';
