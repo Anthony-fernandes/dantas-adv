@@ -48,6 +48,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { ProcessPartiesTab } from '@/components/processes/ProcessPartiesTab';
+import { ProcessFinanceTab } from '@/components/processes/ProcessFinanceTab';
 import { useTenant } from '@/contexts/TenantContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks, useUpdateTask, useTimeEntries } from '@/hooks/useApiData';
@@ -1543,6 +1544,10 @@ export default function ProcessDetail() {
             <FileText className="mr-2 h-4 w-4" />
             Documentos
           </TabsTrigger>
+          <TabsTrigger value="financeiro">
+            <BriefcaseBusiness className="mr-2 h-4 w-4" />
+            Financeiro
+          </TabsTrigger>
           <TabsTrigger value="tarefas">
             <CheckSquare className="mr-2 h-4 w-4" />
             Tarefas
@@ -1563,6 +1568,10 @@ export default function ProcessDetail() {
 
         <TabsContent value="partes">
           <ProcessPartiesTab processId={id!} />
+        </TabsContent>
+
+        <TabsContent value="financeiro">
+          <ProcessFinanceTab processId={id!} />
         </TabsContent>
 
         <TabsContent value="movements">

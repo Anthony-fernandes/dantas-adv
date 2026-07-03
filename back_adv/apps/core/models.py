@@ -551,6 +551,16 @@ class CalendarEvent(TimeStampedModel, SoftDeleteModel):
     location = models.CharField(max_length=255, blank=True, default="")
     color = models.CharField(max_length=20, blank=True, default="")
     kind = models.CharField(max_length=16, choices=Kind.choices, default=Kind.EVENT)
+
+    class Recurrence(models.TextChoices):
+        NONE = "none", "Sem recorrência"
+        DAILY = "daily", "Diária"
+        WEEKLY = "weekly", "Semanal"
+        MONTHLY = "monthly", "Mensal"
+        YEARLY = "yearly", "Anual"
+
+    recurrence = models.CharField(max_length=10, choices=Recurrence.choices, default=Recurrence.NONE)
+    recurrence_until = models.DateField(null=True, blank=True, help_text="Última data em que a recorrência gera ocorrência.")
     process_id_ref = models.UUIDField(null=True, blank=True)
     hearing_id_ref = models.UUIDField(null=True, blank=True)
     created_by = models.ForeignKey(

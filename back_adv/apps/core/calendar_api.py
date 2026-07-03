@@ -1,3 +1,4 @@
+from django.db import models
 from django.utils.dateparse import parse_datetime
 from rest_framework import serializers
 from rest_framework.decorators import action
@@ -57,7 +58,16 @@ class CalendarEventViewSet(TenantAuditedModelViewSet):
 
         custom_qs = self.get_queryset()
         if start:
-            custom_qs = custom_qs.filter(start_at__gte=start)
+            # Eventos recorrentes entram mesmo com início anterior à janela;
+            # a expansão em ocorrências acontece no cliente.
+            custom_qs = custom_qs.filter(
+                models.Q(start_at__gte=start) | ~models.Q(recurrence='none')
+            )
+            custom_qs = custom_qs.exclude(
+                ~models.Q(recurrence='none')
+                & models.Q(recurrence_until__isnull=False)
+                & models.Q(recurrence_until__lt=start.date())
+            )
         if end:
             custom_qs = custom_qs.filter(start_at__lte=end)
 
@@ -79,6 +89,8 @@ class CalendarEventViewSet(TenantAuditedModelViewSet):
                 'location': ev.location or '',
                 'color': ev.color or '',
                 'kind': ev.kind,
+                'recurrence': ev.recurrence,
+                'recurrence_until': ev.recurrence_until.isoformat() if ev.recurrence_until else None,
                 'source': 'custom',
                 'process_id': str(ev.process_id_ref) if ev.process_id_ref else None,
                 'hearing_id': str(ev.hearing_id_ref) if ev.hearing_id_ref else None,

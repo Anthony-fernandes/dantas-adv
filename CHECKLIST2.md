@@ -12,8 +12,8 @@
 
 * [x] **Detecção de conflito de horário de audiências** — nada impede duas audiências do mesmo responsável no mesmo horário. → aviso na criação.
 * [x] **Status CONFIRMADA para audiência** — fluxo padrão do mercado (agendada → confirmada → realizada); hoje só agendada/realizada/redesignada/cancelada.
-* [ ] Visão diária na agenda (hoje: mês/semana/lista)
-* [ ] Recorrência de eventos [defer: modelagem RRULE]
+* [x] Visão diária na agenda (verificado: já existia)
+* [x] Recorrência de eventos (daily/weekly/monthly/yearly + repetir até)
 
 ## Portal do Cliente
 

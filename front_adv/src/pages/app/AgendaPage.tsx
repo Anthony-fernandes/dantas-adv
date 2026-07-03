@@ -46,6 +46,7 @@ import {
   agendaEventToForm,
   buildAgendaClientLookups,
   buildAgendaEventFromFeedItem,
+  expandRecurringFeedItems,
   buildAgendaEventPayload,
   buildAgendaMetaFromForm,
   buildAgendaProcessLookups,
@@ -529,9 +530,13 @@ export default function AgendaPage() {
   const clientById = useMemo(() => buildAgendaClientLookups(clients), [clients]);
 
   const backendEvents = useMemo(() => {
-    const items = feedQuery.data ?? [];
-    return items.map((item) => buildAgendaEventFromFeedItem(item, { processById, clientById }, metaMap[item.id]));
-  }, [clientById, feedQuery.data, metaMap, processById]);
+    const items = expandRecurringFeedItems(feedQuery.data ?? [], interval.start, interval.end);
+    // Ocorrências virtuais (id com ::) herdam a meta da série original.
+    return items.map((item) => {
+      const seriesId = item.id.includes('::') ? item.id.split('::')[0] : item.id;
+      return buildAgendaEventFromFeedItem(item, { processById, clientById }, metaMap[seriesId]);
+    });
+  }, [clientById, feedQuery.data, interval.end, interval.start, metaMap, processById]);
 
   const mockEvents = useMemo(() => {
     if ((feedQuery.data ?? []).length > 0) return [] as AgendaEvent[];

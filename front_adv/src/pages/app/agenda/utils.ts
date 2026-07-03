@@ -1,5 +1,7 @@
 import {
   addDays,
+  addMonths,
+  addYears,
   eachDayOfInterval,
   endOfDay,
   endOfMonth,
@@ -266,6 +268,70 @@ function buildEventHistory(sourceLabel: string, meta?: AgendaEventMeta) {
   return meta?.history?.length ? [...history, ...meta.history] : history;
 }
 
+const RECURRENCE_MAX_OCCURRENCES = 400;
+
+function shiftIso(iso: string, from: Date, to: Date) {
+  const original = parseISO(iso);
+  const shifted = new Date(original.getTime() + (to.getTime() - from.getTime()));
+  return shifted.toISOString();
+}
+
+/** Expande eventos recorrentes do feed em ocorrências dentro da janela visível.
+
+A ocorrência original mantém o id verdadeiro (editar/excluir agem na série);
+as demais recebem sufixo ::yyyy-MM-dd e são somente leitura. */
+export function expandRecurringFeedItems(
+  items: CalendarFeedItem[],
+  windowStart: Date,
+  windowEnd: Date,
+): CalendarFeedItem[] {
+  const output: CalendarFeedItem[] = [];
+
+  for (const item of items) {
+    const recurrence = item.recurrence || 'none';
+    if (item.source !== 'custom' || recurrence === 'none') {
+      output.push(item);
+      continue;
+    }
+
+    const seriesStart = parseISO(item.start_at);
+    if (Number.isNaN(seriesStart.getTime())) {
+      output.push(item);
+      continue;
+    }
+
+    const untilLimit = item.recurrence_until
+      ? endOfDay(parseISO(`${item.recurrence_until}T00:00:00`))
+      : addYears(seriesStart, 1);
+    const hardEnd = windowEnd < untilLimit ? windowEnd : untilLimit;
+
+    const step = (date: Date): Date => {
+      if (recurrence === 'daily') return addDays(date, 1);
+      if (recurrence === 'weekly') return addDays(date, 7);
+      if (recurrence === 'monthly') return addMonths(date, 1);
+      return addYears(date, 1);
+    };
+
+    let cursor = new Date(seriesStart);
+    let guard = 0;
+    while (cursor <= hardEnd && guard < RECURRENCE_MAX_OCCURRENCES) {
+      guard += 1;
+      if (cursor >= windowStart || isSameDay(cursor, windowStart)) {
+        const isOriginal = cursor.getTime() === seriesStart.getTime();
+        output.push({
+          ...item,
+          id: isOriginal ? item.id : `${item.id}::${format(cursor, 'yyyy-MM-dd')}`,
+          start_at: isOriginal ? item.start_at : shiftIso(item.start_at, seriesStart, cursor),
+          end_at: item.end_at ? (isOriginal ? item.end_at : shiftIso(item.end_at, seriesStart, cursor)) : item.end_at,
+        });
+      }
+      cursor = step(cursor);
+    }
+  }
+
+  return output;
+}
+
 export function buildAgendaEventFromFeedItem(
   item: CalendarFeedItem,
   lookups: AgendaLookups,
@@ -303,12 +369,13 @@ export function buildAgendaEventFromFeedItem(
     district: meta?.district || process?.comarca || null,
     videoLink: meta?.videoLink || null,
     reminder: meta?.reminder || '30_min',
-    recurrence: meta?.recurrence || 'none',
+    recurrence: item.recurrence || meta?.recurrence || 'none',
+    recurrenceUntil: item.recurrence_until || null,
     observations: meta?.observations || '',
     modality: item.modality || null,
     hearingId: item.hearing_id || null,
-    editable: item.source === 'custom',
-    deletable: item.source === 'custom',
+    editable: item.source === 'custom' && !item.id.includes('::'),
+    deletable: item.source === 'custom' && !item.id.includes('::'),
     sourceLabel,
     history: buildEventHistory(sourceLabel, meta),
     originalItem: item,
@@ -543,6 +610,8 @@ export function buildAgendaEventPayload(form: AgendaEventFormState) {
     description: form.description || '',
     color: typeMeta.color,
     all_day: form.allDay,
+    recurrence: form.recurrence || 'none',
+    recurrence_until: form.recurrenceUntil || null,
   };
 }
 
@@ -599,6 +668,7 @@ export function agendaEventToForm(event: AgendaEvent): AgendaEventFormState {
     observations: event.observations || '',
     reminder: event.reminder || '30_min',
     recurrence: event.recurrence || 'none',
+    recurrenceUntil: event.recurrenceUntil || '',
     videoLink: event.videoLink || '',
     court: event.court || '',
     branch: event.branch || '',

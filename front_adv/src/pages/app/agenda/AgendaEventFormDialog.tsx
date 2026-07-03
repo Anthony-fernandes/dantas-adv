@@ -240,7 +240,7 @@ export function AgendaEventFormDialog({
               </div>
 
               <div className="space-y-2">
-                <Label>Recorrencia</Label>
+                <Label>Recorrência</Label>
                 <Select value={form.recurrence} onValueChange={(value) => updateField('recurrence', value)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -254,6 +254,18 @@ export function AgendaEventFormDialog({
                   </SelectContent>
                 </Select>
               </div>
+
+              {form.recurrence !== 'none' ? (
+                <div className="space-y-2">
+                  <Label>Repetir até</Label>
+                  <Input
+                    type="date"
+                    value={form.recurrenceUntil}
+                    onChange={(event) => updateField('recurrenceUntil', event.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">Sem data: repete pelos próximos 12 meses.</p>
+                </div>
+              ) : null}
             </section>
 
             <section className="grid gap-4 lg:grid-cols-3">

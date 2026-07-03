@@ -36,6 +36,8 @@ export type CalendarFeedItem = {
   color?: string;
   kind: string;
   source: 'custom' | 'hearing';
+  recurrence?: string | null;
+  recurrence_until?: string | null;
   process_id?: string | null;
   hearing_id?: string | null;
   status?: string | null;
@@ -117,6 +119,7 @@ export type AgendaEvent = {
   videoLink: string | null;
   reminder: string | null;
   recurrence: string | null;
+  recurrenceUntil: string | null;
   observations: string;
   modality: string | null;
   hearingId: string | null;
@@ -157,6 +160,7 @@ export type AgendaEventFormState = {
   observations: string;
   reminder: string;
   recurrence: string;
+  recurrenceUntil: string;
   videoLink: string;
   court: string;
   branch: string;
@@ -193,6 +197,7 @@ export const EMPTY_EVENT_FORM: AgendaEventFormState = {
   observations: '',
   reminder: '30_min',
   recurrence: 'none',
+  recurrenceUntil: '',
   videoLink: '',
   court: '',
   branch: '',
@@ -307,4 +312,5 @@ export const AGENDA_RECURRENCE_OPTIONS = [
   { value: 'daily', label: 'Diariamente' },
   { value: 'weekly', label: 'Semanalmente' },
   { value: 'monthly', label: 'Mensalmente' },
+  { value: 'yearly', label: 'Anualmente' },
 ];
