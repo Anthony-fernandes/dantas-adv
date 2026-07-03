@@ -64,3 +64,35 @@ class AuthAuditTests(BaseTenantTestCase):
         self.assertTrue(
             AuditEvent.objects.filter(event_type='auth.login_failed', tenant__isnull=True).exists()
         )
+
+
+class ConflictCheckTests(BaseTenantTestCase):
+    def test_conflict_when_party_is_existing_client(self):
+        from apps.clients.models import Client as ClientModel
+        ClientModel.objects.create(tenant=self.tenant_a, name='Empresa Conflitada Ltda', doc='12.345.678/0001-90')
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/conflict-check/', {'name': 'Empresa Conflitada'})
+        self.assertEqual(response.status_code, 200, response.content)
+        body = response.json()
+        self.assertTrue(body['has_conflict'])
+        self.assertEqual(body['clients'][0]['name'], 'Empresa Conflitada Ltda')
+
+    def test_no_conflict_for_unknown_person(self):
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/conflict-check/', {'name': 'Pessoa Inexistente Xyz'})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['has_conflict'])
+
+    def test_conflict_check_does_not_leak_other_tenant(self):
+        from apps.clients.models import Client as ClientModel
+        ClientModel.objects.create(tenant=self.tenant_b, name='Cliente Secreto B', doc='999.888.777-66')
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/conflict-check/', {'name': 'Cliente Secreto'})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['has_conflict'])
+        self.assertEqual(response.json()['clients'], [])
+
+    def test_requires_query(self):
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/conflict-check/')
+        self.assertEqual(response.status_code, 400)

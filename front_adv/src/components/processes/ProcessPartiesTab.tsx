@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MoreHorizontal, Pencil, Plus, Scale, Trash2, Users } from 'lucide-react';
+import { AlertTriangle, MoreHorizontal, Pencil, Plus, Scale, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { api, apiGetAllPages } from '@/integrations/api/client';
@@ -81,12 +81,39 @@ const EMPTY_FORM: PartyForm = {
   notes: '',
 };
 
+type ConflictResult = {
+  has_conflict: boolean;
+  clients: Array<{ id: string; name: string; doc?: string | null; status?: string }>;
+  parties: Array<{ id: string; name: string; role_label?: string; process_cnj?: string | null; is_client?: boolean }>;
+};
+
 export function ProcessPartiesTab({ processId }: { processId: string }) {
   const { activeTenantId } = useTenant();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ProcessPartyRecord | null>(null);
   const [form, setForm] = useState<PartyForm>(EMPTY_FORM);
+  const [conflict, setConflict] = useState<ConflictResult | null>(null);
+
+  // Checagem de conflito de interesses enquanto o usuário digita (debounce 600ms).
+  useEffect(() => {
+    if (!dialogOpen || form.is_client) { setConflict(null); return; }
+    const name = form.name.trim();
+    const doc = form.doc.replace(/\D/g, '');
+    if (name.length < 4 && doc.length < 6) { setConflict(null); return; }
+    const handle = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams();
+        if (name.length >= 4) params.set('name', name);
+        if (doc.length >= 6) params.set('doc', doc);
+        const result = await api.get<ConflictResult>(`/conflict-check/?${params.toString()}`);
+        setConflict(result);
+      } catch {
+        setConflict(null);
+      }
+    }, 600);
+    return () => clearTimeout(handle);
+  }, [dialogOpen, form.name, form.doc, form.is_client]);
 
   const partiesQuery = useQuery({
     queryKey: ['process-parties', activeTenantId, processId],
@@ -282,6 +309,31 @@ export function ProcessPartiesTab({ processId }: { processId: string }) {
               <Label>Nome completo *</Label>
               <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome da parte" />
             </div>
+            {conflict?.has_conflict ? (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/40">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                      Possível conflito de interesses
+                    </p>
+                    {conflict.clients.length > 0 && (
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                        Já é cliente do escritório: {conflict.clients.map((c) => c.name).join(', ')}
+                      </p>
+                    )}
+                    {conflict.parties.filter((p) => p.is_client).length > 0 && (
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                        Representada em outro processo: {conflict.parties.filter((p) => p.is_client).map((p) => `${p.name}${p.process_cnj ? ` (${p.process_cnj})` : ''}`).join(', ')}
+                      </p>
+                    )}
+                    <p className="text-xs text-amber-700/80 dark:text-amber-400/80">
+                      Revise os arts. 17–20 do Código de Ética da OAB antes de prosseguir.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between rounded-xl border px-4 py-3">
               <div>
                 <p className="text-sm font-medium">Parte representada pelo escritório</p>

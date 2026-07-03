@@ -4,6 +4,7 @@ from django.db import models
 from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.core.permissions import CauseAccessPermission, IsTenantMember, IsLegal
 from apps.core.viewsets import TenantAuditedModelViewSet
@@ -392,6 +393,77 @@ class ProcessPartySerializer(TenantScopedSerializerMixin, serializers.ModelSeria
         model = ProcessParty
         fields = '__all__'
         read_only_fields = ('id', 'tenant', 'created_at', 'updated_at')
+
+
+class ConflictCheckView(APIView):
+    """Checagem de conflito de interesses.
+
+    GET /api/conflict-check/?name=&doc=
+    Verifica se a pessoa consultada já é cliente do escritório ou figura
+    como parte em outros processos — prática obrigatória antes de aceitar
+    um novo caso (Código de Ética da OAB, arts. 17-20).
+    """
+
+    permission_classes = [IsTenantMember, IsLegal]
+
+    def get(self, request):
+        tenant = request.tenant
+        name = (request.query_params.get('name') or '').strip()
+        doc = (request.query_params.get('doc') or '').strip()
+        doc_digits = ''.join(ch for ch in doc if ch.isdigit())
+
+        if not name and not doc_digits:
+            return Response({'detail': 'Informe name ou doc para a checagem.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from apps.clients.models import Client
+
+        client_qs = Client.objects.filter(tenant=tenant, deleted_at__isnull=True)
+        party_qs = ProcessParty.objects.filter(tenant=tenant).select_related('process')
+
+        client_matches = Client.objects.none()
+        party_matches = ProcessParty.objects.none()
+
+        if doc_digits:
+            client_matches = client_qs.filter(doc__icontains=doc_digits[:6])
+            party_matches = party_qs.filter(doc__icontains=doc_digits[:6])
+        if name and len(name) >= 4:
+            client_matches = client_matches | client_qs.filter(name__icontains=name)
+            party_matches = party_matches | party_qs.filter(name__icontains=name)
+
+        clients_payload = [
+            {'id': str(c.id), 'name': c.name, 'doc': c.doc, 'status': c.status}
+            for c in client_matches.distinct()[:10]
+        ]
+        parties_payload = [
+            {
+                'id': str(p.id),
+                'name': p.name,
+                'doc': p.doc,
+                'role': p.role,
+                'role_label': p.get_role_display(),
+                'process_id': str(p.process_id),
+                'process_cnj': p.process.cnj if p.process else None,
+                'is_client': p.is_client,
+            }
+            for p in party_matches.distinct()[:10]
+        ]
+
+        has_conflict = bool(clients_payload) or any(item['is_client'] for item in parties_payload)
+
+        audit_event(
+            tenant=tenant,
+            actor=request.user,
+            event_type='conflict.check',
+            entity_type='ConflictCheck',
+            summary=f'Checagem de conflito: {name or doc}',
+            payload={'query': {'name': name, 'doc': doc}, 'has_conflict': has_conflict},
+        )
+
+        return Response({
+            'has_conflict': has_conflict,
+            'clients': clients_payload,
+            'parties': parties_payload,
+        })
 
 
 class ProcessPartyViewSet(TenantAuditedModelViewSet):

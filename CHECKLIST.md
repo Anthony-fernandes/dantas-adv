@@ -36,7 +36,7 @@
 * [x] Tabela + cards com filtros combinados
 * [x] Detalhe com abas (processos, financeiro, documentos, portal, histórico)
 * [ ] Timeline consolidada do cliente
-* [ ] Conflito de interesses (checagem de parte contrária na base)
+* [x] Conflito de interesses (checagem de parte contrária na base)
 
 ## Processos
 
@@ -54,7 +54,7 @@
 
 * [x] Calendário unificado (audiências, prazos, tarefas, eventos)
 * [x] Criação/edição de eventos
-* [ ] Lembretes por e-mail (job scheduler)
+* [x] Lembretes por e-mail (send_deadline_alerts com canais configuráveis por tenant)
 
 ## Financeiro
 
@@ -75,7 +75,7 @@
 
 ## Automações
 
-* [ ] Alertas de prazo por e-mail (backend job)
+* [x] Alertas de prazo por e-mail (backend job já existente: send_deadline_alerts D-7/D-3/D-1/D-0)
 * [ ] [EXT] WhatsApp
 * [ ] [EXT] Workflows configuráveis
 

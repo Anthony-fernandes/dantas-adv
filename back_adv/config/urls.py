@@ -84,7 +84,7 @@ from apps.billing.api import BillingViewSet
 from apps.core.audit_api import AuditEventViewSet
 from apps.chat.api import ChatMessageViewSet
 from apps.notifications.api import NotificationViewSet, PushSubscriptionViewSet
-from apps.processes.api import DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessPartyViewSet, ProcessViewSet, TaskViewSet, TimeEntryViewSet, TribunalSyncViewSet
+from apps.processes.api import ConflictCheckView, DeadlineViewSet, HearingViewSet, LegalCauseViewSet, MovementViewSet, ProcessPartyViewSet, ProcessViewSet, TaskViewSet, TimeEntryViewSet, TribunalSyncViewSet
 
 
 class EmailOrUsernameTokenView(TokenObtainPairView):
@@ -145,6 +145,7 @@ class HealthView(APIView):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/login/", LoginView.as_view(), name="auth_login"),
+    path("api/conflict-check/", ConflictCheckView.as_view(), name="conflict_check"),
     path("api/portal/login/", LoginView.as_view(), name="portal_login"),
     path("api/auth/logout/", LogoutView.as_view(), name="auth_logout"),
     path("api/auth/accept-invite/", AcceptInviteView.as_view(), name="auth_accept_invite"),
