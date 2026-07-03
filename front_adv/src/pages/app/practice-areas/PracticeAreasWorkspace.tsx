@@ -689,14 +689,6 @@ export default function PracticeAreasWorkspace() {
             </SelectContent>
           </Select>
 
-          <div className="inline-flex items-center rounded-lg border border-border/70 bg-background p-1">
-            <Button type="button" size="sm" variant={layout === "cards" ? "default" : "ghost"} onClick={() => setLayout("cards")}>
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button type="button" size="sm" variant={layout === "list" ? "default" : "ghost"} onClick={() => setLayout("list")}>
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -766,7 +758,7 @@ export default function PracticeAreasWorkspace() {
       ) : null}
 
       {filteredAreas.length > 0 ? (
-        layout === "cards" ? (
+        false ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filteredAreas.map((area) => (
               <AreaCard
