@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
   CheckCircle2,
+  CircleDollarSign,
   FileSignature,
   MoreHorizontal,
   Pencil,
@@ -144,7 +145,26 @@ export default function ContractsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Contract | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Contract | null>(null);
+  const [billingTarget, setBillingTarget] = useState<Contract | null>(null);
+  const [billingInstallments, setBillingInstallments] = useState('1');
+  const [billingFirstDue, setBillingFirstDue] = useState(() => new Date().toISOString().slice(0, 10));
   const [form, setForm] = useState<ContractForm>(EMPTY_FORM);
+
+  const generateReceivablesMutation = useMutation({
+    mutationFn: async () => {
+      if (!billingTarget) throw new Error('Contrato não selecionado.');
+      return api.post(`/contracts/${billingTarget.id}/gerar-recebiveis/`, {
+        installments: Number(billingInstallments) || 1,
+        first_due_date: billingFirstDue,
+      });
+    },
+    onSuccess: (result: any) => {
+      toast.success(`${result?.created ?? ''} cobrança(s) geradas no contas a receber.`);
+      setBillingTarget(null);
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    },
+    onError: (error: any) => toast.error(error?.message || 'Falha ao gerar cobranças.'),
+  });
 
   const contractsQuery = useQuery({
     queryKey: ['contracts', activeTenantId],
@@ -394,6 +414,10 @@ export default function ContractsPage() {
                       <Pencil className="mr-2 h-3.5 w-3.5" />
                       Editar
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setBillingTarget(c); setBillingInstallments('1'); }}>
+                      <CircleDollarSign className="mr-2 h-3.5 w-3.5" />
+                      Gerar cobranças
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
@@ -566,6 +590,59 @@ export default function ContractsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!billingTarget} onOpenChange={(open) => { if (!open) setBillingTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Gerar cobranças do contrato</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              O valor fixo do contrato será dividido em parcelas mensais no contas a receber
+              (categoria honorários), vinculadas ao cliente.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-1.5">
+                <Label>Número de parcelas</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={120}
+                  value={billingInstallments}
+                  onChange={(event) => setBillingInstallments(event.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Primeiro vencimento</Label>
+                <Input
+                  type="date"
+                  value={billingFirstDue}
+                  onChange={(event) => setBillingFirstDue(event.target.value)}
+                />
+              </div>
+            </div>
+            {billingTarget?.fixed_value ? (
+              <p className="text-xs text-muted-foreground">
+                Total do contrato: <strong className="text-foreground">{Number(billingTarget.fixed_value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
+                {Number(billingInstallments) > 1 ? ` em ${billingInstallments} parcela(s)` : ''}
+              </p>
+            ) : (
+              <p className="text-xs font-medium text-amber-600">
+                Este contrato não tem valor fixo definido — edite o contrato antes de gerar cobranças.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBillingTarget(null)}>Cancelar</Button>
+            <Button
+              onClick={() => generateReceivablesMutation.mutate()}
+              disabled={generateReceivablesMutation.isPending || !billingTarget?.fixed_value || Number(billingInstallments) < 1}
+            >
+              {generateReceivablesMutation.isPending ? 'Gerando…' : 'Gerar cobranças'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

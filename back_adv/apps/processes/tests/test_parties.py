@@ -235,3 +235,66 @@ class PortalUploadTests(BaseTenantTestCase):
         client = self.client_for(self.portal_user, self.tenant_a)
         response = client.post(f'/api/portal/processes/{self.process_a.id}/documents/upload/', {}, format='multipart')
         self.assertEqual(response.status_code, 400)
+
+
+class ContractReceivablesTests(BaseTenantTestCase):
+    def _make_contract(self, value='3000.00'):
+        from apps.documents.models import Contract
+        from apps.clients.models import Client as ClientModel
+        client = ClientModel.objects.create(tenant=self.tenant_a, name='Cliente Contrato')
+        return Contract.objects.create(
+            tenant=self.tenant_a, client=client, type='fixo',
+            fixed_value=value, start_date='2026-01-01',
+        )
+
+    def test_generates_installments_summing_total(self):
+        from apps.finance.models import AccountsReceivable
+        contract = self._make_contract('1000.00')
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.post(
+            f'/api/contracts/{contract.id}/gerar-recebiveis/',
+            {'installments': 3, 'first_due_date': '2026-08-01'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(response.json()['created'], 3)
+        rows = AccountsReceivable.objects.filter(tenant=self.tenant_a, client=contract.client).order_by('due_date')
+        self.assertEqual(rows.count(), 3)
+        total = sum(r.amount for r in rows)
+        self.assertEqual(str(total), '1000.00')
+        # vencimentos mensais
+        self.assertEqual(str(rows[0].due_date), '2026-08-01')
+        self.assertEqual(str(rows[1].due_date), '2026-09-01')
+        self.assertEqual(str(rows[2].due_date), '2026-10-01')
+
+    def test_rejects_contract_without_value(self):
+        contract = self._make_contract(value=None)
+        contract.fixed_value = None
+        contract.save(update_fields=['fixed_value'])
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.post(
+            f'/api/contracts/{contract.id}/gerar-recebiveis/',
+            {'installments': 2, 'first_due_date': '2026-08-01'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_rejects_invalid_installments(self):
+        contract = self._make_contract()
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.post(
+            f'/api/contracts/{contract.id}/gerar-recebiveis/',
+            {'installments': 0, 'first_due_date': '2026-08-01'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_other_tenant_contract_not_found(self):
+        contract = self._make_contract()
+        client = self.client_for(self.lawyer_b, self.tenant_b)
+        response = client.post(
+            f'/api/contracts/{contract.id}/gerar-recebiveis/',
+            {'installments': 1, 'first_due_date': '2026-08-01'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, 404)

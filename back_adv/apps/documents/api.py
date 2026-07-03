@@ -226,6 +226,87 @@ class ContractViewSet(TenantScopedModelViewSet):
     serializer_class = ContractSerializer
     permission_classes = [IsTenantMember, IsLegal]
 
+    @action(detail=True, methods=['post'], url_path='gerar-recebiveis')
+    def gerar_recebiveis(self, request, pk=None):
+        """Gera cobranças (contas a receber) a partir do contrato em um clique.
+
+        Body: {installments: int>=1, first_due_date: 'YYYY-MM-DD', description?: str}
+        Divide o valor fixo do contrato em N parcelas mensais, categoria
+        'honorarios', vinculadas ao cliente do contrato.
+        """
+        from datetime import date as date_cls
+        from decimal import Decimal, ROUND_HALF_UP
+
+        from dateutil.relativedelta import relativedelta
+
+        from apps.core.services.audit import audit_event
+        from apps.finance.models import AccountsReceivable
+
+        contract = self.get_object()
+
+        if not contract.fixed_value or contract.fixed_value <= 0:
+            return Response(
+                {'detail': 'Contrato sem valor fixo definido. Informe o valor antes de gerar cobranças.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        raw_installments = request.data.get('installments')
+        try:
+            installments = int(raw_installments) if raw_installments is not None else 1
+        except (TypeError, ValueError):
+            return Response({'detail': 'installments deve ser um inteiro.'}, status=status.HTTP_400_BAD_REQUEST)
+        if installments < 1 or installments > 120:
+            return Response({'detail': 'installments deve estar entre 1 e 120.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        first_due_raw = str(request.data.get('first_due_date') or '')
+        try:
+            first_due = date_cls.fromisoformat(first_due_raw)
+        except ValueError:
+            return Response({'detail': 'first_due_date inválida (use YYYY-MM-DD).'}, status=status.HTTP_400_BAD_REQUEST)
+
+        description = str(request.data.get('description') or '').strip() or f'Honorários — contrato {contract.type}'
+
+        total = Decimal(contract.fixed_value)
+        base_amount = (total / installments).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        # Ajuste de arredondamento na última parcela para fechar o total exato.
+        last_amount = total - base_amount * (installments - 1)
+
+        created = []
+        for index in range(installments):
+            amount = last_amount if index == installments - 1 else base_amount
+            receivable = AccountsReceivable.objects.create(
+                tenant=request.tenant,
+                client=contract.client,
+                description=f'{description} ({index + 1}/{installments})' if installments > 1 else description,
+                category='honorarios',
+                amount=amount,
+                due_date=first_due + relativedelta(months=index),
+                status='aberta',
+                installment_number=index + 1,
+                total_installments=installments,
+                created_by=request.user,
+            )
+            created.append(receivable)
+
+        audit_event(
+            tenant=request.tenant,
+            actor=request.user,
+            event_type='contract.receivables_generated',
+            entity_type='Contract',
+            entity_id=contract.id,
+            summary=f'{installments} cobrança(s) geradas do contrato ({total})',
+            payload={'installments': installments, 'total': str(total), 'first_due_date': first_due_raw},
+        )
+
+        return Response(
+            {
+                'created': len(created),
+                'total': str(total),
+                'receivable_ids': [str(r.id) for r in created],
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
 
 class JobPositionViewSet(TenantScopedModelViewSet):
     queryset = JobPosition.objects.all().order_by('name')
