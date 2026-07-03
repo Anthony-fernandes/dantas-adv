@@ -125,3 +125,55 @@ class GlobalSearchTests(BaseTenantTestCase):
         response = client.get('/api/search/', {'q': 'a'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {'processes': [], 'clients': [], 'documents': [], 'tasks': []})
+
+
+class HearingConflictTests(BaseTenantTestCase):
+    def _create_hearing(self, tenant, process, when):
+        from apps.processes.models import Hearing
+        return Hearing.objects.create(tenant=tenant, process=process, hearing_date=when, type='Instrução')
+
+    def test_detects_overlapping_hearing(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        base = timezone.now() + timedelta(days=3)
+        self._create_hearing(self.tenant_a, self.process_a, base)
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        probe = (base + timedelta(minutes=30)).isoformat()
+        response = client.get('/api/hearings/check-conflict/', {'hearing_date': probe})
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(response.json()['has_conflict'])
+
+    def test_no_conflict_outside_window(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        base = timezone.now() + timedelta(days=3)
+        self._create_hearing(self.tenant_a, self.process_a, base)
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        probe = (base + timedelta(hours=4)).isoformat()
+        response = client.get('/api/hearings/check-conflict/', {'hearing_date': probe})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['has_conflict'])
+
+    def test_conflict_scoped_to_tenant(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        base = timezone.now() + timedelta(days=3)
+        self._create_hearing(self.tenant_b, self.process_b, base)
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/hearings/check-conflict/', {'hearing_date': base.isoformat()})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['has_conflict'])
+
+    def test_invalid_date_rejected(self):
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/hearings/check-conflict/', {'hearing_date': 'amanha'})
+        self.assertEqual(response.status_code, 400)
+
+    def test_confirmada_status_accepted(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        hearing = self._create_hearing(self.tenant_a, self.process_a, timezone.now() + timedelta(days=5))
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.patch(f'/api/hearings/{hearing.id}/', {'status': 'confirmada'}, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()['status'], 'confirmada')

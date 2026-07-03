@@ -521,6 +521,51 @@ class HearingViewSet(TenantAuditedModelViewSet):
     ordering_fields = ['hearing_date', 'created_at', 'status']
     ordering = ['hearing_date']
 
+    @action(detail=False, methods=['get'], url_path='check-conflict')
+    def check_conflict(self, request):
+        """Detecta audiências no mesmo horário (janela de ±90 min).
+
+        GET /api/hearings/check-conflict/?hearing_date=ISO&responsible=&exclude=
+        Aviso não bloqueante: quem decide é o advogado, mas o sistema alerta —
+        comportamento padrão de agendas jurídicas profissionais.
+        """
+        from datetime import timedelta
+
+        from django.utils.dateparse import parse_datetime
+
+        raw_date = request.query_params.get('hearing_date') or ''
+        target = parse_datetime(raw_date)
+        if target is None:
+            return Response({'detail': 'Parâmetro hearing_date inválido (use ISO 8601).'}, status=status.HTTP_400_BAD_REQUEST)
+
+        window = timedelta(minutes=90)
+        qs = (
+            self.get_queryset()
+            .filter(hearing_date__range=(target - window, target + window))
+            .exclude(status__in=['cancelada', 'realizada'])
+        )
+        exclude_id = request.query_params.get('exclude')
+        if exclude_id:
+            qs = qs.exclude(id=exclude_id)
+        responsible = request.query_params.get('responsible')
+        if responsible:
+            qs = qs.filter(responsible=responsible)
+
+        conflicts = [
+            {
+                'id': str(h.id),
+                'hearing_date': h.hearing_date.isoformat(),
+                'type': h.type,
+                'process_id': str(h.process_id),
+                'process_cnj': h.process.cnj if h.process else None,
+                'responsible_name': getattr(h.responsible, 'full_name', None) or getattr(h.responsible, 'email', None),
+                'location': h.location,
+                'modality': h.modality,
+            }
+            for h in qs.select_related('process', 'responsible')[:10]
+        ]
+        return Response({'has_conflict': bool(conflicts), 'conflicts': conflicts})
+
 
 class TaskSerializer(TenantScopedSerializerMixin, serializers.ModelSerializer):
     def validate(self, attrs):

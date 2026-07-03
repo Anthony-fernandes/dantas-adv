@@ -241,6 +241,7 @@ class HearingModality(models.TextChoices):
 
 class HearingStatus(models.TextChoices):
     AGENDADA = "agendada", "Agendada"
+    CONFIRMADA = "confirmada", "Confirmada"
     REALIZADA = "realizada", "Realizada"
     REDESIGNADA = "redesignada", "Redesignada"
     CANCELADA = "cancelada", "Cancelada"

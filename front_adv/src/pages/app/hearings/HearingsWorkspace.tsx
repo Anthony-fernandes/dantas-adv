@@ -250,6 +250,7 @@ function modalityClasses(value?: string | null) {
 
 function mapBackendStatusToWorkflow(value?: string | null): WorkflowStatus {
   const normalized = String(value || '').toLowerCase();
+  if (normalized === 'confirmada') return 'confirmada';
   if (normalized === 'realizada') return 'realizada';
   if (normalized === 'cancelada') return 'cancelada';
   if (normalized === 'redesignada') return 'adiada';
@@ -258,7 +259,6 @@ function mapBackendStatusToWorkflow(value?: string | null): WorkflowStatus {
 
 function mapWorkflowToBackend(value: WorkflowStatus) {
   if (value === 'adiada') return 'redesignada';
-  if (value === 'confirmada') return 'agendada';
   return value;
 }
 
@@ -373,6 +373,7 @@ export default function HearingsWorkspace() {
   const [editing, setEditing] = useState<HearingItem | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<HearingFormState>({ ...blankForm, hearing_date: defaultDateTime(), end_date: defaultDateTime(3, 10, 0) });
+  const [dateConflicts, setDateConflicts] = useState<Array<{ id: string; hearing_date: string; type?: string | null; process_cnj?: string | null; responsible_name?: string | null }>>([]);
   const [noteDraft, setNoteDraft] = useState('');
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -468,6 +469,26 @@ export default function HearingsWorkspace() {
       setSelectedHearingId(filteredHearings[0].id);
     }
   }, [filteredHearings, selectedHearingId]);
+
+  // Checagem de conflito de pauta (aviso não bloqueante) ao escolher data/hora.
+  useEffect(() => {
+    if (!formOpen || !form.hearing_date) {
+      setDateConflicts([]);
+      return;
+    }
+    const handle = setTimeout(async () => {
+      try {
+        const iso = new Date(form.hearing_date).toISOString();
+        const params = new URLSearchParams({ hearing_date: iso });
+        if (editing?.id) params.set('exclude', editing.id);
+        const result = await api.get<{ has_conflict: boolean; conflicts: typeof dateConflicts }>(`/hearings/check-conflict/?${params.toString()}`);
+        setDateConflicts(result?.conflicts || []);
+      } catch {
+        setDateConflicts([]);
+      }
+    }, 500);
+    return () => clearTimeout(handle);
+  }, [formOpen, form.hearing_date, editing?.id]);
 
   const selectedHearing = useMemo(
     () => filteredHearings.find((hearing) => hearing.id === selectedHearingId) || hearings.find((hearing) => hearing.id === selectedHearingId) || null,
@@ -1303,6 +1324,21 @@ export default function HearingsWorkspace() {
             <div className="space-y-2">
               <Label>Data e hora de início</Label>
               <Input type="datetime-local" value={form.hearing_date} onChange={(event) => setForm((current) => ({ ...current, hearing_date: event.target.value }))} />
+              {dateConflicts.length > 0 && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs dark:border-amber-700 dark:bg-amber-950/40">
+                  <p className="font-semibold text-amber-800 dark:text-amber-300">⚠ Conflito de agenda</p>
+                  <ul className="mt-1 space-y-0.5 text-amber-700 dark:text-amber-400">
+                    {dateConflicts.map((conflict) => (
+                      <li key={conflict.id}>
+                        {new Date(conflict.hearing_date).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        {' — '}{conflict.type || 'Audiência'}{conflict.process_cnj ? ` (${conflict.process_cnj})` : ''}
+                        {conflict.responsible_name ? ` · ${conflict.responsible_name}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 text-amber-700/80 dark:text-amber-400/80">Você pode salvar mesmo assim, mas revise a pauta.</p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
