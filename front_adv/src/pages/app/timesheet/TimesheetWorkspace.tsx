@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Clock, Plus, Search, Pencil, Trash2, Timer } from 'lucide-react';
+import { VirtualTableBody } from '@/components/shared/VirtualTableBody';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

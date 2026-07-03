@@ -164,7 +164,7 @@
 
 ## 16. Segurança / Performance / Responsividade / UX
 
-✅ cobertos nas auditorias 1-2 (headers, SECRET_KEY, throttling, code-splitting, aria-labels, overflow móvel, 39 testes). Pendências P2: virtualização de listas >500 linhas; testes E2E.
+✅ cobertos nas auditorias 1-2 (headers, SECRET_KEY, throttling, code-splitting, aria-labels, overflow móvel, testes). **Virtualização de listas longas — CONCLUÍDO**: componente reutilizável `VirtualTableBody` (@tanstack/react-virtual) monta só a janela visível acima de 80 linhas, com linhas-espaçador preservando a rolagem; aplicado à lista de Prazos (bucket de concluídos cresce indefinidamente). 3 testes vitest. Pendência P2 restante: testes E2E.
 
 ---
 

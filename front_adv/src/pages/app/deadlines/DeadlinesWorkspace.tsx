@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { VirtualTableBody } from '@/components/shared/VirtualTableBody';
 import { StatCard } from '@/components/shared/StatCard';
 import {
   useDeadlines,
@@ -193,6 +194,46 @@ function DeadlineRow({
         </button>
       </td>
     </tr>
+  );
+}
+
+/* ─── Group table (virtualizada quando grande) ───────────────────────── */
+
+function DeadlineGroupTable({
+  items,
+  processMap,
+  onEdit,
+  onComplete,
+  onDelete,
+}: {
+  items: DeadlineItem[];
+  processMap: Record<string, ProcessItem>;
+  onEdit: (d: DeadlineItem) => void;
+  onComplete: (d: DeadlineItem) => void;
+  onDelete: (d: DeadlineItem) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  return (
+    <div ref={scrollRef} className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-card">
+      <table className="min-w-[560px] w-full">
+        <VirtualTableBody
+          items={items}
+          scrollRef={scrollRef}
+          colSpan={5}
+          rowHeight={57}
+          renderRow={(item) => (
+            <DeadlineRow
+              key={item.id}
+              item={item}
+              processMap={processMap}
+              onEdit={onEdit}
+              onComplete={onComplete}
+              onDelete={onDelete}
+            />
+          )}
+        />
+      </table>
+    </div>
   );
 }
 
@@ -480,22 +521,13 @@ export default function DeadlinesWorkspace() {
         {items.length === 0 ? (
           <p className="px-4 py-3 text-sm text-muted-foreground">{emptyMsg}</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border bg-card">
-            <table className="min-w-[560px] w-full">
-              <tbody>
-                {items.map((item) => (
-                  <DeadlineRow
-                    key={item.id}
-                    item={item}
-                    processMap={processMap}
-                    onEdit={openEdit}
-                    onComplete={handleToggleComplete}
-                    onDelete={setDeleting}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DeadlineGroupTable
+            items={items}
+            processMap={processMap}
+            onEdit={openEdit}
+            onComplete={handleToggleComplete}
+            onDelete={setDeleting}
+          />
         )}
       </div>
     );
