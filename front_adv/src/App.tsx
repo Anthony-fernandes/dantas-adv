@@ -72,6 +72,7 @@ const PortalMessages = lazy(() => import("@/pages/portal/PortalMessages"));
 const PortalProcessDetail = lazy(() => import("@/pages/portal/PortalProcessDetail"));
 const PortalDocuments = lazy(() => import("@/pages/portal/PortalDocuments"));
 const PortalFinancial = lazy(() => import("@/pages/portal/PortalFinancial"));
+const PortalContracts = lazy(() => import("@/pages/portal/PortalContracts"));
 
 // Master (SaaS admin)
 const MasterLogin = lazy(() => import("@/pages/master/MasterLogin"));
@@ -334,6 +335,7 @@ const App = () => (
                 <Route path="processos/:id" element={<PortalProcessDetail />} />
                 <Route path="documentos" element={<PortalDocuments />} />
                 <Route path="financeiro" element={<PortalFinancial />} />
+                <Route path="contratos" element={<PortalContracts />} />
                 <Route path="mensagens" element={<PortalMessages />} />
               </Route>
               <Route path="/master" element={<SuperuserBootstrapGuard><MasterProtectedRoute><MasterLayout /></MasterProtectedRoute></SuperuserBootstrapGuard>}>

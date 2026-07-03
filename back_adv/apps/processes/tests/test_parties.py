@@ -365,3 +365,30 @@ class StrategicDashboardTests(BaseTenantTestCase):
         response = client.get('/api/dashboard/strategic/')
         totals = {row['status']: row['count'] for row in response.json()['process_totals']}
         self.assertEqual(totals.get('finalizado'), 1)
+
+
+class PortalContractsTests(PortalUploadTests):
+    def test_portal_client_sees_own_contracts(self):
+        from apps.documents.models import Contract
+        Contract.objects.create(tenant=self.tenant_a, client=self.portal_client, type='fixo', fixed_value='2000.00', start_date='2026-01-01', status='vigente')
+        client = self.client_for(self.portal_user, self.tenant_a)
+        response = client.get('/api/portal/contracts/')
+        self.assertEqual(response.status_code, 200, response.content)
+        results = response.json().get('results', response.json())
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['type'], 'fixo')
+
+    def test_portal_client_does_not_see_other_client_contracts(self):
+        from apps.documents.models import Contract
+        from apps.clients.models import Client as ClientModel
+        other = ClientModel.objects.create(tenant=self.tenant_a, name='Outro')
+        Contract.objects.create(tenant=self.tenant_a, client=other, type='fixo', fixed_value='9.00', start_date='2026-01-01')
+        client = self.client_for(self.portal_user, self.tenant_a)
+        response = client.get('/api/portal/contracts/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json().get('results', response.json())), 0)
+
+    def test_lawyer_cannot_use_portal_contracts(self):
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/portal/contracts/')
+        self.assertEqual(response.status_code, 403)

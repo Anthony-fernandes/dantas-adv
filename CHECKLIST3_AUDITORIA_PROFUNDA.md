@@ -115,7 +115,7 @@
 | Financeiro | ✅ | PortalFinancialView |
 | Mensagens (chat) | ✅ | PortalMessages + ChatMessage |
 | Notificações ao cliente | 🟡 | in-app não cobre o portal — P2: reutilizar Notification para papel CLIENT |
-| Contratos no portal | 🔴 | P2 — expor contratos ativos (leitura) |
+| Contratos no portal | ✅ | `PortalContractsView` (leitura) + `PortalContracts.tsx` + nav |
 
 ## 10. Financeiro
 

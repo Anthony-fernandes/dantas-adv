@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  DollarSign, FileText, Home, LogOut, Menu, MessageSquare, Scale, X,
+  DollarSign, FileSignature, FileText, Home, LogOut, Menu, MessageSquare, Scale, X,
 } from "lucide-react";
 import { PortalNotificationsBell } from '@/components/portal/PortalNotificationsBell';
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,7 @@ const portalNav = [
   { label: "Processos",  icon: Scale,         path: "/portal/processos" },
   { label: "Documentos", icon: FileText,      path: "/portal/documentos" },
   { label: "Financeiro", icon: DollarSign,    path: "/portal/financeiro" },
+  { label: "Contratos",  icon: FileSignature, path: "/portal/contratos" },
   { label: "Mensagens",  icon: MessageSquare, path: "/portal/mensagens" },
 ];
 

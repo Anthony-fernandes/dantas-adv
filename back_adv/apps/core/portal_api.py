@@ -441,3 +441,28 @@ class PortalDocumentUploadView(PortalProcessBase, generics.GenericAPIView):
             },
             status=201,
         )
+
+
+class PortalContractsView(generics.ListAPIView):
+    """Contratos do cliente autenticado no portal (somente leitura)."""
+
+    permission_classes = [permissions.IsAuthenticated, IsClient]
+
+    def get_serializer_class(self):
+        from rest_framework import serializers as s
+        from apps.documents.models import Contract
+
+        class Ser(s.ModelSerializer):
+            class Meta:
+                model = Contract
+                fields = ['id', 'type', 'percent', 'fixed_value', 'start_date', 'end_date', 'status', 'clauses', 'created_at']
+        return Ser
+
+    def get_queryset(self):
+        from apps.documents.models import Contract
+        tenant = self.request.tenant
+        return (
+            Contract.objects
+            .filter(tenant=tenant, client__portal_user=self.request.user, deleted_at__isnull=True)
+            .order_by('-start_date', '-created_at')
+        )
