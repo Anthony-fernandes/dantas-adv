@@ -10,6 +10,7 @@ import { CurrencyInput } from '@/components/processes/CurrencyInput';
 import {
   ensureOptionAvailability,
   PROCESS_PHASE_OPTIONS,
+  PROCESS_PRIORITY_OPTIONS,
   PROCESS_PROBABILITY_OPTIONS,
   PROCESS_STATUS_OPTIONS,
   type ProcessFormErrors,
@@ -326,6 +327,38 @@ export function ProcessForm({
                 ))}
               </SelectContent>
             </Select>
+          </Field>
+
+          <Field label="Prioridade">
+            <Select
+              value={values.priority || 'media'}
+              disabled={disabled}
+              onValueChange={(value) => {
+                onChange('priority', value);
+                onBlur('priority');
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                {PROCESS_PRIORITY_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field label="Etiquetas (tags)" className="md:col-span-2">
+            <Input
+              value={values.tags}
+              disabled={disabled}
+              onChange={(event) => onChange('tags', event.target.value)}
+              onBlur={() => onBlur('tags')}
+              placeholder="Separe por vírgula: urgente, liminar, contrato bancário"
+            />
           </Field>
         </div>
       </ProcessFormSection>

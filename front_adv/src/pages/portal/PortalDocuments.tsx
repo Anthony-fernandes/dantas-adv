@@ -1,12 +1,16 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Download, FileText, Search } from 'lucide-react';
+import { Download, FileText, Loader2, Search, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { api } from '@/integrations/api/client';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { api, apiUpload } from '@/integrations/api/client';
 
 type PortalProcess = { id: string; title?: string | null; cnj?: string | null };
 type Doc = {
@@ -22,9 +26,13 @@ type Paginated<T> = { results: T[]; count: number; next: string | null; previous
 
 type DocWithProcess = Doc & { processId: string; processTitle: string };
 
-async function loadDocuments(): Promise<DocWithProcess[]> {
+async function loadProcesses(): Promise<PortalProcess[]> {
   const processes = await api.get<Paginated<PortalProcess>>('/portal/processes/');
-  const base = processes?.results ?? [];
+  return processes?.results ?? [];
+}
+
+async function loadDocuments(): Promise<DocWithProcess[]> {
+  const base = await loadProcesses();
   const docsByProcess = await Promise.all(
     base.slice(0, 12).map(async (p) => {
       try {
@@ -49,10 +57,23 @@ function formatDate(iso?: string) {
 
 export default function PortalDocuments() {
   const [search, setSearch] = useState('');
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploadProcessId, setUploadProcessId] = useState('');
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['portal-documents'],
     queryFn: loadDocuments,
+  });
+
+  const processesQuery = useQuery({
+    queryKey: ['portal-processes-for-upload'],
+    queryFn: loadProcesses,
+    enabled: uploadOpen,
   });
 
   const docs = useMemo(() => {
@@ -67,17 +88,44 @@ export default function PortalDocuments() {
     );
   }, [data, search]);
 
+  async function handleUpload() {
+    if (!uploadProcessId || !uploadFile) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      if (uploadTitle.trim()) formData.append('title', uploadTitle.trim());
+      await apiUpload(`/portal/processes/${uploadProcessId}/documents/upload/`, formData);
+      toast.success('Documento enviado ao escritório com sucesso.');
+      setUploadOpen(false);
+      setUploadFile(null);
+      setUploadTitle('');
+      setUploadProcessId('');
+      queryClient.invalidateQueries({ queryKey: ['portal-documents'] });
+    } catch (error: any) {
+      toast.error(error?.message || 'Falha ao enviar o documento.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <p className="eyebrow">Portal do cliente</p>
-        <h1 className="mt-1 font-display text-2xl font-semibold text-foreground sm:text-3xl">
-          Documentos
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Arquivos disponibilizados pelo escritório para consulta e download.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="eyebrow">Portal do cliente</p>
+          <h1 className="mt-1 font-display text-2xl font-semibold text-foreground sm:text-3xl">
+            Documentos
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Arquivos disponibilizados pelo escritório e envio de documentos do seu caso.
+          </p>
+        </div>
+        <Button onClick={() => setUploadOpen(true)} className="gap-2 self-start sm:self-auto">
+          <Upload className="h-4 w-4" />
+          Enviar documento
+        </Button>
       </div>
 
       <div className="relative max-w-md">
@@ -130,7 +178,7 @@ export default function PortalDocuments() {
                   </Link>
                   {d.category && (
                     <Badge variant="outline" className="text-[10px] capitalize">
-                      {d.category}
+                      {d.category === 'portal' ? 'Enviado por você' : d.category}
                     </Badge>
                   )}
                   {d.created_at && (
@@ -159,6 +207,56 @@ export default function PortalDocuments() {
           ))}
         </div>
       )}
+
+      <Dialog open={uploadOpen} onOpenChange={(open) => { if (!open) setUploadOpen(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enviar documento ao escritório</DialogTitle>
+            <DialogDescription>
+              Anexe contratos, comprovantes ou qualquer arquivo do seu caso (até 25 MB).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-1.5">
+              <Label>Processo *</Label>
+              <Select value={uploadProcessId} onValueChange={setUploadProcessId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={processesQuery.isLoading ? 'Carregando processos…' : 'Selecione o processo'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(processesQuery.data ?? []).map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.cnj || p.title || 'Processo'}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Título (opcional)</Label>
+              <Input value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} placeholder="Ex.: Comprovante de pagamento" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Arquivo *</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:opacity-90"
+                onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+              />
+              {uploadFile && (
+                <p className="text-xs text-muted-foreground">
+                  {uploadFile.name} · {(uploadFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancelar</Button>
+            <Button onClick={handleUpload} disabled={uploading || !uploadProcessId || !uploadFile}>
+              {uploading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando…</>) : 'Enviar documento'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

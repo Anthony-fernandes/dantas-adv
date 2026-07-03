@@ -228,6 +228,21 @@ function processPhaseBadgeClass(value?: string | null) {
   return 'border-emerald-200 bg-emerald-50 text-emerald-700';
 }
 
+const PRIORITY_BADGE_CLASS: Record<string, string> = {
+  urgente: 'border-rose-200 bg-rose-50 text-rose-700',
+  alta: 'border-amber-200 bg-amber-50 text-amber-700',
+  media: 'border-sky-200 bg-sky-50 text-sky-700',
+  baixa: 'border-slate-200 bg-slate-100 text-slate-600',
+};
+
+function priorityLabel(value?: string | null) {
+  const normalized = normalizeText(value) || 'media';
+  if (normalized === 'urgente') return 'Urgente';
+  if (normalized === 'alta') return 'Alta';
+  if (normalized === 'baixa') return 'Baixa';
+  return 'Média';
+}
+
 function buildCsv(rows: EnrichedProcess[]) {
   const header = [
     'CNJ',
@@ -295,6 +310,7 @@ export default function ProcessesWorkspace() {
   const [responsibleFilter, setResponsibleFilter] = useState('all');
   const [clientFilter, setClientFilter] = useState('all');
   const [probabilityFilter, setProbabilityFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
   const [hearingFilter, setHearingFilter] = useState(false);
   const [deadlineFilter, setDeadlineFilter] = useState(false);
   const [view, setView] = useState<'table' | 'cards'>('table');
@@ -497,6 +513,7 @@ export default function ProcessesWorkspace() {
         if (responsibleFilter !== 'all' && row.responsibleId !== responsibleFilter) return false;
         if (clientFilter !== 'all' && String(row.client || row.client_id || '') !== clientFilter) return false;
         if (probabilityFilter !== 'all' && normalizeText(row.probability) !== probabilityFilter) return false;
+        if (priorityFilter !== 'all' && (normalizeText((row as any).priority) || 'media') !== priorityFilter) return false;
         if (hearingFilter && !row.hearingSoon) return false;
         if (deadlineFilter && !(row.deadlineSoon || row.deadlineOverdue || row.deadlineToday)) return false;
         if (!query) return true;
@@ -523,11 +540,11 @@ export default function ProcessesWorkspace() {
         };
         return alertRank(left) - alertRank(right) || new Date(right.updated_at || right.created_at || 0).getTime() - new Date(left.updated_at || left.created_at || 0).getTime();
       });
-  }, [areaFilter, clientFilter, deadlineFilter, hearingFilter, phaseFilter, probabilityFilter, responsibleFilter, rows, search, statusFilter]);
+  }, [areaFilter, clientFilter, deadlineFilter, hearingFilter, phaseFilter, priorityFilter, probabilityFilter, responsibleFilter, rows, search, statusFilter]);
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, phaseFilter, areaFilter, responsibleFilter, clientFilter, probabilityFilter, hearingFilter, deadlineFilter, view]);
+  }, [search, statusFilter, phaseFilter, areaFilter, responsibleFilter, clientFilter, priorityFilter, probabilityFilter, hearingFilter, deadlineFilter, view]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const pagedRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -608,6 +625,7 @@ export default function ProcessesWorkspace() {
     setResponsibleFilter('all');
     setClientFilter('all');
     setProbabilityFilter('all');
+    setPriorityFilter('all');
     setHearingFilter(false);
     setDeadlineFilter(false);
   };
@@ -741,6 +759,17 @@ export default function ProcessesWorkspace() {
               <SelectTrigger><SelectValue placeholder="Probabilidade" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as probabilidades</SelectItem>
+                <SelectItem value="alta">Alta</SelectItem>
+                <SelectItem value="media">Média</SelectItem>
+                <SelectItem value="baixa">Baixa</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger><SelectValue placeholder="Prioridade" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as prioridades</SelectItem>
+                <SelectItem value="urgente">Urgente</SelectItem>
                 <SelectItem value="alta">Alta</SelectItem>
                 <SelectItem value="media">Média</SelectItem>
                 <SelectItem value="baixa">Baixa</SelectItem>
@@ -1103,7 +1132,12 @@ function ProcessTableRow({
       </TableCell>
       <TableCell className="align-top text-right font-medium whitespace-nowrap">{formatCurrency(row.cause_value)}</TableCell>
       <TableCell className="align-top">
-        <StatusBadge text={row.probability || '-'} variant={probExitoVariant(row.probability || undefined)} />
+        <div className="flex flex-col items-start gap-1">
+          <StatusBadge text={row.probability || '-'} variant={probExitoVariant(row.probability || undefined)} />
+          <span className={cn('inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide', PRIORITY_BADGE_CLASS[normalizeText((row as any).priority) || 'media'])}>
+            {priorityLabel((row as any).priority)}
+          </span>
+        </div>
       </TableCell>
       <TableCell className="align-top">
         <div className="space-y-1">

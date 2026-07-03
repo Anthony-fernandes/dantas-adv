@@ -224,6 +224,7 @@ class ProcessViewSet(TenantAuditedModelViewSet):
         'area': ['exact'],
         'cause': ['exact'],
         'probability': ['exact'],
+        'priority': ['exact'],
         'client': ['exact'],
         'responsible_lawyer': ['exact'],
     }
@@ -232,7 +233,7 @@ class ProcessViewSet(TenantAuditedModelViewSet):
         'plaintiff', 'defendant', 'notes',
         'client__name', 'client__trade_name', 'client__doc', 'cause__name'
     ]
-    ordering_fields = ['created_at', 'updated_at', 'status', 'cnj', 'cause_value', 'probability']
+    ordering_fields = ['created_at', 'updated_at', 'status', 'cnj', 'cause_value', 'probability', 'priority']
     ordering = ['-updated_at']
 
     def perform_create(self, serializer):

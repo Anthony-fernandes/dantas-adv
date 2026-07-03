@@ -60,6 +60,7 @@ from apps.core.landing_cms_api import (
 from apps.core.portal_api import (
     PortalDashboardView,
     PortalDocumentsView,
+    PortalDocumentUploadView,
     PortalFinancialView,
     PortalMeView,
     PortalMessagesView,
@@ -187,6 +188,7 @@ urlpatterns = [
     path("api/portal/processes/<uuid:pk>/", PortalProcessDetailView.as_view(), name="portal_process_detail"),
     path("api/portal/processes/<uuid:pk>/timeline/", PortalTimelineView.as_view(), name="portal_process_timeline"),
     path("api/portal/processes/<uuid:pk>/documents/", PortalDocumentsView.as_view(), name="portal_process_documents"),
+    path("api/portal/processes/<uuid:pk>/documents/upload/", PortalDocumentUploadView.as_view(), name="portal_process_document_upload"),
     path("api/portal/processes/<uuid:pk>/movements/", PortalMovementsView.as_view(), name="portal_process_movements"),
     path("api/portal/financial/", PortalFinancialView.as_view(), name="portal_financial"),
     path("api/portal/messages/", PortalMessagesView.as_view(), name="portal_messages"),

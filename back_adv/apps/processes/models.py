@@ -38,6 +38,13 @@ class ProbabilityLevel(models.TextChoices):
     ALTA = "alta", "Alta"
 
 
+class ProcessPriority(models.TextChoices):
+    BAIXA = "baixa", "Baixa"
+    MEDIA = "media", "Média"
+    ALTA = "alta", "Alta"
+    URGENTE = "urgente", "Urgente"
+
+
 class Process(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="processes")
@@ -53,6 +60,7 @@ class Process(models.Model):
     status = models.CharField(max_length=20, choices=ProcessStatus.choices, default=ProcessStatus.EM_ANDAMENTO)
     cause_value = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     probability = models.CharField(max_length=10, choices=ProbabilityLevel.choices, default=ProbabilityLevel.MEDIA)
+    priority = models.CharField(max_length=10, choices=ProcessPriority.choices, default=ProcessPriority.MEDIA)
     plaintiff = models.CharField(max_length=255, blank=True, null=True)
     defendant = models.CharField(max_length=255, blank=True, null=True)
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, blank=True, null=True, related_name="processes")

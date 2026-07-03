@@ -5,8 +5,8 @@
 ## Produtividade central
 
 * [x] **Busca global real (Cmd+K)** — hoje `GlobalSearch.tsx` só navega entre páginas (lista estática `NAV_COMMANDS`); não encontra processos, clientes nem documentos. Concorrentes têm busca universal. → endpoint `/api/search/` + integração no palette.
-* [ ] **Tags de processo na UI** — campo `tags` existe no modelo mas não aparece em formulário, tabela nem filtro.
-* [ ] **Prioridade de processo** — modelo não tem campo priority (só Deadline/Task têm). Escritórios triam carteira por prioridade.
+* [x] **Tags de processo na UI** — campo `tags` existe no modelo mas não aparece em formulário, tabela nem filtro.
+* [x] **Prioridade de processo** — modelo não tem campo priority (só Deadline/Task têm). Escritórios triam carteira por prioridade.
 
 ## Agenda e audiências
 
@@ -17,7 +17,7 @@
 
 ## Portal do Cliente
 
-* [ ] **Cliente enviar documentos pelo portal** — `PortalDocumentsView` é somente leitura; escritórios recebem documentos por WhatsApp por falta disso. → endpoint de upload + UI.
+* [x] **Cliente enviar documentos pelo portal** — `PortalDocumentsView` é somente leitura; escritórios recebem documentos por WhatsApp por falta disso. → endpoint de upload + UI.
 * [x] Acompanhar processos/movimentações/documentos/financeiro/mensagens (verificado — completo)
 
 ## Verificados como já completos nesta auditoria

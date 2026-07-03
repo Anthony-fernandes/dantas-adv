@@ -177,3 +177,61 @@ class HearingConflictTests(BaseTenantTestCase):
         response = client.patch(f'/api/hearings/{hearing.id}/', {'status': 'confirmada'}, format='json')
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json()['status'], 'confirmada')
+
+
+class PortalUploadTests(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        from apps.accounts.models import AppRole, User, UserRole
+        from apps.clients.models import Client as ClientModel
+        cls.portal_user = User.objects.create_user(email='cliente@test.com', password='x1y2z3!P', username='cliente@test.com')
+        UserRole.objects.create(user=cls.portal_user, tenant=cls.tenant_a, role=AppRole.CLIENT)
+        cls.portal_client = ClientModel.objects.create(tenant=cls.tenant_a, name='Cliente Portal', portal_user=cls.portal_user)
+        cls.process_a.client = cls.portal_client
+        cls.process_a.save(update_fields=['client'])
+
+    def test_portal_client_can_upload_document(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        client = self.client_for(self.portal_user, self.tenant_a)
+        upload = SimpleUploadedFile('contrato.pdf', b'%PDF-1.4 fake', content_type='application/pdf')
+        response = client.post(
+            f'/api/portal/processes/{self.process_a.id}/documents/upload/',
+            {'file': upload, 'title': 'Contrato assinado'},
+            format='multipart',
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        body = response.json()
+        self.assertEqual(body['title'], 'Contrato assinado')
+        self.assertEqual(body['category'], 'portal')
+        from apps.documents.models import Document
+        doc = Document.objects.get(id=body['id'])
+        self.assertEqual(doc.tenant_id, self.tenant_a.id)
+        self.assertEqual(str(doc.process_id), str(self.process_a.id))
+
+    def test_portal_client_cannot_upload_to_unrelated_process(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        client = self.client_for(self.portal_user, self.tenant_a)
+        upload = SimpleUploadedFile('x.pdf', b'%PDF-1.4', content_type='application/pdf')
+        response = client.post(
+            f'/api/portal/processes/{self.process_b.id}/documents/upload/',
+            {'file': upload},
+            format='multipart',
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_lawyer_role_cannot_use_portal_upload(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        upload = SimpleUploadedFile('x.pdf', b'%PDF-1.4', content_type='application/pdf')
+        response = client.post(
+            f'/api/portal/processes/{self.process_a.id}/documents/upload/',
+            {'file': upload},
+            format='multipart',
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_upload_requires_file(self):
+        client = self.client_for(self.portal_user, self.tenant_a)
+        response = client.post(f'/api/portal/processes/{self.process_a.id}/documents/upload/', {}, format='multipart')
+        self.assertEqual(response.status_code, 400)

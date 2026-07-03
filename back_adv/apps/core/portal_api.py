@@ -355,3 +355,89 @@ class PortalMovementsView(PortalProcessBase, generics.ListAPIView):
             tenant=self.request.tenant,
             process=process,
         ).order_by('-date', '-created_at')
+
+
+class PortalDocumentUploadView(PortalProcessBase, generics.GenericAPIView):
+    """Upload de documento pelo cliente do portal.
+
+    POST /api/portal/processes/<pk>/documents/upload/  (multipart)
+    Campos: file (obrigatório), title (opcional — usa o nome do arquivo).
+    O documento entra com categoria 'portal' e visibilidade TENANT, e o
+    escritório é notificado — fluxo que evita o recebimento por WhatsApp.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsClient]
+
+    MAX_UPLOAD_BYTES = 25 * 1024 * 1024  # 25 MB
+
+    def post(self, request, pk=None):
+        process = self.get_object()
+        uploaded = request.FILES.get('file')
+        if not uploaded:
+            return Response({'detail': 'Envie o arquivo no campo "file".'}, status=400)
+        if uploaded.size and uploaded.size > self.MAX_UPLOAD_BYTES:
+            return Response({'detail': 'Arquivo excede o limite de 25 MB.'}, status=400)
+
+        title = (request.data.get('title') or '').strip() or uploaded.name
+
+        document = Document.objects.create(
+            tenant=request.tenant,
+            process=process,
+            client=process.client,
+            title=title,
+            filename=uploaded.name,
+            file=uploaded,
+            file_size=uploaded.size,
+            content_type=getattr(uploaded, 'content_type', None),
+            category='portal',
+            access_level=DocumentAccess.TENANT,
+            uploaded_by=request.user,
+        )
+
+        from apps.core.services.audit import audit_event
+        audit_event(
+            tenant=request.tenant,
+            actor=request.user,
+            event_type='portal.document_uploaded',
+            entity_type='Document',
+            entity_id=document.id,
+            summary=f'Cliente enviou "{title}" pelo portal',
+            payload={'process_id': str(process.id), 'filename': uploaded.name, 'size': uploaded.size},
+        )
+
+        try:
+            from django.contrib.auth import get_user_model
+            from apps.notifications.services import NotificationSpec, notify_users
+            from apps.accounts.models import UserRole as _UserRole
+
+            legal_ids = list(
+                _UserRole.objects.filter(
+                    tenant=request.tenant,
+                    role__in=[AppRole.OWNER, AppRole.ADMIN, AppRole.LAWYER, AppRole.ASSISTANT],
+                ).values_list('user_id', flat=True).distinct()
+            )
+            users = get_user_model().objects.filter(id__in=legal_ids)
+            if users:
+                notify_users(
+                    tenant=request.tenant,
+                    users=users,
+                    spec=NotificationSpec(
+                        type='document',
+                        title='Documento recebido pelo portal',
+                        message=f'{process.client.name if process.client else "Cliente"} enviou "{title}" no processo {process.cnj or process.title}.',
+                        payload={'process_id': str(process.id), 'document_id': str(document.id)},
+                    ),
+                )
+        except Exception:
+            pass
+
+        return Response(
+            {
+                'id': str(document.id),
+                'title': document.title,
+                'filename': document.filename,
+                'category': document.category,
+                'created_at': document.created_at.isoformat(),
+            },
+            status=201,
+        )

@@ -313,6 +313,7 @@ export function buildProcessSubmitPayload(
     phase: normalizeProcessPhase(values.phase),
     status: normalizeProcessStatus(values.status),
     probability: values.probability,
+    priority: values.priority || 'media',
     responsible_lawyer: values.responsibleId || null,
     notes: values.observations || values.internalNotes || null,
     tags,
