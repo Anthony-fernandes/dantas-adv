@@ -1,6 +1,7 @@
 ﻿import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import {
   Activity,
   AlertTriangle,
@@ -99,7 +100,31 @@ type KpiComparison = {
 };
 
 const DAY_MS = 86400000;
-const PIE_COLORS = ["#111827", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db"];
+
+/** Lê tokens de tema para colorir os gráficos (adapta light/dark). */
+function useChartColors() {
+  const { theme, resolvedTheme } = useTheme();
+  return useMemo(() => {
+    const styles = getComputedStyle(document.documentElement);
+    const v = (name: string, fallback: string) => {
+      const raw = styles.getPropertyValue(name).trim();
+      return raw ? `hsl(${raw})` : fallback;
+    };
+    return {
+      grid: v("--border", "#e5e7eb"),
+      axis: v("--muted-foreground", "#9ca3af"),
+      primary: v("--primary", "#7c3aed"),
+      series: [
+        v("--chart-1", "#7c3aed"),
+        v("--chart-2", "#2563eb"),
+        v("--chart-3", "#0891b2"),
+        v("--chart-4", "#d97706"),
+        v("--chart-5", "#db2777"),
+      ],
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme, resolvedTheme]);
+}
 
 const PERIOD_OPTIONS: Array<{ value: PeriodPreset; label: string }> = [
   { value: "today", label: "Hoje" },
@@ -380,7 +405,7 @@ function DashboardKpiCard(props: {
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-3">
               <p className="kpi-label">{title}</p>
-              <p className="text-[2.2rem] font-bold leading-none tracking-tight text-foreground">
+              <p className="text-[24px] font-semibold leading-none tracking-tight tabular-nums text-foreground">
                 {typeof value === "number" ? formatCount(value) : value}
               </p>
             </div>
@@ -405,7 +430,7 @@ function SectionHeader(props: { title: string; description: string; actionLabel?
   return (
     <div className="flex items-start justify-between gap-4">
       <div>
-        <h2 className="text-[1.4rem] font-bold tracking-[-0.02em] text-foreground">{title}</h2>
+        <h2 className="text-[15px] font-semibold tracking-tight text-foreground">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
       {actionLabel && onAction ? (
@@ -432,6 +457,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const canSeeFinance = roles?.some((role) => ["OWNER", "ADMIN", "FINANCE"].includes(role)) ?? false;
+  const chart = useChartColors();
 
   const dashboardQuery = useQuery({
     queryKey: ["dashboard", "strategic", activeTenantId, canSeeFinance],
@@ -1022,7 +1048,7 @@ export default function Dashboard() {
 
   if (dashboardQuery.isLoading) {
     return (
-      <div className="page-container space-y-6">
+      <div className="animate-fade-in space-y-6">
         <div className="space-y-3">
           <Skeleton className="h-6 w-56 rounded-full" />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -1048,12 +1074,12 @@ export default function Dashboard() {
 
   return (
     <TooltipProvider delayDuration={120}>
-      <div className="page-container space-y-8 animate-fade-in">
+      <div className="animate-fade-in space-y-7">
 
         <section className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <h2 className="text-[1.4rem] font-bold tracking-[-0.02em] text-foreground">Resumo jurídico</h2>
+              <h2 className="text-[15px] font-semibold tracking-tight text-foreground">Resumo jurídico</h2>
               <p className="mt-1 text-sm text-muted-foreground">Indicadores centrais da operação jurídica organizados por prioridade.</p>
             </div>
 
@@ -1099,13 +1125,13 @@ export default function Dashboard() {
                 {agendaSeries.some((item) => item.prazos > 0 || item.audiencias > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={agendaSeries}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
+                      <XAxis dataKey="label" tick={{ fontSize: 12, fill: chart.axis }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: chart.axis }} />
                       <RechartsTooltip />
                       <Legend />
-                      <Line type="monotone" dataKey="prazos" name="Prazos" stroke="#374151" strokeWidth={3} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="audiencias" name="Audiências" stroke="#9ca3af" strokeWidth={3} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="prazos" name="Prazos" stroke={chart.series[0]} strokeWidth={3} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="audiencias" name="Audiências" stroke={chart.series[1]} strokeWidth={3} dot={{ r: 3 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -1148,11 +1174,11 @@ export default function Dashboard() {
                   {processesByStatus.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={processesByStatus}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="status" tick={{ fontSize: 12 }} />
-                        <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
+                        <XAxis dataKey="status" tick={{ fontSize: 12, fill: chart.axis }} />
+                        <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: chart.axis }} />
                         <RechartsTooltip />
-                        <Bar dataKey="total" fill="#334155" radius={[8, 8, 0, 0]} />
+                        <Bar dataKey="total" fill={chart.primary} radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : <EmptyState icon={Scale} title="Sem processos para este recorte" description="Ajuste os filtros para visualizar a distribuição por status." />}
@@ -1167,12 +1193,12 @@ export default function Dashboard() {
                   {processesByArea.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={processesByArea} layout="vertical" margin={{ left: 18 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
-                        <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
-                        <YAxis type="category" dataKey="area" width={110} tick={{ fontSize: 12 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} horizontal={false} />
+                        <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: chart.axis }} />
+                        <YAxis type="category" dataKey="area" width={110} tick={{ fontSize: 12, fill: chart.axis }} />
                         <RechartsTooltip />
                         <Bar dataKey="total" radius={[0, 8, 8, 0]}>
-                          {processesByArea.map((entry, index) => <Cell key={entry.area} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
+                          {processesByArea.map((entry, index) => <Cell key={entry.area} fill={chart.series[index % chart.series.length]} />)}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -1189,7 +1215,7 @@ export default function Dashboard() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={clientesPorTipo} dataKey="value" nameKey="name" innerRadius={56} outerRadius={88} paddingAngle={4}>
-                          {clientesPorTipo.map((entry, index) => <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
+                          {clientesPorTipo.map((entry, index) => <Cell key={entry.name} fill={chart.series[index % chart.series.length]} />)}
                         </Pie>
                         <RechartsTooltip formatter={(value: number) => formatCount(Number(value))} />
                         <Legend />
@@ -1212,13 +1238,13 @@ export default function Dashboard() {
                   <div className="mt-6 h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={faturamentoSeries}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
+                        <XAxis dataKey="month" tick={{ fontSize: 12, fill: chart.axis }} />
+                        <YAxis tick={{ fontSize: 12, fill: chart.axis }} />
                         <RechartsTooltip formatter={(value: number) => formatCurrency(Number(value))} />
                         <Legend />
-                        <Bar dataKey="faturamento" name="Faturamento" fill="#374151" radius={[8, 8, 0, 0]} />
-                        <Bar dataKey="inadimplencia" name="Inadimplência" fill="#9ca3af" radius={[8, 8, 0, 0]} />
+                        <Bar dataKey="faturamento" name="Faturamento" fill={chart.series[0]} radius={[8, 8, 0, 0]} />
+                        <Bar dataKey="inadimplencia" name="Inadimplência" fill={chart.series[3]} radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -1231,13 +1257,13 @@ export default function Dashboard() {
                   <div className="mt-6 h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={fluxoCaixaSeries}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
+                        <XAxis dataKey="month" tick={{ fontSize: 12, fill: chart.axis }} />
+                        <YAxis tick={{ fontSize: 12, fill: chart.axis }} />
                         <RechartsTooltip formatter={(value: number) => formatCurrency(Number(value))} />
                         <Legend />
-                        <Line type="monotone" dataKey="entradas" name="Entradas" stroke="#374151" strokeWidth={3} dot={{ r: 3 }} />
-                        <Line type="monotone" dataKey="saidas" name="Saidas" stroke="#9ca3af" strokeWidth={3} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="entradas" name="Entradas" stroke={chart.series[0]} strokeWidth={3} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="saidas" name="Saidas" stroke={chart.series[1]} strokeWidth={3} dot={{ r: 3 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
