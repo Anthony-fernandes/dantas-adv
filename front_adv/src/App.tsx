@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { TenantProvider, useTenant } from "@/contexts/TenantContext";
 import { api } from "@/integrations/api/client";
@@ -13,60 +13,76 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { PortalLayout } from "@/components/layout/PortalLayout";
 import { MasterLayout } from "@/components/layout/MasterLayout";
 
-import Landing from "@/pages/Landing";
-import BlogArticle from "@/pages/BlogArticle";
 import AppLogin from "@/pages/app/AppLogin";
-import Dashboard from "@/pages/app/Dashboard";
-import ProcessList from "@/pages/app/ProcessList";
-import ProcessDetail from "@/pages/app/ProcessDetail";
-import PracticeAreas from "@/pages/app/PracticeAreas";
-import ClientList from "@/pages/app/ClientList";
-import ClientDetail from "@/pages/app/ClientDetail";
-import DocumentsModule from "@/pages/app/DocumentsModule";
-import HearingsPage from "@/pages/app/HearingsPage";
-import AgendaPage from "@/pages/app/AgendaPage";
-import Financial from "@/pages/app/Financial";
-import Employees from "@/pages/app/Employees";
-import Positions from "@/pages/app/Positions";
-import AdminUsers from "@/pages/app/AdminUsers";
-import Companies from "@/pages/app/Companies";
-import LandingCms from "@/pages/app/LandingCms";
-import LandingBlog from "@/pages/app/LandingBlog";
-import Reports from "@/pages/app/Reports";
-import DeadlinesPage from "@/pages/app/DeadlinesPage";
-import HonorariosPage from "@/pages/app/HonorariosPage";
-import TasksPage from "@/pages/app/TasksPage";
-import TimesheetPage from "@/pages/app/TimesheetPage";
-import ChatPage from "@/pages/app/ChatPage";
-import AuditLogPage from "@/pages/app/AuditLogPage";
-import TemplatesPage from "@/pages/app/TemplatesPage";
-import ProfilePage from "@/pages/app/ProfilePage";
-import SettingsPage from "@/pages/app/SettingsPage";
-import PortalLogin from "@/pages/portal/PortalLogin";
-import PortalHome from "@/pages/portal/PortalHome";
-import PortalProcesses from "@/pages/portal/PortalProcesses";
-import PortalMessages from "@/pages/portal/PortalMessages";
-import PortalProcessDetail from "@/pages/portal/PortalProcessDetail";
-import PortalDocuments from "@/pages/portal/PortalDocuments";
-import PortalFinancial from "@/pages/portal/PortalFinancial";
-import MasterLogin from "@/pages/master/MasterLogin";
-import CompaniesAdmin from "@/pages/master/CompaniesAdmin";
-import NotFound from "@/pages/NotFound";
-import SetupTenant from "@/pages/app/SetupTenant";
-import SelectTenant from "@/pages/app/SelectTenant";
-import AcceptInvite from "@/pages/AcceptInvite";
-import ContractsPage from "@/pages/app/ContractsPage";
-import ContabilidadePage from "@/pages/app/ContabilidadePage";
-import NFSeWorkspace from "@/pages/app/financial/NFSeWorkspace";
-import LGPD from "@/pages/app/LGPD";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalApiErrorListener } from "@/components/GlobalApiErrorListener";
 import Forbidden from "@/pages/errors/Forbidden";
 import ServerError from "@/pages/errors/ServerError";
 import SessionExpired from "@/pages/errors/SessionExpired";
 import TenantRequired from "@/pages/errors/TenantRequired";
+import NotFound from "@/pages/NotFound";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { RoleGroups } from "@/lib/rbac";
+
+// Public / landing (chunk separado — visitantes não baixam o app)
+const Landing = lazy(() => import("@/pages/Landing"));
+const BlogArticle = lazy(() => import("@/pages/BlogArticle"));
+const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
+
+// App jurídico (um chunk por módulo)
+const Dashboard = lazy(() => import("@/pages/app/Dashboard"));
+const ProcessesWorkspace = lazy(() => import("@/pages/app/processes/ProcessesWorkspace"));
+const ProcessDetail = lazy(() => import("@/pages/app/ProcessDetail"));
+const PracticeAreas = lazy(() => import("@/pages/app/PracticeAreas"));
+const ClientsWorkspace = lazy(() => import("@/pages/app/clients/ClientsWorkspace"));
+const ClientDetailWorkspace = lazy(() => import("@/pages/app/clients/ClientDetailWorkspace"));
+const DocumentsModule = lazy(() => import("@/pages/app/DocumentsModule"));
+const HearingsPage = lazy(() => import("@/pages/app/HearingsPage"));
+const AgendaPage = lazy(() => import("@/pages/app/AgendaPage"));
+const FinancialWorkspace = lazy(() => import("@/pages/app/financial/FinancialWorkspace"));
+const Employees = lazy(() => import("@/pages/app/Employees"));
+const Positions = lazy(() => import("@/pages/app/Positions"));
+const AdminUsers = lazy(() => import("@/pages/app/AdminUsers"));
+const Companies = lazy(() => import("@/pages/app/Companies"));
+const LandingCms = lazy(() => import("@/pages/app/LandingCms"));
+const LandingBlog = lazy(() => import("@/pages/app/LandingBlog"));
+const Reports = lazy(() => import("@/pages/app/Reports"));
+const DeadlinesPage = lazy(() => import("@/pages/app/DeadlinesPage"));
+const HonorariosPage = lazy(() => import("@/pages/app/HonorariosPage"));
+const TasksPage = lazy(() => import("@/pages/app/TasksPage"));
+const TimesheetPage = lazy(() => import("@/pages/app/TimesheetPage"));
+const ChatPage = lazy(() => import("@/pages/app/ChatPage"));
+const AuditLogPage = lazy(() => import("@/pages/app/AuditLogPage"));
+const TemplatesPage = lazy(() => import("@/pages/app/TemplatesPage"));
+const ProfilePage = lazy(() => import("@/pages/app/ProfilePage"));
+const SettingsPage = lazy(() => import("@/pages/app/SettingsPage"));
+const ContractsPage = lazy(() => import("@/pages/app/ContractsPage"));
+const ContabilidadePage = lazy(() => import("@/pages/app/ContabilidadePage"));
+const NFSeWorkspace = lazy(() => import("@/pages/app/financial/NFSeWorkspace"));
+const LGPD = lazy(() => import("@/pages/app/LGPD"));
+const SetupTenant = lazy(() => import("@/pages/app/SetupTenant"));
+const SelectTenant = lazy(() => import("@/pages/app/SelectTenant"));
+
+// Portal do cliente
+const PortalLogin = lazy(() => import("@/pages/portal/PortalLogin"));
+const PortalHome = lazy(() => import("@/pages/portal/PortalHome"));
+const PortalProcesses = lazy(() => import("@/pages/portal/PortalProcesses"));
+const PortalMessages = lazy(() => import("@/pages/portal/PortalMessages"));
+const PortalProcessDetail = lazy(() => import("@/pages/portal/PortalProcessDetail"));
+const PortalDocuments = lazy(() => import("@/pages/portal/PortalDocuments"));
+const PortalFinancial = lazy(() => import("@/pages/portal/PortalFinancial"));
+
+// Master (SaaS admin)
+const MasterLogin = lazy(() => import("@/pages/master/MasterLogin"));
+const CompaniesAdmin = lazy(() => import("@/pages/master/CompaniesAdmin"));
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+    </div>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -257,6 +273,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
           <ErrorBoundary>
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<LandingOrRedirect />} />
             <Route path="/blog/:slug" element={<BlogArticle />} />
@@ -275,13 +292,13 @@ const App = () => (
               <Route path="/app" element={<SuperuserBootstrapGuard><ProtectedRoute><AppLayout /></ProtectedRoute></SuperuserBootstrapGuard>}>
                 <Route index element={<AppIndexRedirect />} />
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="processos" element={<RequireRole roles={RoleGroups.LEGAL}><ProcessList /></RequireRole>} />
+                <Route path="processos" element={<RequireRole roles={RoleGroups.LEGAL}><ProcessesWorkspace /></RequireRole>} />
                 <Route path="processos/:id" element={<RequireRole roles={RoleGroups.LEGAL}><ProcessDetail /></RequireRole>} />
                 <Route path="areas" element={<RequireRole roles={RoleGroups.LEGAL}><PracticeAreas /></RequireRole>} />
                 <Route path="causas" element={<Navigate to="/app/areas" replace />} />
-                <Route path="clientes" element={<RequireRole roles={RoleGroups.LEGAL}><ClientList /></RequireRole>} />
-                <Route path="clientes/:id" element={<RequireRole roles={RoleGroups.LEGAL}><ClientDetail /></RequireRole>} />
-                <Route path="financeiro" element={<RequireRole roles={RoleGroups.FINANCE}><Financial /></RequireRole>} />
+                <Route path="clientes" element={<RequireRole roles={RoleGroups.LEGAL}><ClientsWorkspace /></RequireRole>} />
+                <Route path="clientes/:id" element={<RequireRole roles={RoleGroups.LEGAL}><ClientDetailWorkspace /></RequireRole>} />
+                <Route path="financeiro" element={<RequireRole roles={RoleGroups.FINANCE}><FinancialWorkspace /></RequireRole>} />
                 <Route path="honorarios" element={<RequireRole roles={RoleGroups.FINANCE}><HonorariosPage /></RequireRole>} />
                 <Route path="documentos" element={<RequireRole roles={RoleGroups.LEGAL}><DocumentsModule /></RequireRole>} />
                 <Route path="audiencias" element={<RequireRole roles={RoleGroups.LEGAL}><HearingsPage /></RequireRole>} />
@@ -290,7 +307,7 @@ const App = () => (
                 <Route path="horas" element={<RequireRole roles={RoleGroups.LEGAL}><TimesheetPage /></RequireRole>} />
                 <Route path="chat" element={<RequireRole roles={RoleGroups.LEGAL}><ChatPage /></RequireRole>} />
                 <Route path="agenda" element={<RequireRole roles={RoleGroups.LEGAL}><AgendaPage /></RequireRole>} />
-                <Route path="financeiro/*" element={<RequireRole roles={RoleGroups.FINANCE}><Financial /></RequireRole>} />
+                <Route path="financeiro/*" element={<RequireRole roles={RoleGroups.FINANCE}><FinancialWorkspace /></RequireRole>} />
                 <Route path="funcionarios" element={<RequireRole roles={RoleGroups.ADMIN}><Employees /></RequireRole>} />
                 <Route path="cargos" element={<RequireRole roles={RoleGroups.ADMIN}><Positions /></RequireRole>} />
                 <Route path="usuarios" element={<RequireRole roles={RoleGroups.ADMIN}><AdminUsers /></RequireRole>} />
@@ -324,6 +341,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>

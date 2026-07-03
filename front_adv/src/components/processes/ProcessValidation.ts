@@ -240,6 +240,25 @@ export function buildProcessFormValues(process?: Record<string, any> | null, def
   };
 }
 
+/**
+ * Dígito verificador CNJ (Resolução CNJ 65/2008, ISO 7064 mod 97-10).
+ * O DV é calculado sobre sequencial + ano + segmento + tribunal + origem + "00".
+ */
+export function isValidCnjCheckDigit(digits: string): boolean {
+  if (digits.length !== 20) return false;
+  const seq = digits.slice(0, 7);
+  const dv = Number(digits.slice(7, 9));
+  const year = digits.slice(9, 13);
+  const segment = digits.slice(13, 14);
+  const court = digits.slice(14, 16);
+  const origin = digits.slice(16, 20);
+  if (segment === '0' || Number(year) < 1900) return false;
+  // BigInt evita perda de precisão no número de 18 dígitos
+  const base = BigInt(seq + year + segment + court + origin + '00');
+  const expected = 98n - (base % 97n);
+  return BigInt(dv) === expected;
+}
+
 export function validateProcessForm(values: ProcessFormValues): ProcessFormErrors {
   const errors: ProcessFormErrors = {};
   const cnjDigits = values.cnj.replace(/\D/g, '');
@@ -248,6 +267,8 @@ export function validateProcessForm(values: ProcessFormValues): ProcessFormError
     errors.cnj = 'Informe o número CNJ do processo.';
   } else if (cnjDigits.length !== 20) {
     errors.cnj = 'Use o formato CNJ 0000000-00.0000.0.00.0000.';
+  } else if (!isValidCnjCheckDigit(cnjDigits)) {
+    errors.cnj = 'Dígito verificador do CNJ inválido. Confira o número no tribunal de origem.';
   }
 
   if (!asText(values.area)) errors.area = 'Selecione a área jurídica.';

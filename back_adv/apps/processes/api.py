@@ -10,6 +10,7 @@ from apps.core.viewsets import TenantAuditedModelViewSet
 from apps.core.models import AuditEvent
 from apps.core.services.audit import audit_event
 from apps.accounts.models import UserRole
+from .cnj import format_cnj, is_valid_cnj
 from .models import Process, Movement, Deadline, Hearing, LegalCause, Task, TimeEntry, TribunalSync
 from apps.documents.models import Document
 from apps.documents.api import DocumentSerializer, DocumentUploadSerializer
@@ -121,6 +122,16 @@ class TenantScopedSerializerMixin:
 
 
 class ProcessSerializer(TenantScopedSerializerMixin, serializers.ModelSerializer):
+    def validate_cnj(self, value):
+        cleaned = (value or '').strip()
+        if not cleaned:
+            return cleaned
+        if not is_valid_cnj(cleaned):
+            raise serializers.ValidationError(
+                'Número CNJ inválido. Verifique o dígito verificador (formato NNNNNNN-DD.AAAA.J.TR.OOOO).'
+            )
+        return format_cnj(cleaned)
+
     def validate(self, attrs):
         if 'client' in attrs and attrs.get('client'):
             self._validate_client(attrs['client'])
