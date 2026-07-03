@@ -1,7 +1,7 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AppSidebar } from './AppSidebar';
-import { Topbar } from './Topbar';
+import { AppHeader } from './AppHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { useDynamicFavicon } from '@/hooks/useDynamicFavicon';
@@ -50,7 +50,7 @@ export function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-50 dark:bg-background text-foreground">
+    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
       <AppSidebar
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
@@ -58,9 +58,9 @@ export function AppLayout() {
         onToggleCollapse={handleToggleCollapse}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <Topbar onOpenMenu={() => setMobileOpen(true)} />
+        <AppHeader onOpenMenu={() => setMobileOpen(true)} />
         <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-6">
-          <div className="mx-auto w-full max-w-[1680px]">
+          <div className="mx-auto w-full max-w-[1600px]">
             <Outlet />
           </div>
         </main>

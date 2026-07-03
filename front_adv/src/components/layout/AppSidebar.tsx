@@ -25,6 +25,7 @@ type AppSidebarProps = {
   onToggleCollapse: () => void;
 };
 
+/* Rotas REAIS do sistema — não inventar módulos. */
 const navSections: NavSection[] = [
   {
     title: "Workspace",
@@ -89,16 +90,15 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
     String((publicSiteQuery.data as any)?.company?.name || "").trim() ||
     "JurisFlow";
   const companyLogo = String((publicSiteQuery.data as any)?.company?.logo_url || "").trim();
-
   const initials = (profile?.full_name || companyName).charAt(0).toUpperCase();
   const userInitials = (profile?.full_name || "U").split(" ").filter(Boolean).slice(0, 2).map((p: string) => p[0]?.toUpperCase() || "").join("");
 
   function renderBrand() {
     if (companyLogo) {
-      return <img src={companyLogo} alt="Logo" className="h-8 w-8 shrink-0 rounded-full object-cover" />;
+      return <img src={companyLogo} alt="Logo" className="h-7 w-7 shrink-0 rounded-md object-cover" />;
     }
     return (
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white">
+      <div className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-gradient-to-br from-primary to-chart-5 text-[13px] font-bold text-primary-foreground shadow-lg shadow-primary/20">
         {initials}
       </div>
     );
@@ -111,13 +111,13 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
       return (
         <div key={section.title}>
           {!isCollapsed && (
-            <p className="px-3 pb-1 pt-5 first:pt-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/50">
+            <p className="px-3 pb-1.5 pt-5 first:pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
               {section.title}
             </p>
           )}
-          {isCollapsed && <div className="mx-auto my-3 h-px w-8 bg-border" />}
+          {isCollapsed && <div className="mx-auto my-3 h-px w-7 bg-sidebar-border" />}
 
-          <div className="space-y-px">
+          <div className="space-y-0.5">
             {visibleItems.map((item) => {
               const isActive = location.pathname.startsWith(item.path);
               const linkEl = (
@@ -126,21 +126,21 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
                   to={item.path}
                   onClick={onNavigate}
                   className={cn(
-                    "group flex items-center rounded-md transition-all duration-100 select-none",
-                    isCollapsed ? "h-8 w-8 justify-center mx-auto" : "gap-2.5 px-3 py-[5px] text-[13px]",
+                    "group flex items-center rounded-md transition-colors select-none",
+                    isCollapsed ? "mx-auto h-8 w-8 justify-center" : "gap-2.5 px-2.5 py-1.5 text-[13px]",
                     isActive
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800",
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
                   )}
                 >
                   <item.icon className={cn(
-                    "h-[15px] w-[15px] shrink-0 transition-colors",
-                    isActive ? "text-primary" : "text-muted-foreground/60 group-hover:text-foreground/70",
+                    "h-4 w-4 shrink-0",
+                    isActive ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground/80",
                   )} />
                   {!isCollapsed && <span className="truncate">{item.label}</span>}
+                  {!isCollapsed && isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
                 </Link>
               );
-
               if (isCollapsed) {
                 return (
                   <Tooltip key={item.path} delayDuration={0}>
@@ -157,53 +157,36 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
     });
   }
 
-  function SidebarShell({ children, width }: { children: React.ReactNode; width: string }) {
-    return (
-      <aside className={cn(
-        "flex h-screen flex-col overflow-hidden bg-white dark:bg-card border-r border-slate-200/80 dark:border-border/70 transition-all duration-300",
-        width,
-      )}>
-        {children}
-      </aside>
-    );
-  }
-
-  const header = (
+  const brandHeader = (isCollapsed: boolean) => (
     <div className={cn(
-      "flex h-14 shrink-0 items-center border-b border-slate-200/80 dark:border-border/70",
-      collapsed ? "justify-center px-2" : "gap-2.5 px-4",
+      "flex h-14 shrink-0 items-center border-b border-sidebar-border",
+      isCollapsed ? "justify-center px-2" : "gap-2.5 px-4",
     )}>
       {renderBrand()}
-      {!collapsed && (
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[14px] font-semibold leading-tight text-foreground">{companyName}</p>
-          <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Portal Interno</p>
+      {!isCollapsed && (
+        <div className="min-w-0 flex-1 leading-tight">
+          <p className="truncate text-[13px] font-semibold tracking-tight text-foreground">{companyName}</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground/60">Portal interno</p>
         </div>
       )}
     </div>
   );
 
   const footer = (
-    <div className={cn(
-      "shrink-0 border-t border-slate-200/80 dark:border-border/70",
-      collapsed ? "p-2 flex flex-col items-center gap-2" : "p-3",
-    )}>
+    <div className={cn("shrink-0 border-t border-sidebar-border", collapsed ? "flex flex-col items-center gap-2 p-2" : "p-3")}>
       {!collapsed && (
-        <div className="mb-2 flex items-center gap-2.5 rounded-md px-2 py-1.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+        <div className="mb-2 flex items-center gap-2.5 rounded-md p-2 hover:bg-sidebar-accent/60">
+          <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-chart-2 to-chart-5 text-[11px] font-semibold text-white">
             {userInitials}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[12px] font-semibold text-foreground">{profile?.full_name || "Usuário"}</p>
-            <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              {profile?.roles?.[0] || "Equipe interna"}
-            </p>
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate text-[12.5px] font-medium text-foreground">{profile?.full_name || "Usuário"}</p>
+            <p className="truncate text-[10.5px] text-muted-foreground">{profile?.roles?.[0] || "Equipe interna"}</p>
           </div>
-          <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
         </div>
       )}
       {collapsed && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary mb-1">
+        <div className="mb-1 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-chart-2 to-chart-5 text-[11px] font-semibold text-white">
           {userInitials}
         </div>
       )}
@@ -211,15 +194,13 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
         variant="ghost"
         size="sm"
         onClick={onToggleCollapse}
+        aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
         className={cn(
-          "h-6 rounded-md text-muted-foreground/50 hover:bg-slate-100 dark:hover:bg-muted hover:text-foreground",
-          collapsed ? "w-6 px-0 mx-auto" : "w-full gap-1.5 text-[10px] font-medium",
+          "h-6 rounded-md text-muted-foreground/60 hover:bg-sidebar-accent hover:text-foreground",
+          collapsed ? "mx-auto w-6 px-0" : "w-full gap-1.5 text-[10.5px] font-medium",
         )}
       >
-        {collapsed
-          ? <ChevronRight className="h-3 w-3" />
-          : <><ChevronLeft className="h-3 w-3" /><span>Recolher</span></>
-        }
+        {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <><ChevronLeft className="h-3.5 w-3.5" /><span>Recolher</span></>}
       </Button>
     </div>
   );
@@ -227,37 +208,36 @@ export function AppSidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }:
   return (
     <>
       {/* Desktop */}
-      <SidebarShell width={collapsed ? "w-[52px]" : "w-[200px]"}>
-        {header}
-        <div className="flex-1 overflow-y-auto px-2 py-2">
-          {renderSections(collapsed)}
-        </div>
+      <aside className={cn(
+        "hidden h-screen shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar transition-all duration-200 md:flex",
+        collapsed ? "w-[56px]" : "w-[232px]",
+      )}>
+        {brandHeader(collapsed)}
+        <div className="flex-1 overflow-y-auto px-2 py-2">{renderSections(collapsed)}</div>
         {footer}
-      </SidebarShell>
+      </aside>
 
       {/* Mobile */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" onClick={onClose}>
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <div className="fixed inset-0 z-50 md:hidden" onClick={onClose}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <aside
-            className="absolute left-0 top-0 flex h-full w-[240px] flex-col bg-white dark:bg-card border-r border-slate-200/80 dark:border-border/70 shadow-xl"
+            className="absolute left-0 top-0 flex h-full w-[248px] flex-col border-r border-sidebar-border bg-sidebar shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex h-14 items-center justify-between border-b border-slate-200/80 dark:border-border/70 px-4">
-              <div className="flex items-center gap-2.5">
+            <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
+              <div className="flex min-w-0 items-center gap-2.5">
                 {renderBrand()}
-                <div>
-                  <p className="text-[14px] font-semibold text-foreground">{companyName}</p>
-                  <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Portal Interno</p>
+                <div className="min-w-0 leading-tight">
+                  <p className="truncate text-[13px] font-semibold text-foreground">{companyName}</p>
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground/60">Portal interno</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" className="h-7 w-7 rounded-md p-0 text-muted-foreground" onClick={onClose}>
+              <Button variant="ghost" size="icon" aria-label="Fechar menu" className="h-7 w-7 text-muted-foreground" onClick={onClose}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto px-2 py-2">
-              {renderSections(false, onClose)}
-            </div>
+            <div className="flex-1 overflow-y-auto px-2 py-2">{renderSections(false, onClose)}</div>
           </aside>
         </div>
       )}

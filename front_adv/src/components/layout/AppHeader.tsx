@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
-type TopbarProps = { onOpenMenu: () => void };
+type AppHeaderProps = { onOpenMenu: () => void };
 
 function resolvePageTitle(pathname: string) {
   if (pathname.startsWith('/app/processos')) return 'Processos';
@@ -56,7 +56,10 @@ function resolveRoleLabel(roles: string[], isSuperuser: boolean) {
   return roleLabels[roles[0] || ''] || 'Equipe interna';
 }
 
-export function Topbar({ onOpenMenu }: TopbarProps) {
+const iconBtn =
+  'h-8 w-8 rounded-lg text-muted-foreground hover:bg-surface-2 hover:text-foreground';
+
+export function AppHeader({ onOpenMenu }: AppHeaderProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, roles, isSuperuser, logout } = useAuth();
@@ -85,19 +88,19 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center border-b border-slate-200/60 dark:border-border bg-white dark:bg-card px-4 gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <header className="glass sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border px-4">
       {/* Hamburger (mobile) */}
       <Button
         variant="ghost"
         size="icon" aria-label="Abrir menu"
-        className="h-8 w-8 shrink-0 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 lg:hidden"
+        className={cn(iconBtn, 'shrink-0 lg:hidden')}
         onClick={onOpenMenu}
       >
         <Menu className="h-4 w-4" />
       </Button>
 
-      {/* Search — center */}
-      <div className="hidden flex-1 justify-center lg:flex">
+      {/* Search — left / center */}
+      <div className="hidden min-w-0 flex-1 lg:flex">
         <GlobalSearch />
       </div>
 
@@ -109,7 +112,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
       {/* Right group */}
       <div className="flex shrink-0 items-center gap-1">
         {tenants.length > 0 && (
-          <div className="hidden lg:block mr-1">
+          <div className="mr-1 hidden lg:block">
             <TenantSwitcher />
           </div>
         )}
@@ -118,7 +121,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         <Button
           variant="ghost"
           size="icon" aria-label="Alternar tema"
-          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
+          className={iconBtn}
           onClick={() => setTheme(isDark ? 'light' : 'dark')}
         >
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -128,7 +131,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         <Button
           variant="ghost"
           size="icon" aria-label="Configurações"
-          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
+          className={iconBtn}
           onClick={() => navigate('/app/configuracoes')}
         >
           <Settings className="h-4 w-4" />
@@ -140,21 +143,21 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
             <Button
               variant="ghost"
               size="icon" aria-label="Notificações"
-              className="relative h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
+              className={cn(iconBtn, 'relative')}
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold leading-none text-destructive-foreground">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-0 shadow-lg border-border/60" align="end">
-            <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+          <PopoverContent className="w-80 border-border p-0 shadow-elevated" align="end">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <p className="text-[13px] font-semibold text-foreground">Notificações</p>
               {unreadCount > 0 && (
-                <button type="button" onClick={markAllRead} className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
+                <button type="button" onClick={markAllRead} className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
                   Marcar todas lidas
                 </button>
               )}
@@ -167,8 +170,8 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
                     type="button"
                     onClick={() => !n.read && markRead(n.id)}
                     className={cn(
-                      'block w-full border-b border-border/40 px-4 py-3 text-left last:border-0 transition-colors',
-                      n.read ? 'opacity-50' : 'hover:bg-muted/40 cursor-pointer',
+                      'block w-full border-b border-border/60 px-4 py-3 text-left transition-colors last:border-0',
+                      n.read ? 'opacity-50' : 'cursor-pointer hover:bg-surface-2',
                     )}
                   >
                     <div className="flex items-start gap-2">
@@ -198,7 +201,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           variant="ghost"
           size="icon"
           aria-label="Sair da conta"
-          className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
+          className={iconBtn}
           onClick={handleLogout}
           title="Sair"
         >
@@ -208,14 +211,14 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         {/* User avatar dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="ml-1 flex items-center rounded-full transition-colors hover:bg-slate-100 dark:hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring p-0.5">
+            <button className="ml-1 flex items-center rounded-full p-0.5 transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <Avatar className="h-8 w-8">
                 {localAvatar && <AvatarImage src={localAvatar} alt={profile?.full_name || ''} className="object-cover" />}
-                <AvatarFallback className="bg-primary text-[10px] font-semibold text-white">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-primary text-[10px] font-semibold text-primary-foreground">{initials}</AvatarFallback>
               </Avatar>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-52 shadow-lg border-border/60" align="end" sideOffset={8}>
+          <DropdownMenuContent className="w-52 border-border shadow-elevated" align="end" sideOffset={8}>
             <DropdownMenuLabel className="pb-1">
               <p className="text-[13px] font-medium text-foreground">{profile?.full_name || 'Usuário'}</p>
               <p className="text-[11px] font-normal text-muted-foreground">{profile?.email || ''}</p>
