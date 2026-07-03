@@ -601,6 +601,26 @@ export default function Dashboard() {
   }, [data?.clients, processFiltersActive, visibleClientIds]);
 
   const processCounts = useMemo(() => {
+    // Sem filtros ativos, usa os totais all-time do servidor (não limitados
+    // pelo cap do payload); com filtros, conta o recorte carregado.
+    if (!processFiltersActive && (data?.processTotals?.length ?? 0) > 0) {
+      const totals = data!.processTotals;
+      const closedAll = totals
+        .filter((item) => isClosedProcess(item.status))
+        .reduce((sum, item) => sum + (item.count || 0), 0);
+      const activeAll = totals
+        .filter((item) => !isClosedProcess(item.status))
+        .reduce((sum, item) => sum + (item.count || 0), 0);
+      const previousActive = filteredProcesses.filter((process) => {
+        const createdAt = toDate(process.created_at || process.updated_at || null);
+        return !!createdAt && createdAt <= prevRange.end && !isClosedProcess(process.status);
+      }).length;
+      const previousClosed = filteredProcesses.filter((process) => {
+        const createdAt = toDate(process.created_at || process.updated_at || null);
+        return !!createdAt && createdAt <= prevRange.end && isClosedProcess(process.status);
+      }).length;
+      return { active: activeAll, closed: closedAll, previousActive, previousClosed };
+    }
     const active = filteredProcesses.filter((process) => !isClosedProcess(process.status)).length;
     const closed = filteredProcesses.filter((process) => isClosedProcess(process.status)).length;
     const previousActive = filteredProcesses.filter((process) => {
@@ -612,7 +632,7 @@ export default function Dashboard() {
       return !!createdAt && createdAt <= prevRange.end && isClosedProcess(process.status);
     }).length;
     return { active, closed, previousActive, previousClosed };
-  }, [filteredProcesses, prevRange.end]);
+  }, [data, filteredProcesses, prevRange.end, processFiltersActive]);
 
   const deadlinesInRange = useMemo(
     () => filteredDeadlines.filter((deadline) => inRange(deadline.due_date, range) && !isCompletedDeadline(deadline.status)),

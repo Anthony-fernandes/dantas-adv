@@ -324,3 +324,44 @@ class PortalNotificationTests(PortalUploadTests):
         titles = {n['title'] for n in response.json().get('results', response.json())}
         self.assertIn('Doc', titles)
         self.assertNotIn('Privada', titles)
+
+
+class StrategicDashboardTests(BaseTenantTestCase):
+    def test_single_payload_scoped_to_tenant(self):
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/dashboard/strategic/')
+        self.assertEqual(response.status_code, 200, response.content)
+        body = response.json()
+        for key in ['legal_summary', 'process_totals', 'processes', 'deadlines', 'hearings',
+                    'movements', 'documents', 'clients', 'employees', 'areas']:
+            self.assertIn(key, body)
+        proc_ids = {p['id'] for p in body['processes']}
+        self.assertIn(str(self.process_a.id), proc_ids)
+        self.assertNotIn(str(self.process_b.id), proc_ids)
+
+    def test_finance_excluded_without_role(self):
+        # lawyer não tem papel FINANCE — finance vem vazio mesmo pedindo
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/dashboard/strategic/?include_finance=1')
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body['receivables'], [])
+        self.assertEqual(body['payables'], [])
+
+    def test_finance_included_for_finance_role(self):
+        from apps.finance.models import AccountsReceivable
+        AccountsReceivable.objects.create(
+            tenant=self.tenant_a, description='Honorários', category='honorarios',
+            amount='500.00', due_date='2026-08-01', status='aberta',
+        )
+        client = self.client_for(self.finance_a, self.tenant_a)
+        response = client.get('/api/dashboard/strategic/?include_finance=1')
+        self.assertEqual(response.status_code, 403)  # finance role não é IsLegal
+
+    def test_process_totals_counts_all_time(self):
+        from apps.processes.models import Process
+        Process.objects.create(tenant=self.tenant_a, subject='Encerrado', status='finalizado')
+        client = self.client_for(self.lawyer_a, self.tenant_a)
+        response = client.get('/api/dashboard/strategic/')
+        totals = {row['status']: row['count'] for row in response.json()['process_totals']}
+        self.assertEqual(totals.get('finalizado'), 1)

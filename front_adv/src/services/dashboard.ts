@@ -1,4 +1,4 @@
-import { apiGetAllPages, apiRequest } from "@/integrations/api/client";
+import { apiRequest } from "@/integrations/api/client";
 
 export type DashboardStatusCount = { status: string; count: number };
 
@@ -170,8 +170,11 @@ export type DashboardPaymentRecord = {
   created_at?: string | null;
 };
 
+export type DashboardStatusTotal = { status: string; count: number };
+
 export type StrategicDashboardData = {
   legalSummary: LegalDashboardResponse | null;
+  processTotals: DashboardStatusTotal[];
   processes: DashboardProcessRecord[];
   deadlines: DashboardDeadlineRecord[];
   hearings: DashboardHearingRecord[];
@@ -185,13 +188,21 @@ export type StrategicDashboardData = {
   payments: DashboardPaymentRecord[];
 };
 
-async function safeAllPages<T>(path: string, params?: Record<string, string | number | boolean | null | undefined>) {
-  try {
-    return await apiGetAllPages<T>(path, params);
-  } catch {
-    return [] as T[];
-  }
-}
+type StrategicDashboardApiResponse = {
+  legal_summary: LegalDashboardResponse | null;
+  process_totals: DashboardStatusTotal[];
+  processes: DashboardProcessRecord[];
+  deadlines: DashboardDeadlineRecord[];
+  hearings: DashboardHearingRecord[];
+  movements: DashboardMovementRecord[];
+  documents: DashboardDocumentRecord[];
+  clients: DashboardClientRecord[];
+  employees: DashboardEmployeeRecord[];
+  areas: DashboardAreaRecord[];
+  receivables: DashboardReceivableRecord[];
+  payables: DashboardPayableRecord[];
+  payments: DashboardPaymentRecord[];
+};
 
 async function safeRequest<T>(path: string) {
   try {
@@ -205,49 +216,47 @@ export async function getLegalDashboard(windowDays: number = 7) {
   return apiRequest<LegalDashboardResponse>(`/dashboard/legal/?window_days=${windowDays}`);
 }
 
+const EMPTY_DASHBOARD: StrategicDashboardData = {
+  legalSummary: null,
+  processTotals: [],
+  processes: [],
+  deadlines: [],
+  hearings: [],
+  movements: [],
+  documents: [],
+  clients: [],
+  employees: [],
+  areas: [],
+  receivables: [],
+  payables: [],
+  payments: [],
+};
+
+/**
+ * Uma única requisição ao endpoint agregado do servidor. O backend já
+ * janela e limita cada recurso, então o payload é enxuto mesmo em bases
+ * grandes (antes: N requisições paginadas baixando tudo para o cliente).
+ */
 export async function getStrategicDashboardData(options: { includeFinance?: boolean } = {}): Promise<StrategicDashboardData> {
   const includeFinance = options.includeFinance !== false;
+  const query = includeFinance ? "?include_finance=1" : "";
 
-  const [
-    legalSummary,
-    processes,
-    deadlines,
-    hearings,
-    movements,
-    documents,
-    clients,
-    employees,
-    areas,
-    receivables,
-    payables,
-    payments,
-  ] = await Promise.all([
-    safeRequest<LegalDashboardResponse>("/dashboard/legal/?window_days=7"),
-    safeAllPages<DashboardProcessRecord>("/processes/", { ordering: "-updated_at" }),
-    safeAllPages<DashboardDeadlineRecord>("/deadlines/", { ordering: "due_date" }),
-    safeAllPages<DashboardHearingRecord>("/hearings/", { ordering: "hearing_date" }),
-    safeAllPages<DashboardMovementRecord>("/movements/", { ordering: "-date" }),
-    safeAllPages<DashboardDocumentRecord>("/documents/", { ordering: "-created_at" }),
-    safeAllPages<DashboardClientRecord>("/clients/", { ordering: "-updated_at" }),
-    safeAllPages<DashboardEmployeeRecord>("/employees/", { ordering: "full_name" }),
-    safeAllPages<DashboardAreaRecord>("/causes/", { ordering: "name" }),
-    includeFinance ? safeAllPages<DashboardReceivableRecord>("/accounts-receivable/", { ordering: "-due_date" }) : Promise.resolve([]),
-    includeFinance ? safeAllPages<DashboardPayableRecord>("/accounts-payable/", { ordering: "-due_date" }) : Promise.resolve([]),
-    includeFinance ? safeAllPages<DashboardPaymentRecord>("/payments/", { ordering: "-payment_date" }) : Promise.resolve([]),
-  ]);
+  const response = await safeRequest<StrategicDashboardApiResponse>(`/dashboard/strategic/${query}`);
+  if (!response) return EMPTY_DASHBOARD;
 
   return {
-    legalSummary,
-    processes,
-    deadlines,
-    hearings,
-    movements,
-    documents,
-    clients,
-    employees,
-    areas,
-    receivables,
-    payables,
-    payments,
+    legalSummary: response.legal_summary ?? null,
+    processTotals: response.process_totals ?? [],
+    processes: response.processes ?? [],
+    deadlines: response.deadlines ?? [],
+    hearings: response.hearings ?? [],
+    movements: response.movements ?? [],
+    documents: response.documents ?? [],
+    clients: response.clients ?? [],
+    employees: response.employees ?? [],
+    areas: response.areas ?? [],
+    receivables: response.receivables ?? [],
+    payables: response.payables ?? [],
+    payments: response.payments ?? [],
   };
 }

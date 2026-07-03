@@ -31,7 +31,7 @@ from apps.accounts.saas_api import (
 )
 from apps.clients.api import ClientViewSet
 from apps.core.calendar_api import CalendarEventViewSet
-from apps.core.dashboard_api import LegalDashboardView
+from apps.core.dashboard_api import LegalDashboardView, StrategicDashboardView
 from apps.core.export_api import TenantExportView
 from apps.core.search_api import GlobalSearchView
 from apps.core.landing_api import (
@@ -161,6 +161,7 @@ urlpatterns = [
     path("api/admin/users/<uuid:user_id>/", SuperAdminUserDetailView.as_view(), name="admin_users_detail"),
     path("api/finance/report/", FinanceReportView.as_view(), name="finance_report"),
     path("api/dashboard/legal/", LegalDashboardView.as_view(), name="dashboard_legal"),
+    path("api/dashboard/strategic/", StrategicDashboardView.as_view(), name="dashboard_strategic"),
     path("api/auth/token/", EmailOrUsernameTokenView.as_view(), name="token_obtain_pair"),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/me/", MeView.as_view(), name="me"),

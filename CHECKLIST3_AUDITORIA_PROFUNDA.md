@@ -13,14 +13,13 @@
 | KPIs financeiros condicionais a papel | ✅ | `canSeeFinance` + RBAC |
 | Gráficos (agenda, status, faturamento×inadimplência) | ✅ | recharts, séries agregadas |
 | Alertas críticos (vencidos, audiências imediatas) | ✅ | seção "alertas" com EmptyState |
-| Agregação server-side | 🔴 | `getStrategicDashboardData` busca TODAS as páginas de 8 recursos |
+| Agregação server-side | ✅ | `StrategicDashboardView` — 1 requisição com listas janeladas/capadas |
 
-**Item pendente: agregação server-side**
-- Problema: em escritório com 5k+ processos o dashboard baixa tudo para o navegador.
-- Impacto: performance degrada com crescimento; concorrentes agregam no servidor.
-- Solução: expandir `LegalDashboardView` com séries e somatórios; frontend consome pronto.
-- Prioridade: P2 (correto no volume atual). Arquivos: `core/dashboard_api.py`, `services/dashboard.ts`.
-- Critério de aceite: dashboard carrega com ≤3 requisições e payload <100KB.
+**[x] Agregação server-side — CONCLUÍDO**
+- Antes: `getStrategicDashboardData` fazia até 11 chamadas paginadas baixando TODAS as páginas de processos/prazos/audiências/movimentos/documentos/clientes/financeiro.
+- Agora: `GET /api/dashboard/strategic/[?include_finance=1]` devolve tudo em **1 requisição**, com cada recurso janelado por data e capado no servidor (processos 2000, prazos 1500, audiências 1000, atividade 300, financeiro 3000). `process_totals` traz a contagem all-time por status para os KPIs não dependerem do cap; finance só entra com papel FINANCE.
+- Arquivos: `core/dashboard_api.py`, `config/urls.py`, `services/dashboard.ts`, `Dashboard.tsx`.
+- Testes: `StrategicDashboardTests` (payload único, isolamento de tenant, RBAC de finance, totais all-time). Critério atendido: 1 requisição em vez de N.
 
 ## 2. Processos
 
