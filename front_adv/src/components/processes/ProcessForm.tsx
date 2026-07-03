@@ -132,6 +132,7 @@ export function ProcessForm({
                 type="button"
                 variant="outline"
                 size="icon"
+                aria-label="Buscar processo no Datajud"
                 className="shrink-0"
                 disabled={disabled || cnjLookup.loading || !values.cnj || values.cnj.replace(/\D/g, '').length < 20}
                 onClick={handleCnjSearch}

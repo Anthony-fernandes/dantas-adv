@@ -88,7 +88,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
       {/* Hamburger (mobile) */}
       <Button
         variant="ghost"
-        size="icon"
+        size="icon" aria-label="Abrir menu"
         className="h-8 w-8 shrink-0 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 lg:hidden"
         onClick={onOpenMenu}
       >
@@ -116,7 +116,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         {/* Theme toggle */}
         <Button
           variant="ghost"
-          size="icon"
+          size="icon" aria-label="Alternar tema"
           className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
           onClick={() => setTheme(isDark ? 'light' : 'dark')}
         >
@@ -126,7 +126,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         {/* Settings */}
         <Button
           variant="ghost"
-          size="icon"
+          size="icon" aria-label="Configurações"
           className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
           onClick={() => navigate('/app/configuracoes')}
         >
@@ -138,7 +138,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon" aria-label="Notificações"
               className="relative h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
             >
               <Bell className="h-4 w-4" />
@@ -196,6 +196,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Sair da conta"
           className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-muted-foreground/60 dark:hover:bg-muted dark:hover:text-foreground"
           onClick={handleLogout}
           title="Sair"

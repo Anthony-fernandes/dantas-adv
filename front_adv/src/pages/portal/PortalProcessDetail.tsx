@@ -141,7 +141,7 @@ export default function PortalProcessDetail() {
       <div className="page-header">
         <div className="flex items-start gap-4">
           <Link to="/portal/processos">
-            <Button variant="ghost" size="icon" className="mt-0.5 h-8 w-8 shrink-0 text-muted-foreground">
+            <Button variant="ghost" size="icon" aria-label="Voltar" className="mt-0.5 h-8 w-8 shrink-0 text-muted-foreground">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>

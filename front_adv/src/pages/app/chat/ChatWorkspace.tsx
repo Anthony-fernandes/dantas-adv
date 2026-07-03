@@ -229,7 +229,7 @@ export default function ChatWorkspace() {
               />
               <Button
                 type="submit"
-                size="icon"
+                size="icon" aria-label="Enviar"
                 className="h-10 w-10 shrink-0"
                 disabled={!text.trim() || sendMsg.isPending}
               >

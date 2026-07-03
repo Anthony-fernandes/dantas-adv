@@ -649,7 +649,7 @@ export default function TasksWorkspace() {
                       <div className="flex shrink-0 items-center gap-1">
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="icon" aria-label="Editar"
                           className="h-7 w-7 text-muted-foreground hover:text-foreground"
                           onClick={() => setEditTask(task)}
                         >
@@ -657,7 +657,7 @@ export default function TasksWorkspace() {
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="icon" aria-label="Excluir"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
                           onClick={() => setDeleteTask(task)}
                         >

@@ -766,7 +766,7 @@ export default function AgendaPage() {
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" className="h-11 w-11 rounded-md" onClick={goToPreviousPeriod}>
+              <Button variant="outline" size="icon" aria-label="Anterior" className="h-11 w-11 rounded-md" onClick={goToPreviousPeriod}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
@@ -774,7 +774,7 @@ export default function AgendaPage() {
                 {calendarLabel}
               </div>
 
-              <Button variant="outline" size="icon" className="h-11 w-11 rounded-md" onClick={goToNextPeriod}>
+              <Button variant="outline" size="icon" aria-label="Próximo" className="h-11 w-11 rounded-md" onClick={goToNextPeriod}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -946,7 +946,7 @@ export default function AgendaPage() {
           <CardHeader className="hidden gap-4 border-b bg-surface-2/40">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" size="icon" onClick={goToPreviousPeriod}>
+                <Button variant="outline" size="icon" aria-label="Anterior" onClick={goToPreviousPeriod}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <Button
@@ -959,7 +959,7 @@ export default function AgendaPage() {
                 >
                   Hoje
                 </Button>
-                <Button variant="outline" size="icon" onClick={goToNextPeriod}>
+                <Button variant="outline" size="icon" aria-label="Próximo" onClick={goToNextPeriod}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

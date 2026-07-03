@@ -465,7 +465,7 @@ export default function Employees() {
                             <TableCell className="text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={(event) => event.stopPropagation()}>
+                                  <Button variant="ghost" size="icon" aria-label="Abrir menu de ações" onClick={(event) => event.stopPropagation()}>
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>

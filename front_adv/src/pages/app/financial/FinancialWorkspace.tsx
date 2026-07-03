@@ -1834,7 +1834,7 @@ function ReceivablesTable({
                 <TableCell><Badge className={cn('border', statusBadgeClass(row.paid ? 'paga' : row.overdue ? 'vencida' : row.status || 'aberta'))}>{row.paid ? 'Recebido' : row.overdue ? 'Vencido' : statusLabel(row.status, 'receivable')}</Badge></TableCell>
                 <TableCell>
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                    <DropdownMenuTrigger asChild><Button size="icon" aria-label="Abrir menu de ações" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onEdit(row)}>Editar cobrança</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onRegisterPayment(row)}>Marcar como recebida</DropdownMenuItem>
@@ -1909,7 +1909,7 @@ function PayablesTable({
                 <TableCell><Badge className={cn('border', statusBadgeClass(row.resolvedStatus))}>{row.statusText}</Badge></TableCell>
                 <TableCell>
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                    <DropdownMenuTrigger asChild><Button size="icon" aria-label="Abrir menu de ações" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onEdit(row)}>Editar despesa</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onRegisterPayment(row)}>Marcar como paga</DropdownMenuItem>

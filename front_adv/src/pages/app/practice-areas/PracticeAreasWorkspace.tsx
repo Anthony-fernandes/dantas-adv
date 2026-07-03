@@ -1206,7 +1206,7 @@ function AreaCard({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button type="button" variant="ghost" size="icon" className="shrink-0" onClick={(event) => event.stopPropagation()}>
+                <Button type="button" variant="ghost" size="icon" aria-label="Abrir menu de ações" className="shrink-0" onClick={(event) => event.stopPropagation()}>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -1328,7 +1328,7 @@ function AreaRow({
       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" aria-label="Abrir menu de ações" className="h-8 w-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

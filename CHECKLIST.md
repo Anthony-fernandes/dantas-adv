@@ -114,5 +114,5 @@
 * [x] StatCards padronizados (cores sólidas, ícones)
 * [x] Tabelas em widgets brancos sem card duplo (padrão Nimbus)
 * [x] Ortografia/acentuação corrigidas em toda a UI
-* [ ] Acessibilidade (aria-labels em botões-ícone)
+* [x] Acessibilidade (aria-labels em botões-ícone)
 * [ ] Responsividade auditada em todas as telas ≤ 768px

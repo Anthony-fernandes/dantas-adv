@@ -418,8 +418,8 @@ export function ProcessDocumentsCenter({
               <Select value={dateRange} onValueChange={setDateRange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Qualquer data</SelectItem><SelectItem value="today">Hoje</SelectItem><SelectItem value="7d">7 dias</SelectItem><SelectItem value="30d">30 dias</SelectItem></SelectContent></Select>
               <Select value={sortBy} onValueChange={setSortBy}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="recent">Mais recentes</SelectItem><SelectItem value="name">Nome</SelectItem><SelectItem value="size">Tamanho</SelectItem><SelectItem value="type">Tipo</SelectItem></SelectContent></Select>
               <div className="flex items-center gap-2">
-                <Button variant={layout === 'list' ? 'default' : 'outline'} size="icon" onClick={() => setLayout('list')}><LayoutList className="h-4 w-4" /></Button>
-                <Button variant={layout === 'cards' ? 'default' : 'outline'} size="icon" onClick={() => setLayout('cards')}><Grid2X2 className="h-4 w-4" /></Button>
+                <Button variant={layout === 'list' ? 'default' : 'outline'} size="icon" aria-label="Visualizar em lista" onClick={() => setLayout('list')}><LayoutList className="h-4 w-4" /></Button>
+                <Button variant={layout === 'cards' ? 'default' : 'outline'} size="icon" aria-label="Visualizar em cards" onClick={() => setLayout('cards')}><Grid2X2 className="h-4 w-4" /></Button>
               </div>
             </div>
 
@@ -454,7 +454,7 @@ export function ProcessDocumentsCenter({
                         </button>
 
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="Abrir menu de ações"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuLabel>Ações do documento</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => setPreviewKey(group.key)}><Eye className="mr-2 h-4 w-4" />Visualizar</DropdownMenuItem>

@@ -581,10 +581,10 @@ export function DocumentsHub({
                   </SelectContent>
                 </Select>
                 <div className="flex items-center gap-2">
-                  <Button variant={layout === 'list' ? 'default' : 'outline'} size="icon" onClick={() => setLayout('list')}>
+                  <Button variant={layout === 'list' ? 'default' : 'outline'} size="icon" aria-label="Visualizar em lista" onClick={() => setLayout('list')}>
                     <LayoutList className="h-4 w-4" />
                   </Button>
-                  <Button variant={layout === 'cards' ? 'default' : 'outline'} size="icon" onClick={() => setLayout('cards')}>
+                  <Button variant={layout === 'cards' ? 'default' : 'outline'} size="icon" aria-label="Visualizar em cards" onClick={() => setLayout('cards')}>
                     <Grid2X2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -637,7 +637,7 @@ export function DocumentsHub({
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" aria-label="Abrir menu de ações">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>

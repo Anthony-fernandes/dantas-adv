@@ -1063,7 +1063,7 @@ export default function ClientsWorkspace() {
 
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" aria-label="Abrir menu de ações"><MoreHorizontal className="h-4 w-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => navigate(`/app/clientes/${row.id}`)}><Eye className="mr-2 h-4 w-4" />Visualizar</DropdownMenuItem>
@@ -1198,7 +1198,7 @@ export default function ClientsWorkspace() {
                         <TableCell className="sticky right-0 z-10 bg-background text-right shadow-[-10px_0_18px_-16px_rgba(15,23,42,0.45)]">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" onClick={(event) => event.stopPropagation()}>
+                              <Button variant="ghost" size="icon" aria-label="Abrir menu de ações" onClick={(event) => event.stopPropagation()}>
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>

@@ -895,7 +895,7 @@ export default function AdminUsers() {
                     />
                     <Button
                       variant="outline"
-                      size="icon"
+                      size="icon" aria-label="Duplicar"
                       onClick={() => navigator.clipboard.writeText(inviteResult!.invite_url || inviteResult!.token || '')}
                     >
                       <Copy className="h-4 w-4" />

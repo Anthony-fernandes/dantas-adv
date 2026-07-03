@@ -487,7 +487,7 @@ export default function TimesheetWorkspace() {
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="icon" aria-label="Editar"
                           className="h-7 w-7 text-muted-foreground hover:text-foreground"
                           onClick={() => setEditEntry(entry)}
                         >
@@ -495,7 +495,7 @@ export default function TimesheetWorkspace() {
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="icon" aria-label="Excluir"
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
                           onClick={() => setDeleteEntry(entry)}
                         >

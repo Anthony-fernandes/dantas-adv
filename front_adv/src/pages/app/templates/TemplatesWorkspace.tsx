@@ -588,7 +588,7 @@ export default function TemplatesWorkspace() {
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon" aria-label="Baixar"
                         className="h-7 w-7 text-muted-foreground hover:text-primary"
                         title="Gerar documento"
                         onClick={() => setGenerateTarget(t)}
@@ -597,7 +597,7 @@ export default function TemplatesWorkspace() {
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon" aria-label="Histórico"
                         className="h-7 w-7 text-muted-foreground hover:text-foreground"
                         title="Histórico de versões"
                         onClick={() => setHistoryTarget(t)}
@@ -606,7 +606,7 @@ export default function TemplatesWorkspace() {
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon" aria-label="Duplicar"
                         className="h-7 w-7 text-muted-foreground hover:text-foreground"
                         title="Duplicar"
                         onClick={() => handleDuplicate(t)}
@@ -615,7 +615,7 @@ export default function TemplatesWorkspace() {
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon" aria-label="Editar"
                         className="h-7 w-7 text-muted-foreground hover:text-foreground"
                         title="Editar"
                         onClick={() => openEdit(t)}
@@ -624,7 +624,7 @@ export default function TemplatesWorkspace() {
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon" aria-label="Excluir"
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
                         title="Excluir"
                         onClick={() => setDeleteTarget(t)}
