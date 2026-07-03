@@ -12,14 +12,19 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
-        display: ["DM Serif Display", "Georgia", "serif"],
+        sans: ["Inter", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        display: ["Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
+        "border-strong": "hsl(var(--border-strong))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
@@ -66,6 +71,7 @@ export default {
         rule: "hsl(var(--rule))",
         surface: "hsl(var(--surface))",
         "surface-2": "hsl(var(--surface-2))",
+        "surface-3": "hsl(var(--surface-3))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
