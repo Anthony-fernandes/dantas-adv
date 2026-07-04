@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Loader2, Save } from 'lucide-react';
 
 import { useCreateProcess } from '@/hooks/useApiData';
 import { apiGetAllPages } from '@/integrations/api/client';
@@ -8,8 +9,10 @@ import { useTenant } from '@/contexts/TenantContext';
 import { loadWorkspaceStateMap, saveWorkspaceStateItem } from '@/services/workspaceState';
 import { invalidateProcessRelatedQueries } from '@/services/processQueryInvalidation';
 import { resolvePracticeAreaByCode, type PracticeAreaUiMeta } from '@/lib/practice-area';
-import { ProcessEditModal } from '@/components/processes/ProcessEditModal';
-import type { ProcessFormValues } from '@/components/processes/ProcessValidation';
+import { ProcessForm } from '@/components/processes/ProcessForm';
+import { useProcessForm } from '@/components/processes/useProcessForm';
+import { buildProcessSubmitPayload } from '@/components/processes/ProcessValidation';
+import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ds';
 
 type AreaCatalog = { id: string; name?: string | null; area?: string | null; is_active?: boolean };
@@ -77,11 +80,7 @@ export default function ProcessCreatePage() {
   );
 
   const clientOptions = useMemo(
-    () =>
-      clients.map((c) => ({
-        value: c.id,
-        label: String(c.name || c.full_name || c.razao_social || 'Cliente'),
-      })),
+    () => clients.map((c) => ({ value: c.id, label: String(c.name || c.full_name || c.razao_social || 'Cliente') })),
     [clients],
   );
 
@@ -90,13 +89,17 @@ export default function ProcessCreatePage() {
     [employeeOptions],
   );
 
-  async function handleSave(payload?: Record<string, unknown>, values?: ProcessFormValues) {
-    if (!payload || !values) return;
+  const defaultArea = areaOptions[0]?.value || 'civel';
+  const form = useProcessForm({ open: true, mode: 'create', defaultArea });
+
+  async function handleSubmit() {
+    if (!form.validateBeforeSave()) return;
+    const payload = buildProcessSubmitPayload(form.values, { clients: clientOptions, employees: employeeOptions });
     const saved = await createProcess.mutateAsync(payload as any);
-    if (values.responsibleId) {
+    if (form.values.responsibleId) {
       await saveWorkspaceStateItem('process_ui', saved.id, {
-        responsibleId: values.responsibleId,
-        responsibleName: employeeMap[values.responsibleId] || '',
+        responsibleId: form.values.responsibleId,
+        responsibleName: employeeMap[form.values.responsibleId] || '',
       });
     }
     await invalidateProcessRelatedQueries(queryClient, activeTenantId);
@@ -105,26 +108,47 @@ export default function ProcessCreatePage() {
 
   return (
     <div className="animate-fade-in">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mb-3 h-7 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
+        onClick={() => navigate('/app/processos')}
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Processos
+      </Button>
+
       <PageHeader
-        breadcrumb={['Processos', 'Novo processo']}
+        eyebrow="Contencioso"
         title="Novo processo"
         description="Cadastre CNJ, cliente, área, foro, risco e responsável principal."
       />
-      <ProcessEditModal
-        open
-        mode="create"
-        processId={null}
-        process={null}
-        defaultArea={areaOptions[0]?.value || 'civel'}
-        clients={clientOptions}
-        employees={employeeOptions}
-        areas={areaOptions}
-        isSubmitting={createProcess.isPending}
-        onOpenChange={(next) => {
-          if (!next) navigate('/app/processos');
-        }}
-        onSave={handleSave}
-      />
+
+      <form
+        onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}
+        className="surface-card space-y-6 p-6"
+      >
+        <ProcessForm
+          values={form.values}
+          errors={form.errors}
+          clients={clientOptions}
+          employees={employeeOptions}
+          areas={areaOptions}
+          disabled={createProcess.isPending}
+          onChange={form.updateField}
+          onBlur={form.touchField}
+        />
+
+        <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+          <Button type="button" variant="outline" onClick={() => navigate('/app/processos')} disabled={createProcess.isPending}>
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={createProcess.isPending}>
+            {createProcess.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            Criar processo
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
