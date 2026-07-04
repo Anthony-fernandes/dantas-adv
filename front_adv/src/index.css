@@ -239,7 +239,7 @@
    Serão removidas conforme cada módulo for reconstruído.
    ========================================================================= */
 @layer components {
-  .page-container { @apply mx-auto w-full max-w-[1600px] space-y-6; }
+  .page-container { @apply mx-auto w-full max-w-[1400px] space-y-6; }
   .page-header { @apply flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between; }
   .page-title { @apply text-xl font-semibold tracking-tight text-foreground; }
   .page-subtitle { @apply max-w-2xl text-[13px] leading-relaxed text-muted-foreground; }
