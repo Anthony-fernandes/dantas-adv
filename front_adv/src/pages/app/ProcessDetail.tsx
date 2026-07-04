@@ -317,9 +317,9 @@ function toMovementAttachment(document: DocumentRecord): MovementAttachment {
 
 function processPhaseTone(value?: string | null) {
   const normalized = normalizeText(value);
-  if (normalized === 'execucao' || normalized === 'cumprimento' || normalized === 'cumprimento_de_sentenca') return 'border-amber-200 bg-amber-50 text-amber-700';
-  if (normalized === 'recursal' || normalized === 'recurso') return 'border-sky-200 bg-sky-50 text-sky-700';
-  return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  if (normalized === 'execucao' || normalized === 'cumprimento' || normalized === 'cumprimento_de_sentenca') return 'border-warning/30 bg-warning/14 text-warning';
+  if (normalized === 'recursal' || normalized === 'recurso') return 'border-info/25 bg-info/12 text-info';
+  return 'border-success/25 bg-success/12 text-success';
 }
 
 function buildProcessForm(process: ProcessRecord, responsibleId?: string | null): ProcessFormState {
@@ -1393,7 +1393,7 @@ export default function ProcessDetail() {
                     <AreaIcon className="h-3.5 w-3.5" />
                     {areaMeta.label}
                   </span>
-                  <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold capitalize border-emerald-200 bg-emerald-50 text-emerald-700">
+                  <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold capitalize border-success/25 bg-success/12 text-success">
                     {humanizeValue(process.phase)}
                   </span>
                 </div>
@@ -1445,7 +1445,7 @@ export default function ProcessDetail() {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 text-sm text-emerald-800">
+            <div className="rounded-2xl border border-success/25 bg-success/10 p-4 text-sm text-success">
               Nenhum alerta crítico no momento. O processo está sem prazo vencido e sem audiência imediata.
             </div>
           )}
@@ -1709,8 +1709,8 @@ export default function ProcessDetail() {
                       key={deadline.id}
                       className={cn(
                         'rounded-2xl border p-4',
-                        isOverdue(deadline.due_date) && normalizeText(deadline.status) !== 'concluido' && 'border-red-200 bg-red-50/60',
-                        !isOverdue(deadline.due_date) && isSoon(deadline.due_date, 3) && 'border-amber-200 bg-amber-50/60',
+                        isOverdue(deadline.due_date) && normalizeText(deadline.status) !== 'concluido' && 'border-destructive/30 bg-destructive/10',
+                        !isOverdue(deadline.due_date) && isSoon(deadline.due_date, 3) && 'border-warning/30 bg-warning/12',
                       )}
                     >
                       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1785,7 +1785,7 @@ export default function ProcessDetail() {
                   <p className="text-sm text-muted-foreground">Sem audiências cadastradas.</p>
                 ) : (
                   sortedHearings.map((hearing) => (
-                    <div key={hearing.id} className={cn('rounded-2xl border p-4', isToday(hearing.hearing_date) && 'border-sky-200 bg-sky-50/60')}>
+                    <div key={hearing.id} className={cn('rounded-2xl border p-4', isToday(hearing.hearing_date) && 'border-info/25 bg-info/10')}>
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                           <div className="font-medium">{hearing.type || 'Audiência'}</div>
@@ -2073,10 +2073,10 @@ function AlertCard({
 }) {
   const toneClass =
     tone === 'danger'
-      ? 'border-red-200 bg-red-50/70 text-red-800'
+      ? 'border-destructive/30 bg-destructive/10 text-destructive'
       : tone === 'warning'
-        ? 'border-amber-200 bg-amber-50/70 text-amber-800'
-        : 'border-sky-200 bg-sky-50/70 text-sky-800';
+        ? 'border-warning/30 bg-warning/12 text-warning'
+        : 'border-info/25 bg-info/10 text-info';
 
   return (
     <div className={cn('rounded-2xl border p-4', toneClass)}>
