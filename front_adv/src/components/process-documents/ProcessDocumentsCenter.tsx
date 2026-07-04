@@ -417,82 +417,95 @@ export function ProcessDocumentsCenter({
               <Select value={responsible} onValueChange={setResponsible}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos os responsáveis</SelectItem>{responsibleOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent></Select>
               <Select value={dateRange} onValueChange={setDateRange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Qualquer data</SelectItem><SelectItem value="today">Hoje</SelectItem><SelectItem value="7d">7 dias</SelectItem><SelectItem value="30d">30 dias</SelectItem></SelectContent></Select>
               <Select value={sortBy} onValueChange={setSortBy}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="recent">Mais recentes</SelectItem><SelectItem value="name">Nome</SelectItem><SelectItem value="size">Tamanho</SelectItem><SelectItem value="type">Tipo</SelectItem></SelectContent></Select>
-              <div className="flex items-center gap-2">
-                <Button variant={layout === 'list' ? 'default' : 'outline'} size="icon" aria-label="Visualizar em lista" onClick={() => setLayout('list')}><LayoutList className="h-4 w-4" /></Button>
-                <Button variant={layout === 'cards' ? 'default' : 'outline'} size="icon" aria-label="Visualizar em cards" onClick={() => setLayout('cards')}><Grid2X2 className="h-4 w-4" /></Button>
-              </div>
             </div>
 
             {isLoading ? (
-              <div className="space-y-3">{[1, 2, 3, 4].map((item) => <div key={item} className="h-20 rounded-2xl bg-muted" />)}</div>
+              <div className="space-y-3">{[1, 2, 3, 4].map((item) => <div key={item} className="h-14 rounded-lg bg-muted" />)}</div>
             ) : isError ? (
               <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-4 text-sm text-destructive">Não foi possível carregar a central de documentos.</div>
             ) : filteredGroups.length === 0 ? (
               <EmptyState title="Nenhum documento encontrado" description="Envie arquivos ou ajuste os filtros para popular a central deste processo." />
             ) : (
-              <div className={layout === 'cards' ? 'grid gap-4 md:grid-cols-2' : 'space-y-3'}>
-                {filteredGroups.map((group) => {
-                  const latest = group.latest;
-                  const kind = getDocumentKind(latest);
-                  const Icon = fileIcon(kind);
-                  const url = getDocumentUrl(latest);
-                  return (
-                    <div key={group.key} className="rounded-2xl border bg-background p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <button type="button" className="flex min-w-0 flex-1 items-start gap-3 text-left" onClick={() => setPreviewKey(group.key)}>
-                          <div className="rounded-xl bg-primary/10 p-3 text-primary"><Icon className="h-5 w-5" /></div>
-                          <div className="min-w-0 space-y-2">
-                            <p className="truncate text-base font-semibold">{latest.title || latest.filename || 'Documento'}</p>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                              <span>{formatFileSize(latest.file_size)}</span>
-                              <span>{formatDocumentDate(latest.created_at)}</span>
-                              <span>{latest.uploaded_by || 'Escritório'}</span>
-                              <span>{processNumber || 'Processo vinculado'}</span>
-                              {clientName ? <span>{clientName}</span> : null}
-                            </div>
-                          </div>
-                        </button>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="Abrir menu de ações"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel>Ações do documento</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => setPreviewKey(group.key)}><Eye className="mr-2 h-4 w-4" />Visualizar</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => url && window.open(url, '_blank', 'noopener,noreferrer')} disabled={!url}><Download className="mr-2 h-4 w-4" />Baixar</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openRenameDialog(group)}><Pencil className="mr-2 h-4 w-4" />Renomear</DropdownMenuItem>
-                            <DropdownMenuItem onClick={async () => { await duplicateAsNewDocument(group); toast.success('Documento duplicado como novo arquivo.'); }}><Copy className="mr-2 h-4 w-4" />Duplicar</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleShare(latest)}><Share2 className="mr-2 h-4 w-4" />Compartilhar</DropdownMenuItem>
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger><FolderInput className="mr-2 h-4 w-4" />Mover para categoria</DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent>
-                                {DOCUMENT_CATEGORY_OPTIONS.map((option) => (
-                                  <DropdownMenuItem key={option.value} onClick={async () => { await patchDocument(latest.id, { category: option.value }); await invalidateDocuments(); toast.success('Categoria atualizada.'); }}>
-                                    {option.label}
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger><Shield className="mr-2 h-4 w-4" />Permissão</DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent>
-                                <DropdownMenuItem onClick={async () => { await patchDocument(latest.id, { access_level: 'TENANT', allowed_roles: [] }); await invalidateDocuments(); toast.success('Documento liberado para o escritório.'); }}>Interno do escritório</DropdownMenuItem>
-                                <DropdownMenuItem onClick={async () => { await patchDocument(latest.id, { access_level: 'ROLES', allowed_roles: ['OWNER', 'ADMIN', 'LAWYER', 'ASSISTANT'] }); await invalidateDocuments(); toast.success('Documento restrito a perfis internos.'); }}>Equipe jurídica</DropdownMenuItem>
-                              </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setDeleteTargetKey(group.key)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                        <span className="rounded-full bg-muted px-2.5 py-1">{latest.category || 'geral'}</span>
-                        <span className="rounded-full bg-muted px-2.5 py-1">{latest.access_level === 'ROLES' ? 'Restrito' : 'Interno'}</span>
-                        <span className="rounded-full bg-muted px-2.5 py-1">{group.versions.length} versão(ões)</span>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="overflow-hidden rounded-xl border border-border">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-[13px]" style={{ minWidth: 760 }}>
+                    <thead>
+                      <tr className="border-b border-border bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                        <th className="px-4 py-2.5 text-left font-medium">Documento</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Categoria</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Permissão</th>
+                        <th className="px-4 py-2.5 text-right font-medium">Tamanho</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Data</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Responsável</th>
+                        <th className="px-4 py-2.5" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredGroups.map((group) => {
+                        const latest = group.latest;
+                        const kind = getDocumentKind(latest);
+                        const Icon = fileIcon(kind);
+                        const url = getDocumentUrl(latest);
+                        return (
+                          <tr key={group.key} className="border-b border-border/60 transition-colors last:border-0 hover:bg-muted/30">
+                            <td className="px-4 py-2.5 align-middle">
+                              <button type="button" className="flex min-w-0 items-center gap-2.5 text-left" onClick={() => setPreviewKey(group.key)}>
+                                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary"><Icon className="h-4 w-4" /></span>
+                                <span className="min-w-0">
+                                  <span className="block max-w-[260px] truncate font-medium text-foreground hover:underline">{latest.title || latest.filename || 'Documento'}</span>
+                                  <span className="block text-[11.5px] text-muted-foreground">{kind} · {group.versions.length} versão(ões)</span>
+                                </span>
+                              </button>
+                            </td>
+                            <td className="px-4 py-2.5 align-middle">
+                              <span className="inline-flex rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] capitalize text-muted-foreground">{latest.category || 'geral'}</span>
+                            </td>
+                            <td className="px-4 py-2.5 align-middle">
+                              <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] ${latest.access_level === 'ROLES' ? 'border-warning/30 bg-warning/14 text-warning' : 'border-border bg-muted text-muted-foreground'}`}>
+                                {latest.access_level === 'ROLES' ? 'Restrito' : 'Interno'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 align-middle text-right tabular-nums text-muted-foreground">{formatFileSize(latest.file_size)}</td>
+                            <td className="px-4 py-2.5 align-middle whitespace-nowrap text-muted-foreground">{formatDocumentDate(latest.created_at)}</td>
+                            <td className="max-w-[140px] truncate px-4 py-2.5 align-middle text-muted-foreground">{latest.uploaded_by || 'Escritório'}</td>
+                            <td className="px-4 py-2.5 align-middle text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="Abrir menu de ações" className="h-8 w-8 text-muted-foreground hover:text-foreground"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  <DropdownMenuLabel>Ações do documento</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => setPreviewKey(group.key)}><Eye className="mr-2 h-4 w-4" />Visualizar</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => url && window.open(url, '_blank', 'noopener,noreferrer')} disabled={!url}><Download className="mr-2 h-4 w-4" />Baixar</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openRenameDialog(group)}><Pencil className="mr-2 h-4 w-4" />Renomear</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={async () => { await duplicateAsNewDocument(group); toast.success('Documento duplicado como novo arquivo.'); }}><Copy className="mr-2 h-4 w-4" />Duplicar</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleShare(latest)}><Share2 className="mr-2 h-4 w-4" />Compartilhar</DropdownMenuItem>
+                                  <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger><FolderInput className="mr-2 h-4 w-4" />Mover para categoria</DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent>
+                                      {DOCUMENT_CATEGORY_OPTIONS.map((option) => (
+                                        <DropdownMenuItem key={option.value} onClick={async () => { await patchDocument(latest.id, { category: option.value }); await invalidateDocuments(); toast.success('Categoria atualizada.'); }}>
+                                          {option.label}
+                                        </DropdownMenuItem>
+                                      ))}
+                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSub>
+                                  <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger><Shield className="mr-2 h-4 w-4" />Permissão</DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent>
+                                      <DropdownMenuItem onClick={async () => { await patchDocument(latest.id, { access_level: 'TENANT', allowed_roles: [] }); await invalidateDocuments(); toast.success('Documento liberado para o escritório.'); }}>Interno do escritório</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={async () => { await patchDocument(latest.id, { access_level: 'ROLES', allowed_roles: ['OWNER', 'ADMIN', 'LAWYER', 'ASSISTANT'] }); await invalidateDocuments(); toast.success('Documento restrito a perfis internos.'); }}>Equipe jurídica</DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSub>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => setDeleteTargetKey(group.key)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Excluir</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </CardContent>
