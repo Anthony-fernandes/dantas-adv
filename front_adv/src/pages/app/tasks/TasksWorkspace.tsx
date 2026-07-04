@@ -596,78 +596,63 @@ export default function TasksWorkspace() {
                 action={{ label: 'Nova tarefa', onClick: () => openCreate() }}
               />
             ) : (
-              <div className="divide-y divide-border">
-                {tasks.map((task) => {
-                  const overdue = isOverdue(task);
-                  const done = task.status === 'concluida';
-                  return (
-                    <div
-                      key={task.id}
-                      className={cn(
-                        'flex items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/40',
-                        done && 'opacity-60',
-                      )}
-                    >
-                      <div className="mt-0.5">
-                        <Checkbox
-                          checked={done}
-                          onCheckedChange={() => handleToggleDone(task)}
-                          className="rounded-full"
-                        />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={cn('text-sm font-medium text-foreground', done && 'line-through text-muted-foreground')}>
-                            {task.title}
-                          </span>
-                          {priorityBadge(task.priority)}
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <table className="w-full border-collapse text-[13px]" style={{ minWidth: 760 }}>
+                <thead>
+                  <tr className="border-b border-border bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    <th className="w-10 px-4 py-2.5" />
+                    <th className="px-4 py-2.5 text-left font-medium">Tarefa</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Prioridade</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Prazo</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Processo</th>
+                    <th className="px-4 py-2.5" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map((task) => {
+                    const overdue = isOverdue(task);
+                    const done = task.status === 'concluida';
+                    return (
+                      <tr key={task.id} className={cn('border-b border-border/60 transition-colors last:border-0 hover:bg-muted/30', done && 'opacity-60')}>
+                        <td className="px-4 py-2.5 align-middle">
+                          <Checkbox checked={done} onCheckedChange={() => handleToggleDone(task)} className="rounded-full" />
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <p className={cn('font-medium text-foreground', done && 'text-muted-foreground line-through')}>{task.title}</p>
+                          {task.description && <p className="max-w-[320px] truncate text-[11.5px] text-muted-foreground">{task.description}</p>}
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">{priorityBadge(task.priority)}</td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
                             {statusIcon(task.status)}
                             <span>{STATUS_LABEL[task.status] ?? task.status}</span>
                           </div>
-                        </div>
-
-                        {task.description && (
-                          <p className="mt-0.5 truncate text-xs text-muted-foreground">{task.description}</p>
-                        )}
-
-                        <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
-                          {task.due_date && (
-                            <span className={cn(overdue && 'font-semibold text-destructive')}>
-                              Prazo: {fmtDate(task.due_date)}{overdue ? ' (vencida)' : ''}
+                        </td>
+                        <td className="px-4 py-2.5 align-middle whitespace-nowrap">
+                          {task.due_date ? (
+                            <span className={cn('text-muted-foreground', overdue && 'font-semibold text-destructive')}>
+                              {fmtDate(task.due_date)}{overdue ? ' (vencida)' : ''}
                             </span>
-                          )}
-                          {task.process && processLabel(task.process) && (
-                            <span className="rounded border border-border bg-muted/50 px-1.5 py-0.5">
-                              {processLabel(task.process)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon" aria-label="Editar"
-                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                          onClick={() => setEditTask(task)}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon" aria-label="Excluir"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={() => setDeleteTask(task)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                          ) : <span className="text-muted-foreground">—</span>}
+                        </td>
+                        <td className="max-w-[180px] truncate px-4 py-2.5 align-middle text-muted-foreground">
+                          {task.process && processLabel(task.process) ? processLabel(task.process) : '—'}
+                        </td>
+                        <td className="px-4 py-2.5 text-right align-middle">
+                          <div className="flex shrink-0 items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" aria-label="Editar" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => setEditTask(task)}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" aria-label="Excluir" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTask(task)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
 
