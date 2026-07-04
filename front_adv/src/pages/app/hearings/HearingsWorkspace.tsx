@@ -945,78 +945,99 @@ export default function HearingsWorkspace() {
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
-        <Card className="border-border/80 shadow-sm">
-          <CardHeader className="border-b bg-muted/20">
-            <CardTitle className="text-base">Pauta de audiências</CardTitle>
-            <p className="text-sm text-muted-foreground">Selecione uma audiência para abrir o painel completo.</p>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-6">
-            <div className="space-y-3">
-              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por tipo, CNJ ou cliente" />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="agendada">Agendadas</SelectItem>
-                  <SelectItem value="confirmada">Confirmadas</SelectItem>
-                  <SelectItem value="realizada">Realizadas</SelectItem>
-                  <SelectItem value="adiada">Adiadas</SelectItem>
-                  <SelectItem value="cancelada">Canceladas</SelectItem>
-                </SelectContent>
-              </Select>
+      <div className="grid gap-6">
+        <Card className="overflow-hidden border-border/80 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-3.5">
+            <CardTitle className="mr-auto text-base">Pauta de audiências</CardTitle>
+            <div className="relative min-w-[220px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={search} onChange={(event) => setSearch(event.target.value)} className="h-9 pl-9" placeholder="Buscar por tipo, CNJ ou cliente" />
             </div>
-
-            <div className="space-y-3">
-              {hearingsQuery.isLoading ? (
-                [1, 2, 3, 4].map((item) => <div key={item} className="h-28 rounded-2xl bg-muted" />)
-              ) : filteredHearings.length === 0 ? (
-                <EmptyState
-                  title="Nenhuma audiência encontrada"
-                  description="Ajuste os filtros ou cadastre uma nova audiência para iniciar o acompanhamento."
-                  action={{ label: 'Nova audiência', onClick: openCreate }}
-                />
-              ) : (
-                filteredHearings.map((hearing) => {
-                  const process = processMap[hearing.process];
-                  const workflowStatus = workflowStatusFor(hearing);
-                  const attention = hearingAttention(hearing.hearing_date, workflowStatus);
-                  const selected = hearing.id === selectedHearing?.id;
-                  return (
-                    <button
-                      key={hearing.id}
-                      type="button"
-                      onClick={() => setSelectedHearingId(hearing.id)}
-                      className={`w-full rounded-2xl border p-4 text-left transition ${selected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40 hover:bg-muted/30'}`}
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${workflowStatusClasses(workflowStatus)}`}>
-                          {workflowStatusLabel(workflowStatus)}
-                        </span>
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${modalityClasses(hearing.modality)}`}>
-                          {modalityLabel(hearing.modality)}
-                        </span>
-                      </div>
-                      <p className="mt-3 text-sm font-semibold text-foreground">{hearing.type || 'Audiência'}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{buildProcessLabel(process)}</p>
-                      <p className="mt-1 text-sm text-foreground/85">{process?.client_name || process?.cliente_nome || 'Cliente não informado'}</p>
-                      <div className="mt-3 flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-xs text-muted-foreground">{formatDateOnly(hearing.hearing_date)}</p>
-                          <p className="text-sm font-medium">{formatTimeOnly(hearing.hearing_date)}</p>
-                        </div>
-                        {attention ? (
-                          <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset ${attention.classes}`}>
-                            {attention.label}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-9 w-[170px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="agendada">Agendadas</SelectItem>
+                <SelectItem value="confirmada">Confirmadas</SelectItem>
+                <SelectItem value="realizada">Realizadas</SelectItem>
+                <SelectItem value="adiada">Adiadas</SelectItem>
+                <SelectItem value="cancelada">Canceladas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {hearingsQuery.isLoading ? (
+            <div className="space-y-3 p-5">
+              {[1, 2, 3, 4].map((item) => <div key={item} className="h-12 rounded-lg bg-muted" />)}
+            </div>
+          ) : filteredHearings.length === 0 ? (
+            <div className="p-6">
+              <EmptyState
+                title="Nenhuma audiência encontrada"
+                description="Ajuste os filtros ou cadastre uma nova audiência para iniciar o acompanhamento."
+                action={{ label: 'Nova audiência', onClick: openCreate }}
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-[13px]" style={{ minWidth: 860 }}>
+                <thead>
+                  <tr className="border-b border-border bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    <th className="px-4 py-2.5 text-left font-medium">Tipo</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Processo / Cliente</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Data / Hora</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Modalidade</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Atenção</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredHearings.map((hearing) => {
+                    const process = processMap[hearing.process];
+                    const workflowStatus = workflowStatusFor(hearing);
+                    const attention = hearingAttention(hearing.hearing_date, workflowStatus);
+                    const selected = hearing.id === selectedHearing?.id;
+                    return (
+                      <tr
+                        key={hearing.id}
+                        onClick={() => setSelectedHearingId(hearing.id)}
+                        className={cn(
+                          'cursor-pointer border-b border-border/60 transition-colors last:border-0 hover:bg-muted/30',
+                          selected && 'bg-primary/5',
+                        )}
+                      >
+                        <td className="px-4 py-2.5 align-middle font-medium text-foreground">{hearing.type || 'Audiência'}</td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <p className="max-w-[260px] truncate text-foreground">{buildProcessLabel(process)}</p>
+                          <p className="max-w-[260px] truncate text-[11.5px] text-muted-foreground">{process?.client_name || process?.cliente_nome || 'Cliente não informado'}</p>
+                        </td>
+                        <td className="px-4 py-2.5 align-middle whitespace-nowrap">
+                          <p className="text-foreground">{formatDateOnly(hearing.hearing_date)}</p>
+                          <p className="text-[11.5px] text-muted-foreground">{formatTimeOnly(hearing.hearing_date)}</p>
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${modalityClasses(hearing.modality)}`}>
+                            {modalityLabel(hearing.modality)}
                           </span>
-                        ) : null}
-                      </div>
-                    </button>
-                  );
-                })
-              )}
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${workflowStatusClasses(workflowStatus)}`}>
+                            {workflowStatusLabel(workflowStatus)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          {attention ? (
+                            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${attention.classes}`}>
+                              {attention.label}
+                            </span>
+                          ) : <span className="text-muted-foreground">—</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          </CardContent>
+          )}
         </Card>
 
         {selectedHearing ? (
