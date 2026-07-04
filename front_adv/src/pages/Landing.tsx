@@ -330,12 +330,13 @@ export default function Landing() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(255,255,255,0.04),transparent)]" />
           <div className="relative mx-auto max-w-4xl px-6 py-24 text-center md:py-36">
             {settings.hero_subtitle && (
-              <p className="mb-6 inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[0.7rem] font-medium uppercase tracking-widest text-white/70">
+              <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-white/75 backdrop-blur-sm">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "var(--accent)" }} />
                 {settings.hero_subtitle}
               </p>
             )}
             {settings.hero_title && (
-              <h1 className="font-display text-[clamp(2.4rem,5vw,4.5rem)] font-bold leading-[1.05] tracking-tight text-white">
+              <h1 className="font-display text-[clamp(2.4rem,5.2vw,4.6rem)] font-bold leading-[1.04] tracking-tight text-white">
                 {settings.hero_title}
               </h1>
             )}
@@ -348,12 +349,22 @@ export default function Landing() {
               <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 <a
                   href={primaryCtaHref}
-                  className="inline-flex items-center gap-2 rounded-md px-7 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  className="inline-flex items-center gap-2 rounded-md px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-black/20 transition-all hover:-translate-y-0.5 hover:opacity-95"
                   style={{ backgroundColor: "var(--accent)" }}
                 >
                   {primaryCtaLabel}
                   <ArrowRight className="h-4 w-4" />
                 </a>
+                {actionVisible(companyPhone ? "Falar com o time" : "", whatsappHref) && whatsappHref !== primaryCtaHref && (
+                  <a
+                    href={whatsappHref}
+                    target={String(whatsappHref).startsWith("http") ? "_blank" : undefined}
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-white/10"
+                  >
+                    Falar com o time
+                  </a>
+                )}
               </div>
             )}
           </div>
@@ -383,14 +394,15 @@ export default function Landing() {
               )}
             </div>
 
-            <div className="grid gap-px border bg-slate-100 md:grid-cols-2 xl:grid-cols-3" style={{ borderColor: "var(--border)" }}>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {practiceAreas.map((area) => (
                 <div
                   key={area.id}
-                  className="group flex flex-col bg-white p-8 transition-colors hover:bg-slate-50"
+                  className="group flex flex-col rounded-xl border bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+                  style={{ borderColor: "var(--border)" }}
                 >
                   <div
-                    className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg text-white"
+                    className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-sm transition-transform group-hover:scale-105"
                     style={{ backgroundColor: "var(--dark)" }}
                   >
                     <UiIcon name={area.icon} fallback={Scale} />
@@ -404,8 +416,8 @@ export default function Landing() {
                       href={area.link || whatsappHref}
                       target={String(area.link || whatsappHref).startsWith("http") ? "_blank" : undefined}
                       rel="noreferrer"
-                      className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest transition-opacity hover:opacity-70"
-                      style={{ color: "var(--dark)" }}
+                      className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest transition-all group-hover:gap-2.5"
+                      style={{ color: "var(--accent)" }}
                     >
                       {servicesButtonText}
                       <ArrowRight className="h-3 w-3" />
@@ -483,10 +495,10 @@ export default function Landing() {
               {differentials.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-lg border border-white/8 p-7"
+                  className="group rounded-xl border border-white/10 p-7 transition-all hover:-translate-y-1 hover:border-white/20"
                   style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
                 >
-                  <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-md" style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "var(--accent)" }}>
+                  <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl transition-transform group-hover:scale-105" style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "var(--accent)" }}>
                     <UiIcon name={item.icon} fallback={Shield} />
                   </div>
                   <h3 className="font-display text-xl font-semibold text-white">{item.title}</h3>
@@ -522,11 +534,11 @@ export default function Landing() {
               {processSteps.map((step, index) => (
                 <div
                   key={step.id}
-                  className="flex gap-5 rounded-lg border p-6"
+                  className="group flex gap-5 rounded-xl border bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   style={{ borderColor: "var(--border)" }}
                 >
                   <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md font-display text-sm font-bold text-white"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-display text-sm font-bold text-white shadow-sm transition-transform group-hover:scale-105"
                     style={{ backgroundColor: "var(--dark)" }}
                   >
                     {String(index + 1).padStart(2, "0")}
@@ -565,7 +577,7 @@ export default function Landing() {
               {testimonials.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col rounded-lg border p-7"
+                  className="flex flex-col rounded-xl border p-7 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
                   style={{ borderColor: "var(--border)", backgroundColor: "white" }}
                 >
                   <div className="mb-4 flex gap-1" style={{ color: "var(--accent)" }}>
