@@ -1698,33 +1698,37 @@ export default function ProcessDetail() {
               <CardHeader>
                 <CardTitle>Controle de prazos</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="p-0">
                 {deadlinesQuery.isError ? (
-                  <p className="text-sm text-destructive">Não foi possível carregar os prazos.</p>
+                  <p className="p-4 text-sm text-destructive">Não foi possível carregar os prazos.</p>
                 ) : deadlines.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sem prazos cadastrados.</p>
+                  <p className="p-4 text-sm text-muted-foreground">Sem prazos cadastrados.</p>
                 ) : (
-                  [...sortedDeadlines].map((deadline) => (
-                    <div
-                      key={deadline.id}
-                      className={cn(
-                        'rounded-2xl border p-4',
-                        isOverdue(deadline.due_date) && normalizeText(deadline.status) !== 'concluido' && 'border-destructive/30 bg-destructive/10',
-                        !isOverdue(deadline.due_date) && isSoon(deadline.due_date, 3) && 'border-warning/30 bg-warning/12',
-                      )}
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <div className="font-medium">{deadline.description || '-'}</div>
-                          <div className="mt-2 text-xs text-muted-foreground">{formatDisplayDateTime(deadline.due_date)}</div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <StatusBadge text={humanizeValue(deadline.priority)} variant={deadlinePriorityVariant(deadline.priority ?? undefined)} />
-                          <StatusBadge text={humanizeValue(deadline.status)} variant={deadlineStatusVariant(deadline.status ?? undefined)} />
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-[13px]" style={{ minWidth: 520 }}>
+                      <thead>
+                        <tr className="border-y border-border bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                          <th className="px-4 py-2.5 text-left font-medium">Descrição</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Vencimento</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Prioridade</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...sortedDeadlines].map((deadline) => {
+                          const overdue = isOverdue(deadline.due_date) && normalizeText(deadline.status) !== 'concluido';
+                          return (
+                            <tr key={deadline.id} className="border-b border-border/60 transition-colors last:border-0 hover:bg-muted/30">
+                              <td className="px-4 py-2.5 align-middle font-medium text-foreground">{deadline.description || '-'}</td>
+                              <td className={cn('px-4 py-2.5 align-middle whitespace-nowrap', overdue ? 'font-semibold text-destructive' : 'text-muted-foreground')}>{formatDisplayDateTime(deadline.due_date)}</td>
+                              <td className="px-4 py-2.5 align-middle"><StatusBadge text={humanizeValue(deadline.priority)} variant={deadlinePriorityVariant(deadline.priority ?? undefined)} /></td>
+                              <td className="px-4 py-2.5 align-middle"><StatusBadge text={humanizeValue(deadline.status)} variant={deadlineStatusVariant(deadline.status ?? undefined)} /></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -1778,39 +1782,45 @@ export default function ProcessDetail() {
               <CardHeader>
                 <CardTitle>Audiências do processo</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="p-0">
                 {hearingsQuery.isError ? (
-                  <p className="text-sm text-destructive">Não foi possível carregar as audiências.</p>
+                  <p className="p-4 text-sm text-destructive">Não foi possível carregar as audiências.</p>
                 ) : hearings.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sem audiências cadastradas.</p>
+                  <p className="p-4 text-sm text-muted-foreground">Sem audiências cadastradas.</p>
                 ) : (
-                  sortedHearings.map((hearing) => (
-                    <div key={hearing.id} className={cn('rounded-2xl border p-4', isToday(hearing.hearing_date) && 'border-info/25 bg-info/10')}>
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <div className="font-medium">{hearing.type || 'Audiência'}</div>
-                          <div className="mt-2 text-xs text-muted-foreground">
-                            {formatDisplayDateTime(hearing.hearing_date)}
-                            {hearing.end_date ? ` até ${formatDisplayDateTime(hearing.end_date)}` : ''}
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <StatusBadge text={humanizeValue(hearing.status)} variant={hearingStatusVariant(hearing.status ?? undefined)} />
-                          <StatusBadge text={humanizeValue(hearing.modality)} variant={hearingModalityVariant(hearing.modality ?? undefined)} />
-                        </div>
-                      </div>
-                      {hearing.location ? <div className="mt-2 text-sm">Local: {hearing.location}</div> : null}
-                      {hearing.online_link ? (
-                        <div className="mt-1 text-sm">
-                          Link:{' '}
-                          <a href={hearing.online_link} target="_blank" rel="noreferrer" className="underline">
-                            {hearing.online_link}
-                          </a>
-                        </div>
-                      ) : null}
-                      {hearing.notes ? <div className="mt-2 whitespace-pre-wrap text-sm">{hearing.notes}</div> : null}
-                    </div>
-                  ))
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-[13px]" style={{ minWidth: 620 }}>
+                      <thead>
+                        <tr className="border-y border-border bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                          <th className="px-4 py-2.5 text-left font-medium">Tipo</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Data / Hora</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Local</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Modalidade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedHearings.map((hearing) => (
+                          <tr key={hearing.id} className={cn('border-b border-border/60 transition-colors last:border-0 hover:bg-muted/30', isToday(hearing.hearing_date) && 'bg-info/5')}>
+                            <td className="px-4 py-2.5 align-middle">
+                              <p className="font-medium text-foreground">{hearing.type || 'Audiência'}</p>
+                              {hearing.notes ? <p className="max-w-[260px] truncate text-[11.5px] text-muted-foreground">{hearing.notes}</p> : null}
+                            </td>
+                            <td className="px-4 py-2.5 align-middle whitespace-nowrap text-muted-foreground">
+                              {formatDisplayDateTime(hearing.hearing_date)}{hearing.end_date ? ` – ${formatDisplayDateTime(hearing.end_date)}` : ''}
+                            </td>
+                            <td className="px-4 py-2.5 align-middle text-muted-foreground">
+                              {hearing.online_link ? (
+                                <a href={hearing.online_link} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">Link online</a>
+                              ) : (hearing.location || '—')}
+                            </td>
+                            <td className="px-4 py-2.5 align-middle"><StatusBadge text={humanizeValue(hearing.status)} variant={hearingStatusVariant(hearing.status ?? undefined)} /></td>
+                            <td className="px-4 py-2.5 align-middle"><StatusBadge text={humanizeValue(hearing.modality)} variant={hearingModalityVariant(hearing.modality ?? undefined)} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </CardContent>
             </Card>
