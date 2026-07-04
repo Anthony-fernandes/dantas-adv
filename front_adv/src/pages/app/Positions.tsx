@@ -32,6 +32,7 @@ import {
   loadOfficeTenantMeta,
   saveOfficeTenantMeta,
 } from "./office-settings/storage";
+import { DataTable, RowActions, type Column } from "@/components/ds";
 
 type Position = {
   id: string;
@@ -334,6 +335,67 @@ export default function Positions() {
     onError: (error: any) => toast({ title: "Erro ao atualizar cargo", description: error?.message, variant: "destructive" }),
   });
 
+  const positionColumns: Column<Position>[] = [
+    {
+      key: "name",
+      header: "Cargo",
+      cell: (position, index) => {
+        const meta = tenantMeta.positions[position.id] || defaultPositionMeta(index);
+        return (
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 shrink-0 rounded-full border border-border" style={{ backgroundColor: meta.color }} />
+            <div className="min-w-0">
+              <p className="truncate font-medium text-foreground">{position.name || "Cargo sem nome"}</p>
+              <p className="truncate text-[12px] text-muted-foreground">{position.description || "Sem descrição"}</p>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "team",
+      header: "Equipe",
+      align: "center",
+      cell: (position) => <span className="tabular-nums text-foreground">{employees.filter((e) => String(e.position || "") === position.id).length}</span>,
+    },
+    {
+      key: "perms",
+      header: "Permissões",
+      align: "center",
+      cell: (position, index) => <span className="tabular-nums text-foreground">{(tenantMeta.positions[position.id] || defaultPositionMeta(index)).permissionCodes.length}</span>,
+    },
+    {
+      key: "salary",
+      header: "Salário base",
+      align: "right",
+      cell: (position) => <span className="tabular-nums text-foreground">{position.salario_base ? formatCurrency(position.salario_base) : "—"}</span>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (position) => <Badge variant="outline">{position.is_active !== false ? "Ativo" : "Inativo"}</Badge>,
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      width: "56px",
+      cell: (position) => (
+        <RowActions
+          actions={[
+            { label: "Editar", icon: <Pencil className="h-4 w-4" />, onClick: () => openEdit(position) },
+            {
+              label: position.is_active !== false ? "Desativar" : "Reativar",
+              icon: <CheckCircle2 className="h-4 w-4" />,
+              onClick: () => toggleStatusMutation.mutate({ positionId: position.id, isActive: position.is_active === false }),
+            },
+            { label: "Excluir", icon: <Trash2 className="h-4 w-4" />, danger: true, separatorBefore: true, onClick: () => setDeleteId(position.id) },
+          ]}
+        />
+      ),
+    },
+  ];
+
   return (
     <OfficeAdminShell
       section="positions"
@@ -384,62 +446,13 @@ export default function Positions() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {filteredPositions.map((position, index) => {
-                    const meta = tenantMeta.positions[position.id] || defaultPositionMeta(index);
-                    const linkedEmployees = employees.filter((employee) => String(employee.position || "") === position.id);
-                    return (
-                      <Card key={position.id} className={`cursor-pointer transition-colors ${selectedId === position.id ? "border-primary" : "hover:border-primary/40"}`} onClick={() => setSelectedId(position.id)}>
-                        <CardContent className="space-y-4 p-5">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="space-y-2">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="h-3 w-3 rounded-full border" style={{ backgroundColor: meta.color }} />
-                                <h3 className="font-semibold">{position.name || "Cargo sem nome"}</h3>
-                                <Badge variant="outline">{position.is_active !== false ? "Ativo" : "Inativo"}</Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{position.description || "Defina uma descrição objetiva para orientar uso e governança do cargo."}</p>
-                            </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" aria-label="Abrir menu de ações" onClick={(event) => event.stopPropagation()}>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => openEdit(position)}><Pencil className="mr-2 h-4 w-4" />Editar</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => toggleStatusMutation.mutate({ positionId: position.id, isActive: position.is_active === false })}>
-                                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                                  {position.is_active !== false ? "Desativar" : "Reativar"}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteId(position.id)}>
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Excluir
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-3 text-sm">
-                            <div className="rounded-xl border p-3">
-                              <p className="text-xs text-muted-foreground">Equipe</p>
-                              <p className="mt-1 font-semibold">{linkedEmployees.length}</p>
-                            </div>
-                            <div className="rounded-xl border p-3">
-                              <p className="text-xs text-muted-foreground">Permissões</p>
-                              <p className="mt-1 font-semibold">{meta.permissionCodes.length}</p>
-                            </div>
-                            <div className="rounded-xl border p-3">
-                              <p className="text-xs text-muted-foreground">Salário base</p>
-                              <p className="mt-1 font-semibold">{position.salario_base ? formatCurrency(position.salario_base) : "-"}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
+                <DataTable
+                  columns={positionColumns}
+                  rows={filteredPositions}
+                  getRowKey={(p) => p.id}
+                  onRowClick={(p) => setSelectedId(p.id)}
+                  minWidth={720}
+                />
               )}
             </CardContent>
           </Card>

@@ -31,6 +31,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { OfficeAdminShell } from "@/components/office-management/OfficeAdminShell";
 import { getInheritedPermissionsForRoles, stripInheritedPermissions } from "@/lib/accessControl";
 import { cn } from "@/lib/utils";
+import { DataTable, RowActions, type Column } from "@/components/ds";
 
 type Company = { id: string; name?: string };
 type AdminUser = {
@@ -550,6 +551,62 @@ export default function AdminUsers() {
     editingUserId ? updateMutation.mutate() : createMutation.mutate();
   };
 
+  const userColumns: Column<any>[] = [
+    {
+      key: "user",
+      header: "Usuário",
+      cell: (user) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9 border border-border">
+            <AvatarFallback>{initialsOf(user.full_name || user.email)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate font-medium text-foreground">{user.full_name || user.email || "Sem nome"}</p>
+            <p className="truncate text-[12px] text-muted-foreground">{user.email || "—"}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "tenant",
+      header: "Empresa",
+      cell: (user) => {
+        const tenantName = (typeof user.tenant === "object" ? user.tenant?.name : resolveId(user.tenant)) || resolveId(user.tenant_id) || "Sem empresa";
+        return <span className="text-muted-foreground">{tenantName}</span>;
+      },
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (user) => <Badge variant="outline">{user.is_active !== false ? "Ativo" : "Inativo"}</Badge>,
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      width: "56px",
+      cell: (user) => (
+        <RowActions
+          actions={[
+            { label: "Editar", icon: <Pencil className="h-4 w-4" />, onClick: () => startEdit(user) },
+            {
+              label: user.is_active !== false ? "Desativar" : "Ativar",
+              icon: <CheckCircle2 className="h-4 w-4" />,
+              onClick: () => {
+                const nextIsActive = user.is_active === false;
+                if (!nextIsActive) {
+                  const confirmed = window.confirm(`Deseja desativar o acesso de ${user.full_name || user.email || "este usuário"}?`);
+                  if (!confirmed) return;
+                }
+                toggleStatusMutation.mutate({ userId: user.id, isActive: nextIsActive });
+              },
+            },
+          ]}
+        />
+      ),
+    },
+  ];
+
   return (
     <OfficeAdminShell
       section="users"
@@ -603,51 +660,15 @@ export default function AdminUsers() {
                 </select>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {!filteredUsers.length ? <p className="text-sm text-muted-foreground">Nenhum usuário encontrado.</p> : null}
-              {filteredUsers.map((user) => {
-                const tenantName = (typeof user.tenant === "object" ? user.tenant?.name : resolveId(user.tenant)) || resolveId(user.tenant_id) || "Sem empresa";
-                return (
-                  <div
-                    key={user.id}
-                    className={cn("cursor-pointer rounded-xl border p-4 transition-colors", selectedUserId === user.id ? "border-primary bg-muted/40" : "hover:border-primary/40")}
-                    onClick={() => setSelectedUserId(user.id)}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border">
-                          <AvatarFallback>{initialsOf(user.full_name || user.email)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{user.full_name || user.email || "Sem nome"}</p>
-                          <p className="text-xs text-muted-foreground">{user.email || "-"} · {tenantName}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">{user.is_active !== false ? "Ativo" : "Inativo"}</Badge>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            const nextIsActive = user.is_active === false;
-                            if (!nextIsActive) {
-                              const confirmed = window.confirm(`Deseja desativar o acesso de ${user.full_name || user.email || "este usuário"}?`);
-                              if (!confirmed) return;
-                            }
-                            toggleStatusMutation.mutate({ userId: user.id, isActive: nextIsActive });
-                          }}
-                        >
-                          {user.is_active !== false ? "Desativar" : "Ativar"}
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); startEdit(user); }}>
-                          Editar
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <CardContent>
+              <DataTable
+                columns={userColumns}
+                rows={filteredUsers}
+                getRowKey={(u) => u.id}
+                onRowClick={(u) => setSelectedUserId(u.id)}
+                minWidth={620}
+                empty={<span className="text-sm text-muted-foreground">Nenhum usuário encontrado.</span>}
+              />
             </CardContent>
           </Card>
         </div>
