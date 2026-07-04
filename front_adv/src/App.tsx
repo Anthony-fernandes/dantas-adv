@@ -301,6 +301,7 @@ const App = () => (
                 <Route path="areas" element={<RequireRole roles={RoleGroups.LEGAL}><PracticeAreas /></RequireRole>} />
                 <Route path="causas" element={<Navigate to="/app/areas" replace />} />
                 <Route path="clientes" element={<RequireRole roles={RoleGroups.LEGAL}><ClientsWorkspace /></RequireRole>} />
+                <Route path="clientes/novo" element={<RequireRole roles={RoleGroups.LEGAL}><ClientsWorkspace /></RequireRole>} />
                 <Route path="clientes/:id" element={<RequireRole roles={RoleGroups.LEGAL}><ClientDetailWorkspace /></RequireRole>} />
                 <Route path="financeiro" element={<RequireRole roles={RoleGroups.FINANCE}><FinancialWorkspace /></RequireRole>} />
                 <Route path="honorarios" element={<RequireRole roles={RoleGroups.FINANCE}><HonorariosPage /></RequireRole>} />

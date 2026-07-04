@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
@@ -548,6 +548,16 @@ export default function ClientsWorkspace() {
     setDialogOpen(true);
   };
 
+  const location = useLocation();
+  const isCreateRoute = location.pathname.endsWith('/clientes/novo');
+  useEffect(() => {
+    if (isCreateRoute) {
+      resetForm();
+      setDialogOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCreateRoute]);
+
   const openEdit = (client: ClientRecord) => {
     setEditingClientId(client.id);
     setForm(buildFormState(client));
@@ -697,11 +707,14 @@ export default function ClientsWorkspace() {
             open={dialogOpen}
             onOpenChange={(open) => {
               setDialogOpen(open);
-              if (!open) resetForm();
+              if (!open) {
+                resetForm();
+                if (isCreateRoute) navigate('/app/clientes');
+              }
             }}
           >
             <DialogTrigger asChild>
-              <Button onClick={openCreate}>
+              <Button onClick={() => navigate('/app/clientes/novo')}>
                 <Plus className="mr-2 h-4 w-4" />
                 Novo cliente
               </Button>
