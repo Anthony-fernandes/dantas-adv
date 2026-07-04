@@ -2,11 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
+  AlarmClock,
+  CalendarClock,
   Download,
   Eye,
   FilterX,
+  FolderKanban,
+  Gavel,
   Pencil,
   Plus,
+  Scale,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -455,6 +460,7 @@ export default function ProcessesWorkspace() {
   return (
     <div className="animate-fade-in">
       <PageHeader
+        eyebrow="Contencioso"
         title="Processos"
         description="Carteira consolidada de clientes, áreas, audiências e prazos."
         actions={
@@ -472,11 +478,11 @@ export default function ProcessesWorkspace() {
       />
 
       <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <DsStatCard label="Total" value={stats.total} hint="Carteira cadastrada" />
-        <DsStatCard label="Ativos" value={stats.active} hint="Em andamento" />
-        <DsStatCard label="Encerrados" value={stats.closed} hint="Arquivados" />
-        <DsStatCard label="Prazos hoje" value={stats.dueToday} hint="Atenção imediata" />
-        <DsStatCard label="Audiências 7d" value={stats.upcomingHearings} hint="Próximos 7 dias" />
+        <DsStatCard label="Total" value={stats.total} hint="Carteira cadastrada" icon={Scale} tone="default" />
+        <DsStatCard label="Ativos" value={stats.active} hint="Em andamento" icon={FolderKanban} tone="info" />
+        <DsStatCard label="Encerrados" value={stats.closed} hint="Arquivados" icon={Gavel} tone="default" />
+        <DsStatCard label="Prazos hoje" value={stats.dueToday} hint="Atenção imediata" icon={AlarmClock} tone="warning" />
+        <DsStatCard label="Audiências 7d" value={stats.upcomingHearings} hint="Próximos 7 dias" icon={CalendarClock} tone="success" />
       </div>
 
       <DataToolbar
