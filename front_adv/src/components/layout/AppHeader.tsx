@@ -88,7 +88,7 @@ export function AppHeader({ onOpenMenu }: AppHeaderProps) {
   }
 
   return (
-    <header className="glass sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border px-4">
+    <header className="glass sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border px-4">
       {/* Hamburger (mobile) */}
       <Button
         variant="ghost"

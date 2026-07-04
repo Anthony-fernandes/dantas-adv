@@ -13,33 +13,31 @@ export function PageLayout({ children, className }: { children: ReactNode; class
 type PageHeaderProps = {
   title: string;
   description?: string;
+  /** Rótulo pequeno em maiúsculas acima do título. Aceita também breadcrumb (usa o último item). */
+  eyebrow?: string;
   breadcrumb?: string[];
   actions?: ReactNode;
   children?: ReactNode;
 };
 
-/** Cabeçalho de página: título, descrição e ações à direita. */
-export function PageHeader({ title, description, breadcrumb, actions, children }: PageHeaderProps) {
+/**
+ * Cabeçalho de página no padrão Legal Flow Redefined:
+ * eyebrow em maiúsculas, título grande em font-display, descrição e ações,
+ * com borda inferior separando do conteúdo.
+ */
+export function PageHeader({ title, description, eyebrow, breadcrumb, actions, children }: PageHeaderProps) {
+  const eyebrowText = eyebrow ?? (breadcrumb && breadcrumb.length > 0 ? breadcrumb[0] : undefined);
   return (
-    <div className="mb-5">
-      {breadcrumb && breadcrumb.length > 0 && (
-        <nav className="mb-2 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-          {breadcrumb.map((item, index) => (
-            <span key={index} className="flex items-center gap-1.5">
-              {index > 0 && <span className="opacity-40">/</span>}
-              <span className={index === breadcrumb.length - 1 ? 'text-foreground' : ''}>{item}</span>
-            </span>
-          ))}
-        </nav>
-      )}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-[19px] font-semibold tracking-tight text-foreground">{title}</h1>
-          {description && <p className="mt-0.5 max-w-2xl text-[13px] text-muted-foreground">{description}</p>}
-        </div>
-        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+    <div className="mb-6 flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
+      <div className="min-w-0">
+        {eyebrowText && (
+          <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{eyebrowText}</p>
+        )}
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">{title}</h1>
+        {description && <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{description}</p>}
+        {children}
       </div>
-      {children}
+      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </div>
   );
 }

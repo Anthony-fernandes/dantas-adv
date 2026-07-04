@@ -49,7 +49,7 @@ export function DataTable<T>({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[13px]" style={{ minWidth }}>
           <thead>
-            <tr className="border-b border-border bg-surface-2/50">
+            <tr className="border-b border-border bg-muted/40">
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -89,7 +89,7 @@ export function DataTable<T>({
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   className={cn(
                     'border-b border-border/60 transition-colors last:border-0',
-                    onRowClick && 'cursor-pointer hover:bg-surface-2/50',
+                    onRowClick && 'cursor-pointer hover:bg-muted/30',
                   )}
                 >
                   {columns.map((col) => (
