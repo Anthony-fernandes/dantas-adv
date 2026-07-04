@@ -367,6 +367,17 @@ export default function Landing() {
                 )}
               </div>
             )}
+
+            {practiceAreas.length > 0 && (
+              <div className="mt-12 border-t border-white/10 pt-8">
+                <p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-white/40">Áreas de atuação</p>
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+                  {practiceAreas.slice(0, 6).map((area) => (
+                    <span key={area.id} className="text-sm font-medium text-white/70">{area.title}</span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Bottom fade */}

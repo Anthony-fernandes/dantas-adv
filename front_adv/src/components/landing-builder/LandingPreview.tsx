@@ -422,9 +422,9 @@ export function LandingPreview(props: LandingPreviewProps) {
               {activeAreas.slice(0, isMobile ? 3 : 6).map((area) => {
                 const Icon = uiIcon(area.landing_icon, Scale);
                 return (
-                  <Card key={area.id} className="rounded-none bg-white shadow-none" style={{ borderColor: "var(--landing-border-soft)" }}>
+                  <Card key={area.id} className="rounded-xl bg-white shadow-sm transition-shadow hover:shadow-lg" style={{ borderColor: "var(--landing-border-soft)" }}>
                     <CardContent className="p-6 text-center">
-                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-white" style={{ backgroundColor: "var(--landing-dark-base)" }}>
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-sm" style={{ backgroundColor: "var(--landing-dark-base)" }}>
                         <Icon className="h-5 w-5" />
                       </div>
                       <h3 className="mt-5 font-serif text-xl" style={{ color: "var(--landing-dark-base)" }}>{area.name || "Nova Ã¡rea"}</h3>
