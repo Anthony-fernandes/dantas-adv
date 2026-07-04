@@ -1,19 +1,26 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Scale, Building2, Check, LogOut, Plus } from "lucide-react";
+import { Scale, Building2, Check, LogOut } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/selecionar-tenant")({
   head: () => ({ meta: [{ title: "Selecionar escritório — JurisFlow" }, { name: "robots", content: "noindex" }] }),
   component: SelecionarTenant,
 });
 
-const workspaces = [
-  { id: "t1", nome: "Souza & Palma Advogados", plano: "Business", usuarios: 24, papel: "Sócia", atual: true },
-  { id: "t2", nome: "Meridiano Consultoria Jurídica", plano: "Professional", usuarios: 8, papel: "Advogada externa" },
-  { id: "t3", nome: "Vértice Jurídico M&A", plano: "Enterprise", usuarios: 64, papel: "Correspondente" },
-];
-
 function SelecionarTenant() {
   const nav = useNavigate();
+  const { tenants, activeTenantId, setActiveTenant, logout } = useAuth();
+  const workspaces = tenants.map((t) => ({ id: t.id, nome: t.name, atual: t.id === activeTenantId }));
+
+  function choose(id: string) {
+    setActiveTenant(id);
+    nav({ to: "/app" });
+  }
+  function handleLogout() {
+    logout();
+    nav({ to: "/login" });
+  }
+
   return (
     <div className="min-h-screen bg-background p-6 grid place-items-center">
       <div className="w-full max-w-2xl">
@@ -31,13 +38,13 @@ function SelecionarTenant() {
         <ul className="space-y-3">
           {workspaces.map((w) => (
             <li key={w.id}>
-              <button onClick={() => nav({ to: "/app" })}
+              <button onClick={() => choose(w.id)}
                 className="w-full surface-card p-5 flex items-center justify-between hover:border-primary transition group">
                 <div className="flex items-center gap-4">
                   <div className="grid h-12 w-12 place-items-center rounded-lg bg-primary/10 text-primary"><Building2 className="h-5 w-5" /></div>
                   <div className="text-left">
                     <p className="font-display font-semibold text-[15px]">{w.nome}</p>
-                    <p className="text-[12.5px] text-muted-foreground">Plano {w.plano} · {w.usuarios} usuários · Seu papel: {w.papel}</p>
+                    <p className="text-[12.5px] text-muted-foreground">Escritório</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -49,12 +56,8 @@ function SelecionarTenant() {
           ))}
         </ul>
 
-        <button className="mt-4 w-full rounded-lg border-2 border-dashed border-border py-4 text-[13px] text-muted-foreground hover:border-primary hover:text-primary transition inline-flex items-center justify-center gap-2">
-          <Plus className="h-4 w-4" /> Criar novo escritório
-        </button>
-
         <div className="mt-8 text-center">
-          <button onClick={() => nav({ to: "/login" })} className="inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground hover:text-foreground">
+          <button onClick={handleLogout} className="inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground hover:text-foreground">
             <LogOut className="h-3.5 w-3.5" /> Sair da conta
           </button>
         </div>

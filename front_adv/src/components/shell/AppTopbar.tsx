@@ -1,12 +1,27 @@
-import { Bell, Search, Plus, HelpCircle, Command, Moon, Sun } from "lucide-react";
+import { Bell, Search, Command, Moon, Sun, LogOut, User } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/lib/auth";
+
+const ROLE_LABEL: Record<string, string> = {
+  OWNER: "Proprietário", ADMIN: "Administrador", LAWYER: "Advogado(a)",
+  ASSISTANT: "Assistente", FINANCE: "Financeiro", CLIENT: "Cliente",
+};
 
 export function AppTopbar({ title, breadcrumb }: { title?: string; breadcrumb?: string }) {
+  const navigate = useNavigate();
+  const { profile, roles, isSuperuser, logout } = useAuth();
   const [dark, setDark] = useState(false);
   useEffect(() => {
-    const isDark = document.documentElement.classList.contains("dark");
-    setDark(isDark);
+    setDark(document.documentElement.classList.contains("dark"));
   }, []);
   const toggle = () => {
     const el = document.documentElement;
@@ -14,6 +29,14 @@ export function AppTopbar({ title, breadcrumb }: { title?: string; breadcrumb?: 
     el.classList.toggle("dark", next);
     setDark(next);
   };
+
+  const initials = (profile?.full_name || "U").split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() || "").join("");
+  const roleLabel = isSuperuser ? "Superusuário" : ROLE_LABEL[roles[0] || ""] || "Equipe interna";
+
+  function handleLogout() {
+    logout();
+    navigate({ to: "/login" });
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/85 backdrop-blur-md px-6">
@@ -33,21 +56,35 @@ export function AppTopbar({ title, breadcrumb }: { title?: string; breadcrumb?: 
         </kbd>
       </div>
 
-      <Button size="sm" className="gap-1.5 h-9 bg-primary hover:bg-primary/90">
-        <Plus className="h-4 w-4" />
-        Novo
-      </Button>
-
       <button onClick={toggle} aria-label="Alternar tema" className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition">
         {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </button>
-      <button aria-label="Ajuda" className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition">
-        <HelpCircle className="h-4 w-4" />
-      </button>
       <button aria-label="Notificações" className="relative grid h-9 w-9 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition">
         <Bell className="h-4 w-4" />
-        <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
       </button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="ml-1 flex items-center gap-2 rounded-md p-0.5 pr-2 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">{initials}</span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel className="pb-1">
+            <p className="text-[13px] font-medium text-foreground">{profile?.full_name || "Usuário"}</p>
+            <p className="text-[11px] font-normal text-muted-foreground">{profile?.email || ""}</p>
+            <p className="text-[10px] font-normal text-muted-foreground/70">{roleLabel}</p>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="gap-2 text-[13px]" onClick={() => navigate({ to: "/app/perfil" })}>
+            <User className="h-3.5 w-3.5" /> Meu perfil
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="gap-2 text-[13px] text-destructive focus:text-destructive" onClick={handleLogout}>
+            <LogOut className="h-3.5 w-3.5" /> Sair
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
   );
 }

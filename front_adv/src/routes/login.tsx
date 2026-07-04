@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Scale, ArrowRight, ShieldCheck } from "lucide-react";
+import { Scale, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — JurisFlow" }] }),
@@ -9,8 +11,27 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("marina.souza@jurisflow.com.br");
-  const [pwd, setPwd] = useState("supersegura");
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || !pwd) {
+      toast.error("Informe e-mail e senha.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await login(email, pwd);
+      navigate({ to: "/app" });
+    } catch (err: any) {
+      toast.error(err?.detail || "Não foi possível entrar. Verifique suas credenciais.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen grid lg:grid-cols-[1.1fr_1fr] bg-background">
@@ -57,7 +78,7 @@ function LoginPage() {
           <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Entrar na plataforma</h1>
           <p className="mt-2 text-[13.5px] text-muted-foreground">Bem-vinda de volta. Insira suas credenciais para continuar.</p>
 
-          <form onSubmit={(e) => { e.preventDefault(); navigate({ to: "/app" }); }} className="mt-8 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div>
               <label className="text-[12px] font-medium text-foreground">E-mail corporativo</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
@@ -77,8 +98,8 @@ function LoginPage() {
               Manter-me conectada por 30 dias
             </label>
 
-            <button type="submit" className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-[14px] font-medium text-primary-foreground hover:bg-primary/90 transition">
-              Entrar <ArrowRight className="h-4 w-4" />
+            <button type="submit" disabled={submitting} className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-[14px] font-medium text-primary-foreground hover:bg-primary/90 transition disabled:opacity-60">
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Entrar <ArrowRight className="h-4 w-4" /></>}
             </button>
 
             <div className="relative py-2">
