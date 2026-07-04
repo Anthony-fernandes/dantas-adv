@@ -28,7 +28,7 @@ const PROVIDER_OPTIONS = [
 ];
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  idle: { label: 'Aguardando', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+  idle: { label: 'Aguardando', className: 'bg-muted text-muted-foreground border-border' },
   syncing: { label: 'Sincronizando', className: 'bg-blue-100 text-blue-800 border-blue-200' },
   success: { label: 'Sincronizado', className: 'bg-green-100 text-green-800 border-green-200' },
   error: { label: 'Erro', className: 'bg-red-100 text-red-700 border-red-200' },
@@ -103,7 +103,7 @@ export function TribunalSyncPanel({ processId, processCnj }: Props) {
       )}
 
       {syncs.map((sync) => {
-        const st = STATUS_MAP[sync.sync_status] ?? { label: sync.sync_status, className: 'bg-gray-100 text-gray-600 border-gray-200' };
+        const st = STATUS_MAP[sync.sync_status] ?? { label: sync.sync_status, className: 'bg-muted text-muted-foreground border-border' };
         const isSyncing = syncingId === sync.id;
         return (
           <div key={sync.id} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
