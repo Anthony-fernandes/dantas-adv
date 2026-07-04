@@ -52,9 +52,9 @@ const ROLE_BADGE: Record<string, string> = {
   terceiro: 'border-sky-200 bg-sky-50 text-sky-700',
   assistente: 'border-violet-200 bg-violet-50 text-violet-700',
   testemunha: 'border-amber-200 bg-amber-50 text-amber-700',
-  perito: 'border-slate-200 bg-slate-100 text-slate-700',
+  perito: 'border-border bg-muted text-muted-foreground',
   mp: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-  outro: 'border-slate-200 bg-slate-100 text-slate-700',
+  outro: 'border-border bg-muted text-muted-foreground',
 };
 
 type PartyForm = {

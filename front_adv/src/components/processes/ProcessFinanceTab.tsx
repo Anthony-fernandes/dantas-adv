@@ -67,13 +67,13 @@ function FinanceSummaryCard({ label, value, icon: Icon, tone }: { label: string;
     rose: 'bg-rose-600 shadow-rose-100 ring-rose-100',
   };
   return (
-    <div className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80 dark:bg-card dark:ring-border">
+    <div className="surface-card flex items-center gap-4 p-5">
       <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm ring-4', tones[tone])}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p>
-        <p className="mt-0.5 text-2xl font-bold leading-none tracking-tight text-slate-800 dark:text-foreground">{value}</p>
+        <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+        <p className="mt-0.5 text-2xl font-bold leading-none tracking-tight text-foreground">{value}</p>
       </div>
     </div>
   );

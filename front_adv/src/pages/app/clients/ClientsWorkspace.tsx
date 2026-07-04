@@ -256,7 +256,7 @@ function formatClientStatusLabel(value?: string | null) {
 
 function clientStatusBadgeClass(value?: string | null) {
   const status = normalizeStatus(value);
-  if (status === 'inativo') return 'border-slate-200 bg-slate-100 text-slate-700';
+  if (status === 'inativo') return 'border-border bg-muted text-muted-foreground';
   if (status === 'prospecto') return 'border-amber-200 bg-amber-50 text-amber-700';
   return 'border-emerald-200 bg-emerald-50 text-emerald-700';
 }
@@ -268,7 +268,7 @@ function typeBadgeClass(type?: string | null) {
 }
 
 function portalBadgeClass(enabled: boolean) {
-  return enabled ? 'border-primary/20 bg-primary/10 text-primary' : 'border-slate-200 bg-slate-100 text-slate-700';
+  return enabled ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-muted text-muted-foreground';
 }
 
 async function safeAllPages<T>(path: string, params?: Record<string, string | number | boolean | null | undefined>) {

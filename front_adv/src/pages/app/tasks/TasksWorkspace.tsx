@@ -82,7 +82,7 @@ const KANBAN_COLUMNS = [
   { key: 'pendente', label: 'Pendente', color: 'bg-muted', dot: 'bg-muted-foreground' },
   { key: 'em_andamento', label: 'Em andamento', color: 'bg-amber-500/15', dot: 'bg-amber-500' },
   { key: 'concluida', label: 'Concluída', color: 'bg-green-500/15', dot: 'bg-green-500' },
-  { key: 'cancelada', label: 'Cancelada', color: 'bg-slate-500/15', dot: 'bg-slate-400' },
+  { key: 'cancelada', label: 'Cancelada', color: 'bg-muted', dot: 'bg-muted-foreground' },
 ];
 
 function priorityBadge(priority: string) {

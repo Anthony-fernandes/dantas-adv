@@ -27,7 +27,7 @@ type NFSe = {
 type ClientItem = { id: string; full_name?: string; name?: string };
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  rascunho: { label: 'Rascunho', className: 'bg-gray-100 text-gray-600 border-gray-200' },
+  rascunho: { label: 'Rascunho', className: 'bg-muted text-muted-foreground border-border' },
   emitida: { label: 'Emitida', className: 'bg-green-100 text-green-800 border-green-200' },
   cancelada: { label: 'Cancelada', className: 'bg-red-100 text-red-700 border-red-200' },
   erro: { label: 'Erro', className: 'bg-red-100 text-red-700 border-red-200' },
@@ -175,7 +175,7 @@ export default function NFSeWorkspace() {
             </TableHeader>
             <TableBody>
               {nfses.map((n) => {
-                const st = STATUS_MAP[n.status] ?? { label: n.status, className: 'bg-gray-100 text-gray-600 border-gray-200' };
+                const st = STATUS_MAP[n.status] ?? { label: n.status, className: 'bg-muted text-muted-foreground border-border' };
                 return (
                   <TableRow key={n.id}>
                     <TableCell className="font-mono text-sm">{n.numero ?? '—'}</TableCell>
