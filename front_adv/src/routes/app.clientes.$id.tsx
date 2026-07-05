@@ -1,31 +1,49 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, Building2, User, Phone, Mail, MapPin, Briefcase, FileText, Wallet, MessageSquare, Edit3, MoreHorizontal, Plus } from "lucide-react";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { ArrowLeft, Building2, User, Phone, Mail, MapPin, FileText, Loader2 } from "lucide-react";
 import { StatusPill, StatCard } from "@/components/shell/PageHeader";
-import { clientes, processos, contratos, financeiro, fmtBRL, fmtDate } from "@/lib/mock";
+import { useDetail, useList, fmtBRL, fmtDate, clientName, humanize } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/clientes/$id")({
-  head: ({ params }) => ({ meta: [{ title: `Cliente ${params.id} — JurisFlow` }] }),
-  loader: ({ params }) => {
-    const cliente = clientes.find((c) => c.id === params.id);
-    if (!cliente) throw notFound();
-    return { cliente };
-  },
+  head: () => ({ meta: [{ title: `Cliente — JurisFlow` }] }),
   component: ClienteDetalhe,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Cliente não encontrado.</div>
-  ),
 });
 
-const TABS = ["Resumo", "Processos", "Contratos", "Financeiro", "Documentos", "Interações"] as const;
+const TABS = ["Resumo", "Processos", "Contratos", "Documentos"] as const;
+
+function typeOf(c: any): "PF" | "PJ" {
+  const t = String(c?.type || c?.tipo || "").toUpperCase();
+  if (t === "PJ" || c?.razao_social || c?.cnpj) return "PJ";
+  return "PF";
+}
 
 function ClienteDetalhe() {
-  const { cliente } = Route.useLoaderData();
+  const { id } = useParams({ from: "/app/clientes/$id" });
+  const { data: c, isLoading } = useDetail<any>("clients", id);
+  const processes = useList<any>("processes");
+  const contracts = useList<any>("contracts");
+  const documents = useList<any>("documents");
   const [tab, setTab] = useState<(typeof TABS)[number]>("Resumo");
-  const procs = processos.filter((p) => p.cliente.startsWith(cliente.nome.split(" ")[0]));
-  const ctrs = contratos.filter((c) => c.cliente.startsWith(cliente.nome.split(" ")[0]));
-  const fins = financeiro.filter((f) => f.cliente.startsWith(cliente.nome.split(" ")[0]));
-  const isPJ = cliente.tipo === "PJ";
+
+  const procs = useMemo(
+    () => (processes.data ?? []).filter((p) => String(p.client || p.client_id || "") === id),
+    [processes.data, id],
+  );
+  const ctrs = useMemo(
+    () => (contracts.data ?? []).filter((x) => String(x.client || x.client_id || "") === id),
+    [contracts.data, id],
+  );
+  const docs = useMemo(
+    () => (documents.data ?? []).filter((x) => String(x.client || x.client_id || "") === id),
+    [documents.data, id],
+  );
+
+  if (isLoading) return <div className="p-16 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+  if (!c) return <div className="p-10 text-center text-muted-foreground">Cliente não encontrado.</div>;
+
+  const isPJ = typeOf(c) === "PJ";
+  const name = clientName(c);
+  const address = c.address || {};
 
   return (
     <div className="mx-auto max-w-[1400px] p-6 md:p-8 space-y-6">
@@ -40,35 +58,23 @@ function ClienteDetalhe() {
               {isPJ ? <Building2 className="h-6 w-6" /> : <User className="h-6 w-6" />}
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                {isPJ ? "Pessoa Jurídica" : "Pessoa Física"} · {cliente.id}
-              </p>
-              <h1 className="font-display text-2xl font-semibold tracking-tight">{cliente.nome}</h1>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{isPJ ? "Pessoa Jurídica" : "Pessoa Física"}</p>
+              <h1 className="font-display text-2xl font-semibold tracking-tight">{name}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-[12.5px] text-muted-foreground">
-                <span className="inline-flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> {cliente.documento}</span>
-                <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {cliente.cidade}</span>
-                <span className="inline-flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {cliente.responsavel}</span>
-                <StatusPill tone={cliente.status === "Ativo" ? "success" : cliente.status === "Prospect" ? "info" : "muted"}>{cliente.status}</StatusPill>
+                <span className="inline-flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> {c.document || c.doc || "—"}</span>
+                <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {c.city || address.city || "—"}</span>
+                <StatusPill tone={String(c.status || "ativo").toLowerCase() === "inativo" ? "muted" : "success"}>{c.status || "Ativo"}</StatusPill>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-[13px] hover:bg-muted">
-              <MessageSquare className="h-3.5 w-3.5" /> Mensagem
-            </button>
-            <button className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">
-              <Edit3 className="h-3.5 w-3.5" /> Editar
-            </button>
-            <button className="grid h-9 w-9 place-items-center rounded-md border border-border hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Processos" value={String(cliente.processos)} tone="info" />
-        <StatCard label="Contratos ativos" value={String(ctrs.length)} tone="success" />
-        <StatCard label="A receber" value={fmtBRL(fins.filter(f => f.tipo === "Receber" && f.status !== "Pago").reduce((a, b) => a + b.valor, 0))} tone="warning" />
-        <StatCard label="Último contato" value="2 dias" hint="via WhatsApp" />
+        <StatCard label="Processos" value={String(procs.length)} tone="info" />
+        <StatCard label="Contratos" value={String(ctrs.length)} tone="success" />
+        <StatCard label="Documentos" value={String(docs.length)} tone="warning" />
+        <StatCard label="Tipo" value={isPJ ? "PJ" : "PF"} />
       </div>
 
       <div className="surface-card">
@@ -85,22 +91,20 @@ function ClienteDetalhe() {
         {tab === "Resumo" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
             <InfoBlock title="Dados de contato" rows={[
-              { icon: Mail, label: "E-mail", value: `contato@${cliente.nome.toLowerCase().replace(/[^a-z]/g, "").slice(0, 10)}.com.br` },
-              { icon: Phone, label: "Telefone", value: "(11) 3200-4500" },
-              { icon: MapPin, label: "Endereço", value: `Av. Paulista, 1200 — ${cliente.cidade}` },
+              { icon: Mail, label: "E-mail", value: c.email || "—" },
+              { icon: Phone, label: "Telefone", value: c.phone || c.whatsapp || "—" },
+              { icon: MapPin, label: "Endereço", value: [address.street, c.city || address.city, c.state || address.state].filter(Boolean).join(", ") || "—" },
             ]} />
             <InfoBlock title="Dados jurídicos" rows={[
-              { icon: FileText, label: isPJ ? "CNPJ" : "CPF", value: cliente.documento },
-              { icon: Briefcase, label: "Responsável", value: cliente.responsavel },
-              { icon: User, label: "Origem", value: "Indicação — parceria" },
+              { icon: FileText, label: isPJ ? "CNPJ" : "CPF", value: c.document || c.doc || "—" },
+              { icon: User, label: "Status", value: humanize(c.status || "ativo") },
             ]} />
-            <div className="surface-card lg:col-span-2 p-5">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground mb-3">Notas internas</p>
-              <p className="text-[13.5px] leading-relaxed text-foreground/85">
-                Cliente estratégico com histórico de bom relacionamento. Prefere comunicação por e-mail
-                nas segundas pela manhã. Contrato em revisão para renovação anual em dezembro.
-              </p>
-            </div>
+            {c.notes && (
+              <div className="surface-card lg:col-span-2 p-5">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground mb-3">Notas internas</p>
+                <p className="text-[13.5px] leading-relaxed text-foreground/85 whitespace-pre-wrap">{typeof c.notes === "string" ? c.notes : ""}</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -108,18 +112,18 @@ function ClienteDetalhe() {
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
-                <tr><th className="px-5 py-3 text-left">Número</th><th className="px-5 py-3 text-left">Área</th><th className="px-5 py-3 text-left">Fase</th><th className="px-5 py-3 text-right">Valor</th><th className="px-5 py-3 text-left">Status</th></tr>
+                <tr><th className="px-5 py-3 text-left">Número CNJ</th><th className="px-5 py-3 text-left">Área</th><th className="px-5 py-3 text-left">Fase</th><th className="px-5 py-3 text-right">Valor</th><th className="px-5 py-3 text-left">Status</th></tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {procs.map((p) => (
                   <tr key={p.id} className="hover:bg-muted/30">
                     <td className="px-5 py-3.5 font-mono text-[12px]">
-                      <Link to="/app/processos/$id" params={{ id: p.id }} className="text-primary hover:underline">{p.numero}</Link>
+                      <Link to="/app/processos/$id" params={{ id: String(p.id) }} className="text-primary hover:underline">{p.cnj || "—"}</Link>
                     </td>
-                    <td className="px-5 py-3.5">{p.area}</td>
-                    <td className="px-5 py-3.5 text-muted-foreground">{p.fase}</td>
-                    <td className="px-5 py-3.5 text-right tabular-nums">{fmtBRL(p.valor)}</td>
-                    <td className="px-5 py-3.5"><StatusPill tone={p.status === "Em andamento" ? "info" : p.status === "Suspenso" ? "warning" : "success"}>{p.status}</StatusPill></td>
+                    <td className="px-5 py-3.5">{p.area || "—"}</td>
+                    <td className="px-5 py-3.5 text-muted-foreground capitalize">{p.phase || "—"}</td>
+                    <td className="px-5 py-3.5 text-right tabular-nums">{fmtBRL(p.cause_value)}</td>
+                    <td className="px-5 py-3.5"><StatusPill tone="info">{p.status || "—"}</StatusPill></td>
                   </tr>
                 ))}
                 {procs.length === 0 && <tr><td colSpan={5} className="px-5 py-10 text-center text-muted-foreground">Sem processos vinculados.</td></tr>}
@@ -130,72 +134,28 @@ function ClienteDetalhe() {
 
         {tab === "Contratos" && (
           <div className="p-6 space-y-3">
-            {ctrs.map((c) => (
-              <div key={c.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
+            {ctrs.map((c2) => (
+              <div key={c2.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
                 <div>
-                  <p className="font-medium">{c.numero} · {c.objeto}</p>
-                  <p className="text-[12px] text-muted-foreground">{fmtDate(c.inicio)} → {fmtDate(c.fim)}</p>
+                  <p className="font-medium">{humanize(c2.type)}</p>
+                  <p className="text-[12px] text-muted-foreground">{fmtDate(c2.start_date)} {c2.end_date ? `→ ${fmtDate(c2.end_date)}` : ""}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="tabular-nums font-medium">{fmtBRL(c.valor)}</span>
-                  <StatusPill tone={c.status === "Ativo" ? "success" : "warning"}>{c.status}</StatusPill>
-                </div>
+                <StatusPill tone={String(c2.status).toLowerCase() === "vigente" ? "success" : "muted"}>{c2.status}</StatusPill>
               </div>
             ))}
             {ctrs.length === 0 && <p className="text-center text-muted-foreground py-8">Sem contratos.</p>}
           </div>
         )}
 
-        {tab === "Financeiro" && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
-              <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
-                <tr><th className="px-5 py-3 text-left">Descrição</th><th className="px-5 py-3 text-left">Vencimento</th><th className="px-5 py-3 text-right">Valor</th><th className="px-5 py-3 text-left">Status</th></tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {fins.map((f) => (
-                  <tr key={f.id}><td className="px-5 py-3.5">{f.descricao}</td><td className="px-5 py-3.5">{fmtDate(f.vencimento)}</td><td className="px-5 py-3.5 text-right tabular-nums">{fmtBRL(f.valor)}</td><td className="px-5 py-3.5"><StatusPill tone={f.status === "Pago" ? "success" : f.status === "Atrasado" ? "destructive" : "warning"}>{f.status}</StatusPill></td></tr>
-                ))}
-                {fins.length === 0 && <tr><td colSpan={4} className="px-5 py-10 text-center text-muted-foreground">Sem lançamentos.</td></tr>}
-              </tbody>
-            </table>
-          </div>
-        )}
-
         {tab === "Documentos" && (
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-[13px] text-muted-foreground">4 arquivos · 12,4 MB</p>
-              <button className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-3.5 w-3.5" /> Anexar</button>
-            </div>
-            <div className="grid gap-2">
-              {["Contrato social 2024.pdf", "Procuração ad judicia.pdf", "Comprovante endereço.pdf", "RG diretoria.pdf"].map((f) => (
-                <div key={f} className="flex items-center justify-between rounded-md border border-border bg-card px-4 py-3 text-[13px]">
-                  <span className="inline-flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> {f}</span>
-                  <span className="text-[11.5px] text-muted-foreground">3,1 MB · há 4 dias</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {tab === "Interações" && (
-          <div className="p-6 space-y-3">
-            {[
-              { d: "hoje, 09:14", t: "Marina Souza registrou reunião presencial", desc: "Alinhamento sobre estratégia recursal." },
-              { d: "ontem, 16:20", t: "E-mail enviado", desc: "Encaminhada minuta do acordo para revisão do cliente." },
-              { d: "há 3 dias", t: "Ligação recebida", desc: "Cliente solicitou status do processo trabalhista." },
-              { d: "há 1 semana", t: "Contrato assinado", desc: "CT-2026-014 · Consultoria mensal renovada." },
-            ].map((i) => (
-              <div key={i.d} className="flex gap-3 rounded-md border border-border bg-card p-4">
-                <div className="h-2 w-2 mt-2 rounded-full bg-primary shrink-0" />
-                <div>
-                  <p className="text-[11.5px] uppercase tracking-wide text-muted-foreground">{i.d}</p>
-                  <p className="font-medium text-[13.5px]">{i.t}</p>
-                  <p className="text-[13px] text-muted-foreground">{i.desc}</p>
-                </div>
+          <div className="p-6 grid gap-2">
+            {docs.map((f) => (
+              <div key={f.id} className="flex items-center justify-between rounded-md border border-border bg-card px-4 py-3 text-[13px]">
+                <span className="inline-flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /> {f.title || f.filename || "Documento"}</span>
+                <span className="text-[11.5px] text-muted-foreground">{fmtDate(f.created_at)}</span>
               </div>
             ))}
+            {docs.length === 0 && <p className="text-center text-muted-foreground py-8">Sem documentos.</p>}
           </div>
         )}
       </div>
@@ -213,7 +173,7 @@ function InfoBlock({ title, rows }: { title: string; rows: { icon: React.Compone
           return (
             <li key={r.label} className="flex items-start gap-3">
               <div className="grid h-8 w-8 place-items-center rounded-md bg-muted text-muted-foreground shrink-0"><Icon className="h-4 w-4" /></div>
-              <div><p className="text-[11.5px] uppercase tracking-wider text-muted-foreground">{r.label}</p><p className="text-[13.5px] font-medium">{r.value}</p></div>
+              <div className="min-w-0"><p className="text-[11.5px] uppercase tracking-wider text-muted-foreground">{r.label}</p><p className="text-[13.5px] font-medium break-words">{r.value}</p></div>
             </li>
           );
         })}
