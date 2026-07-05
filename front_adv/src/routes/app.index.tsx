@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import {
   Gavel, Users, Timer, DollarSign, TrendingUp,
   ArrowUpRight, AlertTriangle, CheckSquare,
 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
+import { ProcessoDialog } from "@/components/shell/ProcessoDialog";
 import { useList, fmtBRL, fmtDate, daysUntil, clientName } from "@/lib/resources";
 import { useAuth } from "@/lib/auth";
 
@@ -19,6 +20,8 @@ function isOpen(status?: string | null) {
 
 function Dashboard() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
+  const [novoOpen, setNovoOpen] = useState(false);
   const processes = useList<any>("processes", { ordering: "-updated_at" });
   const clients = useList<any>("clients");
   const deadlines = useList<any>("deadlines", { ordering: "due_date" });
@@ -89,9 +92,10 @@ function Dashboard() {
             <Link to="/app/processos" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3.5 py-2 text-[13px] hover:bg-muted transition">
               Ver processos
             </Link>
-            <Link to="/app/processos/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+            <button onClick={() => setNovoOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
               Novo processo <ArrowUpRight className="h-3.5 w-3.5" />
-            </Link>
+            </button>
+            <ProcessoDialog open={novoOpen} onOpenChange={setNovoOpen} onCreated={(p) => navigate({ to: "/app/processos/$id", params: { id: String(p.id) } })} />
           </>
         }
       />

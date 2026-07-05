@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { FolderKanban, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { FormDialog } from "@/components/shell/FormDialog";
+import { RowActions } from "@/components/shell/RowActions";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { useList, useCreate } from "@/lib/resources";
 
@@ -75,20 +76,35 @@ function AreasPage() {
                 <th className="px-5 py-2.5 text-left font-medium">Área</th>
                 <th className="px-4 py-2.5 text-right font-medium">Processos</th>
                 <th className="px-5 py-2.5 text-left font-medium">Status</th>
+                <th className="px-5 py-2.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {areas.isLoading && (
-                <tr><td colSpan={3} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
+                <tr><td colSpan={4} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
               )}
               {!areas.isLoading && rows.length === 0 && (
-                <tr><td colSpan={3} className="px-5 py-10 text-center text-muted-foreground">Nenhuma área cadastrada.</td></tr>
+                <tr><td colSpan={4} className="px-5 py-10 text-center text-muted-foreground">Nenhuma área cadastrada.</td></tr>
               )}
               {rows.map((a) => (
                 <tr key={a.id} className="hover:bg-muted/30 transition">
                   <td className="px-5 py-3 font-medium">{a.name || a.area || "Área"}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{procByArea[String(a.area || "").toLowerCase()] || 0}</td>
                   <td className="px-5 py-3"><StatusPill tone={a.is_active !== false ? "success" : "muted"}>{a.is_active !== false ? "Ativa" : "Inativa"}</StatusPill></td>
+                  <td className="px-5 py-3 text-right">
+                    <RowActions
+                      resource="causes"
+                      id={String(a.id)}
+                      editTitle="Editar área"
+                      fields={[
+                        { label: "Nome da área", name: "name", type: "text", required: true, full: true },
+                        { label: "Código", name: "area", type: "text" },
+                        { label: "Status", name: "is_active", type: "select", options: [{ value: "true", label: "Ativa" }, { value: "false", label: "Inativa" }] },
+                      ]}
+                      initial={{ name: a.name || "", area: a.area || "", is_active: a.is_active !== false ? "true" : "false" }}
+                      buildPayload={(v) => ({ name: v.name, area: v.area || v.name.toLowerCase(), is_active: v.is_active !== "false" })}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

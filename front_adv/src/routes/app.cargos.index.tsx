@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { BriefcaseBusiness, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { FormDialog } from "@/components/shell/FormDialog";
+import { RowActions } from "@/components/shell/RowActions";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { useList, useCreate } from "@/lib/resources";
 
@@ -65,16 +66,31 @@ function CargosPage() {
                 <th className="px-5 py-2.5 text-left font-medium">Cargo</th>
                 <th className="px-4 py-2.5 text-left font-medium">Descrição</th>
                 <th className="px-5 py-2.5 text-left font-medium">Status</th>
+                <th className="px-5 py-2.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {positions.isLoading && <tr><td colSpan={3} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>}
-              {!positions.isLoading && rows.length === 0 && <tr><td colSpan={3} className="px-5 py-10 text-center text-muted-foreground">Nenhum cargo cadastrado.</td></tr>}
+              {positions.isLoading && <tr><td colSpan={4} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>}
+              {!positions.isLoading && rows.length === 0 && <tr><td colSpan={4} className="px-5 py-10 text-center text-muted-foreground">Nenhum cargo cadastrado.</td></tr>}
               {rows.map((p) => (
                 <tr key={p.id} className="hover:bg-muted/30 transition">
                   <td className="px-5 py-3 font-medium">{p.name || "Cargo"}</td>
                   <td className="px-4 py-3 text-muted-foreground truncate max-w-[420px]">{p.description || "—"}</td>
                   <td className="px-5 py-3"><StatusPill tone={p.is_active !== false ? "success" : "muted"}>{p.is_active !== false ? "Ativo" : "Inativo"}</StatusPill></td>
+                  <td className="px-5 py-3 text-right">
+                    <RowActions
+                      resource="job-positions"
+                      id={String(p.id)}
+                      editTitle="Editar cargo"
+                      fields={[
+                        { label: "Nome do cargo", name: "name", type: "text", required: true, full: true },
+                        { label: "Descrição", name: "description", type: "textarea" },
+                        { label: "Status", name: "is_active", type: "select", options: [{ value: "true", label: "Ativo" }, { value: "false", label: "Inativo" }] },
+                      ]}
+                      initial={{ name: p.name || "", description: p.description || "", is_active: p.is_active !== false ? "true" : "false" }}
+                      buildPayload={(v) => ({ name: v.name, description: v.description || null, is_active: v.is_active !== "false" })}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

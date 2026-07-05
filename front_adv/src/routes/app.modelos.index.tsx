@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { FileText, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { FormDialog } from "@/components/shell/FormDialog";
+import { RowActions } from "@/components/shell/RowActions";
 import { useList, useCreate, fmtDate, humanize } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/modelos/")({
@@ -74,14 +75,15 @@ function ModelosPage() {
                 <th className="px-4 py-2.5 text-left font-medium">Formato</th>
                 <th className="px-4 py-2.5 text-left font-medium">Versão</th>
                 <th className="px-5 py-2.5 text-left font-medium">Criado</th>
+                <th className="px-5 py-2.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {templates.isLoading && (
-                <tr><td colSpan={5} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
+                <tr><td colSpan={6} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
               )}
               {!templates.isLoading && rows.length === 0 && (
-                <tr><td colSpan={5} className="px-5 py-10 text-center text-muted-foreground">Nenhum modelo cadastrado.</td></tr>
+                <tr><td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">Nenhum modelo cadastrado.</td></tr>
               )}
               {rows.map((t) => (
                 <tr key={t.id} className="hover:bg-muted/30 transition">
@@ -93,6 +95,21 @@ function ModelosPage() {
                   <td className="px-4 py-3 text-muted-foreground uppercase">{t.format || "—"}</td>
                   <td className="px-4 py-3 font-mono text-muted-foreground">v{t.version || 1}</td>
                   <td className="px-5 py-3 text-muted-foreground">{fmtDate(t.created_at)}</td>
+                  <td className="px-5 py-3 text-right">
+                    <RowActions
+                      resource="legal-templates"
+                      id={String(t.id)}
+                      editTitle="Editar modelo"
+                      fields={[
+                        { label: "Nome do modelo", name: "name", type: "text", required: true, full: true },
+                        { label: "Categoria", name: "category", type: "select", options: ["peticao", "contrato", "parecer", "procuracao", "notificacao", "geral"] },
+                        { label: "Formato", name: "format", type: "select", options: ["docx", "pdf", "html"] },
+                        { label: "Conteúdo", name: "content", type: "textarea", required: true, full: true },
+                      ]}
+                      initial={{ name: t.name || "", category: t.category || "geral", format: t.format || "docx", content: t.content || "" }}
+                      buildPayload={(v) => ({ name: v.name, category: v.category, format: v.format, content: v.content })}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

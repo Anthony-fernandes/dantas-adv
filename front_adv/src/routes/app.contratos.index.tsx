@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { FileSignature, Plus, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
 import { FormDialog } from "@/components/shell/FormDialog";
+import { RowActions } from "@/components/shell/RowActions";
 import { useList, useCreate, fmtBRL, fmtDate, clientName, humanize } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/contratos/")({
@@ -108,14 +109,15 @@ function ContratosPage() {
                 <th className="px-4 py-2.5 text-left font-medium">Vigência</th>
                 <th className="px-4 py-2.5 text-right font-medium">Valor</th>
                 <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                <th className="px-5 py-2.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {contracts.isLoading && (
-                <tr><td colSpan={5} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
+                <tr><td colSpan={6} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
               )}
               {!contracts.isLoading && rows.length === 0 && (
-                <tr><td colSpan={5} className="px-5 py-10 text-center text-muted-foreground">Nenhum contrato cadastrado.</td></tr>
+                <tr><td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">Nenhum contrato cadastrado.</td></tr>
               )}
               {rows.map((c) => (
                 <tr key={c.id} className="hover:bg-muted/30 transition">
@@ -125,6 +127,28 @@ function ContratosPage() {
                   <td className="px-4 py-3 text-right tabular-nums font-medium">{fmtBRL(contractValue(c))}</td>
                   <td className="px-4 py-3">
                     <StatusPill tone={String(c.status).toLowerCase() === "vigente" ? "success" : String(c.status).toLowerCase() === "suspenso" ? "warning" : "muted"}>{c.status || "—"}</StatusPill>
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <RowActions
+                      resource="contracts"
+                      id={String(c.id)}
+                      editTitle="Editar contrato"
+                      fields={[
+                        { label: "Cliente", name: "client", type: "select", options: clientOptions, full: true },
+                        { label: "Tipo", name: "type", type: "select", options: [
+                          { value: "fixo", label: "Honorário fixo" }, { value: "percentual", label: "Percentual" },
+                          { value: "exito", label: "Êxito" }, { value: "hora", label: "Por hora" }, { value: "retainer", label: "Retainer mensal" },
+                        ] },
+                        { label: "Valor (R$)", name: "fixed_value", type: "money" },
+                        { label: "Status", name: "status", type: "select", options: [
+                          { value: "vigente", label: "Vigente" }, { value: "suspenso", label: "Suspenso" }, { value: "encerrado", label: "Encerrado" },
+                        ] },
+                        { label: "Início", name: "start_date", type: "date" },
+                        { label: "Fim", name: "end_date", type: "date" },
+                      ]}
+                      initial={{ client: String(c.client || ""), type: c.type || "fixo", fixed_value: c.fixed_value != null ? String(c.fixed_value) : "", status: c.status || "vigente", start_date: c.start_date || "", end_date: c.end_date || "" }}
+                      buildPayload={(v) => ({ client: v.client || null, type: v.type, fixed_value: v.fixed_value ? Number(v.fixed_value) : null, status: v.status, start_date: v.start_date, end_date: v.end_date || null })}
+                    />
                   </td>
                 </tr>
               ))}

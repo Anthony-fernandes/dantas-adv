@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { UserSquare2, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { FormDialog } from "@/components/shell/FormDialog";
+import { RowActions } from "@/components/shell/RowActions";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { useList, useCreate, fmtDate } from "@/lib/resources";
 
@@ -69,11 +70,12 @@ function FuncionariosPage() {
                 <th className="px-4 py-2.5 text-left font-medium">Contato</th>
                 <th className="px-4 py-2.5 text-left font-medium">Admissão</th>
                 <th className="px-5 py-2.5 text-left font-medium">Status</th>
+                <th className="px-5 py-2.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {employees.isLoading && <tr><td colSpan={5} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>}
-              {!employees.isLoading && rows.length === 0 && <tr><td colSpan={5} className="px-5 py-10 text-center text-muted-foreground">Nenhum funcionário cadastrado.</td></tr>}
+              {employees.isLoading && <tr><td colSpan={6} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>}
+              {!employees.isLoading && rows.length === 0 && <tr><td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">Nenhum funcionário cadastrado.</td></tr>}
               {rows.map((e) => {
                 const name = e.full_name || e.name || e.email || "Sem nome";
                 return (
@@ -88,6 +90,22 @@ function FuncionariosPage() {
                     <td className="px-4 py-3 text-muted-foreground">{e.phone || "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{fmtDate(e.hire_date)}</td>
                     <td className="px-5 py-3"><StatusPill tone={e.is_active !== false ? "success" : "muted"}>{e.is_active !== false ? "Ativo" : "Inativo"}</StatusPill></td>
+                    <td className="px-5 py-3 text-right">
+                      <RowActions
+                        resource="employees"
+                        id={String(e.id)}
+                        editTitle="Editar funcionário"
+                        fields={[
+                          { label: "Nome completo", name: "full_name", type: "text", required: true, full: true },
+                          { label: "E-mail", name: "email", type: "email" },
+                          { label: "Telefone", name: "phone", type: "tel" },
+                          { label: "Data de admissão", name: "hire_date", type: "date" },
+                          { label: "Status", name: "is_active", type: "select", options: [{ value: "true", label: "Ativo" }, { value: "false", label: "Inativo" }] },
+                        ]}
+                        initial={{ full_name: e.full_name || e.name || "", email: e.email || "", phone: e.phone || "", hire_date: e.hire_date || "", is_active: e.is_active !== false ? "true" : "false" }}
+                        buildPayload={(v) => ({ full_name: v.full_name, email: v.email || null, phone: v.phone || null, hire_date: v.hire_date || null, is_active: v.is_active !== "false" })}
+                      />
+                    </td>
                   </tr>
                 );
               })}
