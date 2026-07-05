@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Edit3, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit3, Trash2, Loader2 } from "lucide-react";
 import { PageHeader, StatusPill } from "./PageHeader";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+
+export type FieldOption = string | { value: string; label: string };
 
 export type FieldDef = {
   label: string;
@@ -9,10 +11,18 @@ export type FieldDef = {
   type?: "text" | "number" | "date" | "email" | "tel" | "textarea" | "select" | "money";
   placeholder?: string;
   required?: boolean;
-  options?: string[];
+  options?: FieldOption[];
   full?: boolean;
   mono?: boolean;
+  defaultValue?: string;
 };
+
+function optionValue(o: FieldOption) {
+  return typeof o === "string" ? o : o.value;
+}
+function optionLabel(o: FieldOption) {
+  return typeof o === "string" ? o : o.label;
+}
 
 export function RecordDetail({
   backTo,
@@ -85,6 +95,7 @@ export function RecordForm({
   description,
   fields,
   onSubmit,
+  submitLabel = "Salvar",
 }: {
   backTo: string;
   backLabel: string;
@@ -92,8 +103,26 @@ export function RecordForm({
   title: string;
   description?: string;
   fields: FieldDef[];
-  onSubmit?: () => void;
+  onSubmit?: (values: Record<string, string>) => void | Promise<void>;
+  submitLabel?: string;
 }) {
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(fields.map((f) => [f.name, f.defaultValue ?? (f.type === "select" && f.options?.length ? optionValue(f.options[0]) : "")])),
+  );
+  const [submitting, setSubmitting] = useState(false);
+
+  const set = (name: string, v: string) => setValues((prev) => ({ ...prev, [name]: v }));
+
+  async function handle(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await onSubmit?.(values);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-[900px] p-6 md:p-8 space-y-6">
       <Link to={backTo as any} className="inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground hover:text-foreground">
@@ -101,25 +130,24 @@ export function RecordForm({
       </Link>
       <PageHeader eyebrow={eyebrow} title={title} description={description} />
 
-      <form
-        onSubmit={(e) => { e.preventDefault(); onSubmit?.(); }}
-        className="surface-card p-6 space-y-6"
-      >
+      <form onSubmit={handle} className="surface-card p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {fields.map((f) => (
-            <FieldControl key={f.name} field={f} />
+            <FieldControl key={f.name} field={f} value={values[f.name] ?? ""} onChange={(v) => set(f.name, v)} />
           ))}
         </div>
         <div className="flex items-center justify-end gap-2 pt-4 border-t border-border">
           <Link to={backTo as any} className="rounded-md border border-border bg-card px-4 py-2 text-[13px] hover:bg-muted">Cancelar</Link>
-          <button type="submit" className="rounded-md bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">Salvar</button>
+          <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />} {submitLabel}
+          </button>
         </div>
       </form>
     </div>
   );
 }
 
-function FieldControl({ field }: { field: FieldDef }) {
+function FieldControl({ field, value, onChange }: { field: FieldDef; value: string; onChange: (v: string) => void }) {
   const cls = `mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2.5 text-[13.5px] outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 ${field.mono ? "font-mono" : ""}`;
   return (
     <div className={field.full || field.type === "textarea" ? "md:col-span-2" : ""}>
@@ -127,10 +155,10 @@ function FieldControl({ field }: { field: FieldDef }) {
         {field.label}{field.required && <span className="text-destructive"> *</span>}
       </label>
       {field.type === "textarea" ? (
-        <textarea rows={3} placeholder={field.placeholder} required={field.required} className={cls} />
+        <textarea rows={3} placeholder={field.placeholder} required={field.required} value={value} onChange={(e) => onChange(e.target.value)} className={cls} />
       ) : field.type === "select" ? (
-        <select required={field.required} className={cls}>
-          {(field.options || []).map((o) => <option key={o}>{o}</option>)}
+        <select required={field.required} value={value} onChange={(e) => onChange(e.target.value)} className={cls}>
+          {(field.options || []).map((o) => <option key={optionValue(o)} value={optionValue(o)}>{optionLabel(o)}</option>)}
         </select>
       ) : (
         <input
@@ -138,6 +166,8 @@ function FieldControl({ field }: { field: FieldDef }) {
           step={field.type === "money" ? "0.01" : undefined}
           placeholder={field.placeholder}
           required={field.required}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           className={cls}
         />
       )}

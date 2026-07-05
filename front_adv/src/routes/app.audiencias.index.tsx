@@ -1,15 +1,32 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Plus, MapPin, Video, User } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { Plus, MapPin, Video, FolderOpen, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
-import { audiencias, fmtDate } from "@/lib/mock";
-import { FolderOpen } from "lucide-react";
+import { useList, fmtDateTime, daysUntil } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/audiencias/")({
   head: () => ({ meta: [{ title: "Audiências — JurisFlow" }] }),
   component: AudienciasPage,
 });
 
+function isVirtual(m?: string | null) {
+  return String(m || "").toLowerCase().includes("virtual");
+}
+
 function AudienciasPage() {
+  const hearings = useList<any>("hearings", { ordering: "hearing_date" });
+  const rows = hearings.data ?? [];
+
+  const stats = useMemo(() => {
+    const week = rows.filter((h) => {
+      const d = daysUntil(h.hearing_date);
+      return d !== null && d >= 0 && d <= 7;
+    }).length;
+    const presencial = rows.filter((h) => !isVirtual(h.modality)).length;
+    const virtual = rows.filter((h) => isVirtual(h.modality)).length;
+    return { week, presencial, virtual, total: rows.length };
+  }, [rows]);
+
   return (
     <div className="mx-auto max-w-[1400px] p-6 md:p-8 space-y-6">
       <PageHeader
@@ -17,45 +34,57 @@ function AudienciasPage() {
         title="Audiências"
         description="Todas as audiências agendadas, com modalidade e responsável."
         actions={
-          <button className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+          <Link to="/app/audiencias/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
             <Plus className="h-3.5 w-3.5" /> Nova audiência
-          </button>
+          </Link>
         }
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Nesta semana" value="4" icon={FolderOpen} />
-        <StatCard label="Presenciais" value="2" tone="warning" />
-        <StatCard label="Virtuais" value="2" tone="info" />
-        <StatCard label="Realizadas (mês)" value="18" tone="success" />
+        <StatCard label="Total" value={String(stats.total)} icon={FolderOpen} />
+        <StatCard label="Próximos 7 dias" value={String(stats.week)} tone="warning" />
+        <StatCard label="Presenciais" value={String(stats.presencial)} tone="info" />
+        <StatCard label="Virtuais" value={String(stats.virtual)} tone="success" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {audiencias.map((a) => (
-          <div key={a.id} className="surface-card p-5 hover:shadow-[var(--shadow-elevated)] transition">
-            <div className="flex items-start gap-4">
-              <div className="text-center rounded-md border border-border bg-muted/40 px-3 py-2.5 min-w-[64px]">
-                <p className="font-display text-2xl font-semibold leading-none">{a.data.split("-")[2]}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">Jul</p>
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <StatusPill tone={a.modalidade === "Virtual" ? "info" : "warning"}>
-                    {a.modalidade === "Virtual" ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
-                    {a.modalidade}
-                  </StatusPill>
-                  <span className="text-[12px] font-medium">{a.hora}</span>
-                </div>
-                <p className="font-display text-lg font-semibold">{a.tipo}</p>
-                <p className="text-[12.5px] font-mono text-muted-foreground mt-1">{a.processo}</p>
-                <p className="text-[13px] text-muted-foreground mt-1">{a.forum}</p>
-                <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 text-[12px] text-muted-foreground">
-                  <User className="h-3.5 w-3.5" /> {a.responsavel}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="surface-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px]">
+            <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+              <tr>
+                <th className="px-5 py-2.5 text-left font-medium">Data / Hora</th>
+                <th className="px-4 py-2.5 text-left font-medium">Tipo</th>
+                <th className="px-4 py-2.5 text-left font-medium">Local</th>
+                <th className="px-4 py-2.5 text-left font-medium">Modalidade</th>
+                <th className="px-4 py-2.5 text-left font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {hearings.isLoading && (
+                <tr><td colSpan={5} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
+              )}
+              {!hearings.isLoading && rows.length === 0 && (
+                <tr><td colSpan={5} className="px-5 py-10 text-center text-muted-foreground">Nenhuma audiência agendada.</td></tr>
+              )}
+              {rows.map((a) => (
+                <tr key={a.id} className="hover:bg-muted/30 transition">
+                  <td className="px-5 py-3 whitespace-nowrap font-medium">{fmtDateTime(a.hearing_date)}</td>
+                  <td className="px-4 py-3">{a.type || "Audiência"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{a.location || "—"}</td>
+                  <td className="px-4 py-3">
+                    <StatusPill tone={isVirtual(a.modality) ? "info" : "warning"}>
+                      {isVirtual(a.modality) ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                      {a.modality || "Presencial"}
+                    </StatusPill>
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusPill tone={String(a.status).toLowerCase() === "realizada" ? "success" : String(a.status).toLowerCase() === "cancelada" ? "muted" : "info"}>{a.status || "agendada"}</StatusPill>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
