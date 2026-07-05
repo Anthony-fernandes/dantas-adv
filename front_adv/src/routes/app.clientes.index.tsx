@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Users, Plus, Search, MoreHorizontal, Eye, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
+import { ClienteDialog } from "@/components/shell/ClienteDialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -28,6 +29,7 @@ function ClientesPage() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [open, setOpen] = useState(false);
 
   const procByClient = useMemo(() => {
     const m: Record<string, number> = {};
@@ -64,11 +66,13 @@ function ClientesPage() {
         title="Clientes"
         description="Pessoas físicas e jurídicas atendidas pelo escritório."
         actions={
-          <Link to="/app/clientes/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+          <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
             <Plus className="h-3.5 w-3.5" /> Novo cliente
-          </Link>
+          </button>
         }
       />
+
+      <ClienteDialog open={open} onOpenChange={setOpen} onCreated={(c) => navigate({ to: "/app/clientes/$id", params: { id: String(c.id) } })} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total" value={String(stats.total)} icon={Users} />

@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { FileStack, Upload, FileText, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { DocumentoDialog } from "@/components/shell/DocumentoDialog";
 import { useList, fmtDate } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/documentos/")({
@@ -19,6 +20,7 @@ function fmtSize(bytes?: number | null) {
 
 function DocumentosPage() {
   const documents = useList<any>("documents", { ordering: "-created_at" });
+  const [open, setOpen] = useState(false);
   const rows = documents.data ?? [];
 
   const stats = useMemo(() => ({
@@ -36,11 +38,12 @@ function DocumentosPage() {
         { label: "Restritos", value: String(stats.restritos), tone: "warning" },
       ]}
       actions={
-        <Link to="/app/documentos/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+        <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
           <Upload className="h-3.5 w-3.5" /> Novo documento
-        </Link>
+        </button>
       }
     >
+      <DocumentoDialog open={open} onOpenChange={setOpen} />
       <div className="surface-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">

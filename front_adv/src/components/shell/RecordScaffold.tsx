@@ -147,7 +147,7 @@ export function RecordForm({
   );
 }
 
-function FieldControl({ field, value, onChange }: { field: FieldDef; value: string; onChange: (v: string) => void }) {
+export function FieldControl({ field, value, onChange }: { field: FieldDef; value: string; onChange: (v: string) => void }) {
   const cls = `mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2.5 text-[13.5px] outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 ${field.mono ? "font-mono" : ""}`;
   return (
     <div className={field.full || field.type === "textarea" ? "md:col-span-2" : ""}>

@@ -1,8 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Plus, Loader2, CheckCircle2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
-import { useList, useUpdate, fmtDate, humanize } from "@/lib/resources";
+import { FormDialog } from "@/components/shell/FormDialog";
+import { useList, useUpdate, useCreate, fmtDate, humanize } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/tarefas/")({
   head: () => ({ meta: [{ title: "Tarefas — JurisFlow" }] }),
@@ -18,9 +20,17 @@ function prioTone(p?: string | null) {
 
 function TarefasPage() {
   const tasks = useList<any>("tasks");
+  const processes = useList<any>("processes");
   const update = useUpdate<any>("tasks");
+  const create = useCreate<any>("tasks");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [open, setOpen] = useState(false);
   const rows = tasks.data ?? [];
+
+  const processOptions = useMemo(
+    () => [{ value: "", label: "Selecione…" }, ...(processes.data ?? []).map((p) => ({ value: String(p.id), label: p.cnj || `Processo ${p.id}` }))],
+    [processes.data],
+  );
 
   const filtered = useMemo(
     () => rows.filter((t) => statusFilter === "all" || String(t.status).toLowerCase() === statusFilter),
@@ -41,10 +51,48 @@ function TarefasPage() {
         title="Tarefas"
         description="Tarefas do escritório, por processo e responsável."
         actions={
-          <Link to="/app/tarefas/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+          <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
             <Plus className="h-3.5 w-3.5" /> Nova tarefa
-          </Link>
+          </button>
         }
+      />
+
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Nova tarefa"
+        description="Crie uma tarefa e vincule opcionalmente a um processo."
+        submitLabel="Criar tarefa"
+        fields={[
+          { label: "Título", name: "title", type: "text", required: true, full: true },
+          { label: "Processo", name: "process", type: "select", options: processOptions },
+          { label: "Prioridade", name: "priority", type: "select", required: true, options: [
+            { value: "urgente", label: "Urgente" }, { value: "alta", label: "Alta" },
+            { value: "media", label: "Média" }, { value: "baixa", label: "Baixa" },
+          ] },
+          { label: "Vencimento", name: "due_date", type: "date" },
+          { label: "Descrição", name: "description", type: "textarea" },
+        ]}
+        onSubmit={async (v) => {
+          if (!v.title) {
+            toast.error("Informe o título da tarefa.");
+            return;
+          }
+          try {
+            await create.mutateAsync({
+              title: v.title,
+              process: v.process || null,
+              priority: v.priority || "media",
+              due_date: v.due_date || null,
+              description: v.description || null,
+              status: "pendente",
+            });
+            toast.success("Tarefa criada.");
+            setOpen(false);
+          } catch (err: any) {
+            toast.error(err?.detail || "Não foi possível criar a tarefa.");
+          }
+        }}
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

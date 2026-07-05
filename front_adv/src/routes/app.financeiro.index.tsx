@@ -1,8 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { DollarSign, TrendingUp, TrendingDown, Wallet, Plus, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
+import { FormDialog } from "@/components/shell/FormDialog";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
-import { useList, fmtBRL, fmtDate, clientName } from "@/lib/resources";
+import { useList, useCreate, fmtBRL, fmtDate, clientName } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/financeiro/")({
   head: () => ({ meta: [{ title: "Financeiro — JurisFlow" }] }),
@@ -26,10 +28,17 @@ function FinanceiroPage() {
   const receivables = useList<any>("accounts-receivable");
   const payables = useList<any>("accounts-payable");
   const clients = useList<any>("clients");
+  const createReceber = useCreate<any>("accounts-receivable", ["accounts-payable"]);
+  const createPagar = useCreate<any>("accounts-payable", ["accounts-receivable"]);
   const [filter, setFilter] = useState<"all" | "receber" | "pagar">("all");
+  const [open, setOpen] = useState(false);
 
   const clientMap = useMemo(
     () => Object.fromEntries((clients.data ?? []).map((c) => [String(c.id), clientName(c)])),
+    [clients.data],
+  );
+  const clientOptions = useMemo(
+    () => [{ value: "", label: "Selecione…" }, ...(clients.data ?? []).map((c) => ({ value: String(c.id), label: clientName(c) }))],
     [clients.data],
   );
 
@@ -60,10 +69,49 @@ function FinanceiroPage() {
         title="Fluxo financeiro"
         description="Contas a receber, contas a pagar e situação de caixa do escritório."
         actions={
-          <Link to="/app/financeiro/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+          <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
             <Plus className="h-3.5 w-3.5" /> Novo lançamento
-          </Link>
+          </button>
         }
+      />
+
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Novo lançamento"
+        description="Registre uma conta a receber ou a pagar."
+        submitLabel="Criar lançamento"
+        fields={[
+          { label: "Tipo", name: "kind", type: "select", required: true, options: [{ value: "receber", label: "A receber" }, { value: "pagar", label: "A pagar" }] },
+          { label: "Descrição", name: "description", type: "text", required: true, full: true },
+          { label: "Cliente", name: "client", type: "select", options: clientOptions },
+          { label: "Valor (R$)", name: "amount", type: "money", required: true },
+          { label: "Vencimento", name: "due_date", type: "date", required: true },
+          { label: "Status", name: "status", type: "select", options: [
+            { value: "aberto", label: "Em aberto" }, { value: "pago", label: "Pago" }, { value: "vencido", label: "Vencido" },
+          ] },
+        ]}
+        onSubmit={async (v) => {
+          if (!v.description || !v.amount || !v.due_date) {
+            toast.error("Informe descrição, valor e vencimento.");
+            return;
+          }
+          try {
+            const payload: Record<string, unknown> = {
+              description: v.description,
+              client: v.client || null,
+              amount: Number(v.amount),
+              due_date: v.due_date,
+              status: v.status || "aberto",
+            };
+            if (v.kind === "pagar") await createPagar.mutateAsync(payload);
+            else await createReceber.mutateAsync(payload);
+            toast.success("Lançamento criado.");
+            setOpen(false);
+          } catch (err: any) {
+            toast.error(err?.detail || "Não foi possível criar o lançamento.");
+          }
+        }}
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Gavel, Plus, Search, MoreHorizontal, Eye, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
+import { ProcessoDialog } from "@/components/shell/ProcessoDialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -31,6 +32,7 @@ function ProcessosPage() {
   const clients = useList<any>("clients");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [open, setOpen] = useState(false);
 
   const clientMap = useMemo(
     () => Object.fromEntries((clients.data ?? []).map((c) => [String(c.id), clientName(c)])),
@@ -65,11 +67,13 @@ function ProcessosPage() {
         title="Processos"
         description="Gestão completa do contencioso: andamentos, prazos, valor da causa e responsáveis."
         actions={
-          <Link to="/app/processos/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+          <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
             <Plus className="h-3.5 w-3.5" /> Novo processo
-          </Link>
+          </button>
         }
       />
+
+      <ProcessoDialog open={open} onOpenChange={setOpen} onCreated={(p) => navigate({ to: "/app/processos/$id", params: { id: String(p.id) } })} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total" value={String(stats.total)} icon={Gavel} />

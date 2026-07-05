@@ -1,9 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Clock, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { FormDialog } from "@/components/shell/FormDialog";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { useList, fmtBRL, fmtDate } from "@/lib/resources";
+import { useList, useCreate, fmtBRL, fmtDate } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/horas/")({
   head: () => ({ meta: [{ title: "Horas — JurisFlow" }] }),
@@ -20,7 +22,15 @@ function fmtHours(v: any) {
 
 function HorasPage() {
   const entries = useList<any>("time-entries", { ordering: "-date" });
+  const processes = useList<any>("processes");
+  const create = useCreate<any>("time-entries");
+  const [open, setOpen] = useState(false);
   const rows = entries.data ?? [];
+
+  const processOptions = useMemo(
+    () => [{ value: "", label: "Selecione…" }, ...(processes.data ?? []).map((p) => ({ value: String(p.id), label: p.cnj || `Processo ${p.id}` }))],
+    [processes.data],
+  );
 
   const stats = useMemo(() => {
     const totalH = rows.reduce((s, e) => s + Number(e.hours || e.duration_hours || 0), 0);
@@ -40,11 +50,46 @@ function HorasPage() {
         { label: "Valor apurado", value: fmtBRL(stats.valor), tone: "warning" },
       ]}
       actions={
-        <Link to="/app/horas/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+        <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
           <Plus className="h-3.5 w-3.5" /> Lançar horas
-        </Link>
+        </button>
       }
     >
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Novo apontamento"
+        description="Lance horas trabalhadas, opcionalmente vinculadas a um processo."
+        submitLabel="Lançar horas"
+        fields={[
+          { label: "Data", name: "date", type: "date", required: true },
+          { label: "Processo", name: "process", type: "select", options: processOptions },
+          { label: "Descrição", name: "description", type: "text", required: true, full: true },
+          { label: "Horas", name: "hours", type: "number", required: true },
+          { label: "Faturável", name: "billable", type: "select", options: [{ value: "true", label: "Sim" }, { value: "false", label: "Não" }] },
+          { label: "Valor (R$)", name: "amount", type: "money" },
+        ]}
+        onSubmit={async (v) => {
+          if (!v.date || !v.description || !v.hours) {
+            toast.error("Informe data, descrição e horas.");
+            return;
+          }
+          try {
+            await create.mutateAsync({
+              date: v.date,
+              process: v.process || null,
+              description: v.description,
+              hours: Number(v.hours),
+              billable: v.billable !== "false",
+              amount: v.amount ? Number(v.amount) : null,
+            });
+            toast.success("Horas lançadas.");
+            setOpen(false);
+          } catch (err: any) {
+            toast.error(err?.detail || "Não foi possível lançar as horas.");
+          }
+        }}
+      />
       <div className="surface-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">

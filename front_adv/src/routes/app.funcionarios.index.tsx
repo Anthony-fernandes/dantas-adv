@@ -1,8 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
 import { UserSquare2, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { FormDialog } from "@/components/shell/FormDialog";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { useList, fmtDate } from "@/lib/resources";
+import { useList, useCreate, fmtDate } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/funcionarios/")({
   head: () => ({ meta: [{ title: "Funcionários — JurisFlow" }] }),
@@ -11,6 +14,8 @@ export const Route = createFileRoute("/app/funcionarios/")({
 
 function FuncionariosPage() {
   const employees = useList<any>("employees");
+  const create = useCreate<any>("employees");
+  const [open, setOpen] = useState(false);
   const rows = employees.data ?? [];
 
   return (
@@ -23,11 +28,37 @@ function FuncionariosPage() {
         { label: "Ativos", value: String(rows.filter((e) => e.is_active !== false).length), tone: "success" },
       ]}
       actions={
-        <Link to="/app/funcionarios/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+        <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
           <Plus className="h-3.5 w-3.5" /> Novo funcionário
-        </Link>
+        </button>
       }
     >
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Novo funcionário"
+        description="Cadastre um integrante da equipe do escritório."
+        submitLabel="Criar funcionário"
+        fields={[
+          { label: "Nome completo", name: "full_name", type: "text", required: true, full: true },
+          { label: "E-mail", name: "email", type: "email" },
+          { label: "Telefone", name: "phone", type: "tel" },
+          { label: "Data de admissão", name: "hire_date", type: "date" },
+        ]}
+        onSubmit={async (v) => {
+          if (!v.full_name) {
+            toast.error("Informe o nome completo.");
+            return;
+          }
+          try {
+            await create.mutateAsync({ full_name: v.full_name, email: v.email || null, phone: v.phone || null, hire_date: v.hire_date || null, is_active: true });
+            toast.success("Funcionário cadastrado.");
+            setOpen(false);
+          } catch (err: any) {
+            toast.error(err?.detail || "Não foi possível cadastrar o funcionário.");
+          }
+        }}
+      />
       <div className="surface-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">

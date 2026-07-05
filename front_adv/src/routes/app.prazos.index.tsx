@@ -1,8 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Timer, AlertTriangle, Clock, CheckCircle2, Plus, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
-import { useList, fmtDate, daysUntil, humanize } from "@/lib/resources";
+import { FormDialog } from "@/components/shell/FormDialog";
+import { useList, useCreate, fmtDate, daysUntil, humanize } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/prazos/")({
   head: () => ({ meta: [{ title: "Prazos — JurisFlow" }] }),
@@ -15,7 +17,15 @@ function isDone(status?: string | null) {
 
 function PrazosPage() {
   const deadlines = useList<any>("deadlines", { ordering: "due_date" });
+  const processes = useList<any>("processes");
+  const create = useCreate<any>("deadlines");
+  const [open, setOpen] = useState(false);
   const rows = deadlines.data ?? [];
+
+  const processOptions = useMemo(
+    () => [{ value: "", label: "Selecione…" }, ...(processes.data ?? []).map((p) => ({ value: String(p.id), label: p.cnj || `Processo ${p.id}` }))],
+    [processes.data],
+  );
 
   const sorted = useMemo(
     () =>
@@ -44,10 +54,48 @@ function PrazosPage() {
         title="Prazos"
         description="Todos os prazos processuais monitorados, com destaque para os fatais."
         actions={
-          <Link to="/app/prazos/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+          <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
             <Plus className="h-3.5 w-3.5" /> Novo prazo
-          </Link>
+          </button>
         }
+      />
+
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Novo prazo"
+        description="Cadastre um prazo processual vinculado a um processo."
+        submitLabel="Criar prazo"
+        fields={[
+          { label: "Descrição", name: "description", type: "text", required: true, full: true },
+          { label: "Processo", name: "process", type: "select", options: processOptions },
+          { label: "Vencimento", name: "due_date", type: "date", required: true },
+          { label: "Prioridade", name: "priority", type: "select", options: [
+            { value: "urgente", label: "Urgente" }, { value: "alta", label: "Alta" },
+            { value: "media", label: "Média" }, { value: "baixa", label: "Baixa" },
+          ] },
+          { label: "Observações", name: "notes", type: "textarea" },
+        ]}
+        onSubmit={async (v) => {
+          if (!v.description || !v.due_date) {
+            toast.error("Informe descrição e vencimento.");
+            return;
+          }
+          try {
+            await create.mutateAsync({
+              description: v.description,
+              process: v.process || null,
+              due_date: v.due_date,
+              priority: v.priority || "media",
+              notes: v.notes || null,
+              status: "aberto",
+            });
+            toast.success("Prazo criado.");
+            setOpen(false);
+          } catch (err: any) {
+            toast.error(err?.detail || "Não foi possível criar o prazo.");
+          }
+        }}
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

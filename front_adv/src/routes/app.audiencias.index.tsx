@@ -1,8 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Plus, MapPin, Video, FolderOpen, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
-import { useList, fmtDateTime, daysUntil } from "@/lib/resources";
+import { FormDialog } from "@/components/shell/FormDialog";
+import { useList, useCreate, fmtDateTime, daysUntil } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/audiencias/")({
   head: () => ({ meta: [{ title: "Audiências — JurisFlow" }] }),
@@ -15,7 +17,15 @@ function isVirtual(m?: string | null) {
 
 function AudienciasPage() {
   const hearings = useList<any>("hearings", { ordering: "hearing_date" });
+  const processes = useList<any>("processes");
+  const create = useCreate<any>("hearings");
+  const [open, setOpen] = useState(false);
   const rows = hearings.data ?? [];
+
+  const processOptions = useMemo(
+    () => [{ value: "", label: "Selecione…" }, ...(processes.data ?? []).map((p) => ({ value: String(p.id), label: p.cnj || `Processo ${p.id}` }))],
+    [processes.data],
+  );
 
   const stats = useMemo(() => {
     const week = rows.filter((h) => {
@@ -34,10 +44,49 @@ function AudienciasPage() {
         title="Audiências"
         description="Todas as audiências agendadas, com modalidade e responsável."
         actions={
-          <Link to="/app/audiencias/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+          <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
             <Plus className="h-3.5 w-3.5" /> Nova audiência
-          </Link>
+          </button>
         }
+      />
+
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Nova audiência"
+        description="Agende uma audiência vinculada a um processo."
+        submitLabel="Agendar audiência"
+        fields={[
+          { label: "Tipo", name: "type", type: "select", required: true, options: ["Instrução", "Conciliação", "Una", "Julgamento"] },
+          { label: "Processo", name: "process", type: "select", options: processOptions },
+          { label: "Data e hora", name: "hearing_date", type: "text", required: true, placeholder: "AAAA-MM-DD HH:MM" },
+          { label: "Local / Fórum", name: "location", type: "text" },
+          { label: "Modalidade", name: "modality", type: "select", required: true, options: ["Presencial", "Virtual", "Híbrida"] },
+          { label: "Link online", name: "online_link", type: "text" },
+          { label: "Observações", name: "notes", type: "textarea" },
+        ]}
+        onSubmit={async (v) => {
+          if (!v.type || !v.hearing_date) {
+            toast.error("Informe tipo e data/hora.");
+            return;
+          }
+          try {
+            await create.mutateAsync({
+              type: v.type,
+              process: v.process || null,
+              hearing_date: v.hearing_date.replace(" ", "T"),
+              location: v.location || null,
+              modality: v.modality,
+              online_link: v.online_link || null,
+              notes: v.notes || null,
+              status: "agendada",
+            });
+            toast.success("Audiência agendada.");
+            setOpen(false);
+          } catch (err: any) {
+            toast.error(err?.detail || "Não foi possível agendar a audiência.");
+          }
+        }}
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

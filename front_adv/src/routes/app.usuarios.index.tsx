@@ -1,7 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
 import { UserCog, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { FormDialog } from "@/components/shell/FormDialog";
 import { StatusPill } from "@/components/shell/PageHeader";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/usuarios/")({
@@ -16,6 +21,8 @@ function roleLabel(u: any): string {
 
 function UsuariosPage() {
   const users = useList<any>("users");
+  const { activeTenantId } = useAuth();
+  const [open, setOpen] = useState(false);
   const rows = users.data ?? [];
 
   return (
@@ -28,11 +35,48 @@ function UsuariosPage() {
         { label: "Ativos", value: String(rows.filter((u) => u.is_active !== false).length), tone: "success" },
       ]}
       actions={
-        <Link to="/app/usuarios/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+        <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
           <Plus className="h-3.5 w-3.5" /> Novo usuário
-        </Link>
+        </button>
       }
     >
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Convidar usuário"
+        description="Envie um convite de acesso ao escritório."
+        submitLabel="Enviar convite"
+        fields={[
+          { label: "Nome", name: "full_name", type: "text", required: true },
+          { label: "E-mail", name: "email", type: "email", required: true },
+          { label: "Perfil", name: "role", type: "select", required: true, options: [
+            { value: "ADMIN", label: "Administrador" }, { value: "LAWYER", label: "Advogado(a)" },
+            { value: "ASSISTANT", label: "Assistente" }, { value: "FINANCE", label: "Financeiro" },
+          ] },
+        ]}
+        onSubmit={async (v) => {
+          if (!v.email) {
+            toast.error("Informe o e-mail do convidado.");
+            return;
+          }
+          if (!activeTenantId) {
+            toast.error("Selecione um escritório antes de convidar.");
+            return;
+          }
+          try {
+            await api.post(`/tenants/${activeTenantId}/invite/`, {
+              email: v.email,
+              full_name: v.full_name || "",
+              role: v.role,
+              roles: [v.role],
+            });
+            toast.success("Convite enviado.");
+            setOpen(false);
+          } catch (err: any) {
+            toast.error(err?.detail || "Não foi possível enviar o convite.");
+          }
+        }}
+      />
       <div className="surface-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">

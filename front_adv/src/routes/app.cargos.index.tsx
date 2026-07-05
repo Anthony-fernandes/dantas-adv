@@ -1,8 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
 import { BriefcaseBusiness, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { FormDialog } from "@/components/shell/FormDialog";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { useList } from "@/lib/resources";
+import { useList, useCreate } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/cargos/")({
   head: () => ({ meta: [{ title: "Cargos — JurisFlow" }] }),
@@ -11,6 +14,8 @@ export const Route = createFileRoute("/app/cargos/")({
 
 function CargosPage() {
   const positions = useList<any>("job-positions");
+  const create = useCreate<any>("job-positions");
+  const [open, setOpen] = useState(false);
   const rows = positions.data ?? [];
 
   return (
@@ -23,11 +28,35 @@ function CargosPage() {
         { label: "Ativos", value: String(rows.filter((p) => p.is_active !== false).length), tone: "success" },
       ]}
       actions={
-        <Link to="/app/cargos/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+        <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
           <Plus className="h-3.5 w-3.5" /> Novo cargo
-        </Link>
+        </button>
       }
     >
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Novo cargo"
+        description="Cadastre um cargo do escritório."
+        submitLabel="Criar cargo"
+        fields={[
+          { label: "Nome do cargo", name: "name", type: "text", required: true, full: true },
+          { label: "Descrição", name: "description", type: "textarea" },
+        ]}
+        onSubmit={async (v) => {
+          if (!v.name) {
+            toast.error("Informe o nome do cargo.");
+            return;
+          }
+          try {
+            await create.mutateAsync({ name: v.name, description: v.description || null, is_active: true });
+            toast.success("Cargo criado.");
+            setOpen(false);
+          } catch (err: any) {
+            toast.error(err?.detail || "Não foi possível criar o cargo.");
+          }
+        }}
+      />
       <div className="surface-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">

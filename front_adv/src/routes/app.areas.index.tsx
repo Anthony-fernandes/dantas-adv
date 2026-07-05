@@ -1,9 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { FolderKanban, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { FormDialog } from "@/components/shell/FormDialog";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { useList } from "@/lib/resources";
+import { useList, useCreate } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/areas/")({
   head: () => ({ meta: [{ title: "Áreas de atuação — JurisFlow" }] }),
@@ -13,6 +15,8 @@ export const Route = createFileRoute("/app/areas/")({
 function AreasPage() {
   const areas = useList<any>("causes");
   const processes = useList<any>("processes");
+  const create = useCreate<any>("causes");
+  const [open, setOpen] = useState(false);
   const rows = areas.data ?? [];
 
   const procByArea = useMemo(() => {
@@ -34,11 +38,35 @@ function AreasPage() {
         { label: "Ativas", value: String(rows.filter((a) => a.is_active !== false).length), tone: "success" },
       ]}
       actions={
-        <Link to="/app/areas/novo" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+        <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
           <Plus className="h-3.5 w-3.5" /> Nova área
-        </Link>
+        </button>
       }
     >
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Nova área"
+        description="Cadastre uma área do direito atendida pelo escritório."
+        submitLabel="Criar área"
+        fields={[
+          { label: "Nome da área", name: "name", type: "text", required: true, full: true },
+          { label: "Código", name: "area", type: "text", placeholder: "ex.: civel" },
+        ]}
+        onSubmit={async (v) => {
+          if (!v.name) {
+            toast.error("Informe o nome da área.");
+            return;
+          }
+          try {
+            await create.mutateAsync({ name: v.name, area: v.area || v.name.toLowerCase(), is_active: true });
+            toast.success("Área criada.");
+            setOpen(false);
+          } catch (err: any) {
+            toast.error(err?.detail || "Não foi possível criar a área.");
+          }
+        }}
+      />
       <div className="surface-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
