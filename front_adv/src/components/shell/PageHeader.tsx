@@ -36,7 +36,7 @@ export function StatCard({
   hint?: string;
   trend?: string;
   icon?: React.ComponentType<{ className?: string }>;
-  tone?: "default" | "success" | "warning" | "info" | "destructive";
+  tone?: "default" | "success" | "warning" | "info" | "destructive" | "muted";
 }) {
   const tones: Record<string, string> = {
     default: "bg-primary/8 text-primary",
@@ -44,6 +44,7 @@ export function StatCard({
     warning: "bg-warning/15 text-warning",
     info: "bg-info/12 text-info",
     destructive: "bg-destructive/12 text-destructive",
+    muted: "bg-muted text-muted-foreground",
   };
   return (
     <div className="surface-card p-5">
