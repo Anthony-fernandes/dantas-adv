@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { RecordForm } from "@/components/shell/RecordScaffold";
+import { useCreate } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/cargos/novo")({
   head: () => ({ meta: [{ title: "Novo cargo — JurisFlow" }] }),
@@ -8,20 +10,32 @@ export const Route = createFileRoute("/app/cargos/novo")({
 
 function Novo() {
   const nav = useNavigate();
+  const create = useCreate<any>("job-positions");
   return (
     <RecordForm
       backTo="/app/cargos"
       backLabel="Voltar para cargos"
       eyebrow="Cargos"
       title="Novo cargo"
-      description="Preencha os campos para criar um novo registro."
-      onSubmit={() => nav({ to: "/app/cargos" })}
+      description="Cadastre um cargo do escritório."
+      submitLabel="Criar cargo"
       fields={[
-          { label: "Nome do cargo", name: "nome", type: "text", required: true },
-          { label: "Nível", name: "nivel", type: "select", required: true, options: ["Diretoria","Sênior","Pleno","Júnior","Estágio","Administrativo"] },
-          { label: "Salário-base (R$)", name: "salarioBase", type: "money", required: true },
-          { label: "Descrição", name: "descricao", type: "textarea" }
+        { label: "Nome do cargo", name: "name", type: "text", required: true, full: true },
+        { label: "Descrição", name: "description", type: "textarea" },
       ]}
+      onSubmit={async (v) => {
+        if (!v.name) {
+          toast.error("Informe o nome do cargo.");
+          return;
+        }
+        try {
+          await create.mutateAsync({ name: v.name, description: v.description || null, is_active: true });
+          toast.success("Cargo criado.");
+          nav({ to: "/app/cargos" });
+        } catch (err: any) {
+          toast.error(err?.detail || "Não foi possível criar o cargo.");
+        }
+      }}
     />
   );
 }
