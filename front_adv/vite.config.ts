@@ -4,6 +4,10 @@ import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 
+// Backend Django (DRF). Use 127.0.0.1 (IPv4) para evitar o problema de
+// resolução de "localhost" -> ::1 no Windows, já que o runserver escuta em 127.0.0.1.
+const API_TARGET = process.env.VITE_API_PROXY || "http://127.0.0.1:8000";
+
 export default defineConfig({
   plugins: [
     TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
@@ -11,5 +15,11 @@ export default defineConfig({
     tailwindcss(),
     tsconfigPaths(),
   ],
-  server: { host: true, port: 5173 },
+  server: {
+    host: true,
+    port: 5173,
+    proxy: {
+      "/api": { target: API_TARGET, changeOrigin: true },
+    },
+  },
 });
