@@ -174,11 +174,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let resp: any;
       try {
         resp = await api.post<any>(endpoint, { email, password });
-      } catch {
-        resp = await api.post<any>(endpoint, { username: email, password });
+      } catch (err: any) {
+        // Só tenta com "username" se foi rejeição de credenciais/validação (não erro de rede/servidor).
+        if (err?.status === 400 || err?.status === 401) {
+          resp = await api.post<any>(endpoint, { username: email, password });
+        } else {
+          throw err;
+        }
+      }
+      if (!resp?.access || !resp?.refresh) {
+        throw { status: 0, detail: "Resposta de login inválida do servidor." };
       }
       setTokens({ access: resp.access, refresh: resp.refresh });
-      await refreshMe();
+      try {
+        await refreshMe();
+      } catch (err) {
+        // Tokens obtidos, mas não foi possível carregar o perfil — limpa para manter consistência.
+        clearTokens();
+        setIsAuthenticated(false);
+        throw err;
+      }
     },
     [refreshMe],
   );

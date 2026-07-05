@@ -78,7 +78,6 @@ const PUBLIC_PATHS = new Set([
   "/public/tenants/",
   "/public/site/",
   "/auth/accept-invite/",
-  "/tenants/my/",
 ]);
 
 const GLOBAL_ADMIN_PREFIXES = ["/admin/companies/", "/admin/users/"];
@@ -177,7 +176,7 @@ export async function apiRequest<T>(
   try {
     resp = await doFetch(access);
   } catch {
-    throw { status: 0, detail: "Falha de conexão com o servidor." } as ApiError;
+    throw { status: 0, detail: "Não foi possível contatar o servidor. Verifique se o backend está no ar." } as ApiError;
   }
 
   if (resp.status === 401 && getRefreshToken() && !PUBLIC_PATHS.has(normalizedPath)) {
