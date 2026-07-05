@@ -117,21 +117,51 @@ async function readErrorPayload(resp: Response) {
 }
 
 function toApiError(status: number, payload: unknown): ApiError {
-  let detail = "Ocorreu um erro inesperado.";
+  let detail = "";
   let code: string | undefined;
-  if (typeof payload === "string" && payload) detail = payload;
-  else if (payload && typeof payload === "object") {
+
+  if (typeof payload === "string" && payload) {
+    // Respostas HTML (ex.: proxy/404) — não jogar o HTML inteiro na tela.
+    detail = /<!doctype|<html/i.test(payload) ? "" : payload;
+  } else if (payload && typeof payload === "object") {
     const p = payload as Record<string, any>;
     code = p.code || p.error_code;
+    const fromField = (v: unknown): string =>
+      Array.isArray(v) ? v.map(String).join(" ") : typeof v === "string" ? v : "";
     detail =
       p.detail ||
       p.message ||
       p.error ||
-      (Array.isArray(p.non_field_errors) ? p.non_field_errors.join(" ") : "") ||
-      detail;
+      fromField(p.non_field_errors) ||
+      // Erros DRF por campo: {"email": ["..."], "password": ["..."]}
+      Object.entries(p)
+        .filter(([k]) => !["code", "error_code"].includes(k))
+        .map(([k, v]) => {
+          const msg = fromField(v);
+          return msg ? `${k}: ${msg}` : "";
+        })
+        .filter(Boolean)
+        .join(" · ");
   }
-  if (status === 401) detail = detail || "Sessão expirada.";
-  return { status, detail, code, payload };
+
+  if (!detail) {
+    if (status === 0) detail = "Não foi possível contatar o servidor.";
+    else if (status === 401) detail = "Credenciais inválidas ou sessão expirada.";
+    else if (status === 403) detail = "Acesso negado.";
+    else if (status === 404) detail = "Recurso não encontrado (verifique se o backend está no ar).";
+    else if (status >= 500) detail = "Erro interno do servidor.";
+    else detail = `Erro na requisição (HTTP ${status}).`;
+  }
+
+  const err: ApiError = { status, detail: `${detail} (HTTP ${status})`, code, payload };
+  // Ajuda de diagnóstico no console do navegador (F12).
+  try {
+    // eslint-disable-next-line no-console
+    console.error("[API]", status, payload);
+  } catch {
+    /* noop */
+  }
+  return err;
 }
 
 export async function apiRequest<T>(
