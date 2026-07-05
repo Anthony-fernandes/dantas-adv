@@ -1,5 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { UserCircle2, ArrowRight, Scale } from "lucide-react";
+import { useState } from "react";
+import { UserCircle2, ArrowRight, Scale, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/portal/login")({
   head: () => ({ meta: [{ title: "Portal do Cliente — JurisFlow" }] }),
@@ -8,6 +11,28 @@ export const Route = createFileRoute("/portal/login")({
 
 function PortalLoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [user, setUser] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user || !pwd) {
+      toast.error("Informe usuário e senha.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await login(user, pwd, true);
+      navigate({ to: "/portal" });
+    } catch (err: any) {
+      toast.error(err?.detail || "Não foi possível acessar o portal.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-6">
       <div className="w-full max-w-md surface-card p-8">
@@ -25,11 +50,11 @@ function PortalLoginPage() {
         <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">Acompanhe seus processos</h1>
         <p className="mt-1.5 text-[13.5px] text-muted-foreground">Documentos, andamentos, financeiro e contratos, em um só lugar.</p>
 
-        <form onSubmit={(e) => { e.preventDefault(); navigate({ to: "/portal" }); }} className="mt-6 space-y-3">
-          <input placeholder="CPF ou CNPJ" className="w-full h-11 rounded-md border border-input bg-background px-3.5 text-[14px] outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition" />
-          <input type="password" placeholder="Senha" className="w-full h-11 rounded-md border border-input bg-background px-3.5 text-[14px] outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition" />
-          <button className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-[14px] font-medium text-primary-foreground hover:bg-primary/90 transition">
-            Acessar portal <ArrowRight className="h-4 w-4" />
+        <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+          <input value={user} onChange={(e) => setUser(e.target.value)} placeholder="E-mail, CPF ou CNPJ" className="w-full h-11 rounded-md border border-input bg-background px-3.5 text-[14px] outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition" />
+          <input value={pwd} onChange={(e) => setPwd(e.target.value)} type="password" placeholder="Senha" className="w-full h-11 rounded-md border border-input bg-background px-3.5 text-[14px] outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition" />
+          <button type="submit" disabled={submitting} className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-[14px] font-medium text-primary-foreground hover:bg-primary/90 transition disabled:opacity-60">
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Acessar portal <ArrowRight className="h-4 w-4" /></>}
           </button>
         </form>
 
