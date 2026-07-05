@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, Scale, Users, Wallet, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowLeft, Scale, Users, Wallet, FileText, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { useList, useCreate, clientName } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/processos/novo")({
   head: () => ({ meta: [{ title: "Novo processo — JurisFlow" }] }),
@@ -15,19 +17,92 @@ const STEPS = [
   { id: "revisao", label: "Revisão", icon: FileText },
 ] as const;
 
-// Basic CNJ mask check
 function validateCNJ(v: string) {
   const digits = v.replace(/\D/g, "");
   if (digits.length !== 20) return { ok: false, msg: "O número CNJ deve ter 20 dígitos." };
   return { ok: true, msg: "Formato CNJ válido." };
 }
 
+type Form = {
+  cnj: string;
+  area: string;
+  phase: string;
+  status: string;
+  court: string;
+  court_division: string;
+  client: string;
+  plaintiff: string;
+  defendant: string;
+  subject: string;
+  cause_value: string;
+  probability: string;
+};
+
+const EMPTY: Form = {
+  cnj: "", area: "civel", phase: "conhecimento", status: "em_andamento",
+  court: "", court_division: "", client: "", plaintiff: "", defendant: "",
+  subject: "", cause_value: "", probability: "media",
+};
+
 function NovoProcesso() {
   const nav = useNavigate();
+  const clients = useList<any>("clients");
+  const areas = useList<any>("causes");
+  const createProcess = useCreate<any>("processes");
+
   const [step, setStep] = useState<(typeof STEPS)[number]["id"]>("dados");
-  const [cnj, setCnj] = useState("");
-  const cnjCheck = cnj ? validateCNJ(cnj) : null;
+  const [form, setForm] = useState<Form>(EMPTY);
   const idx = STEPS.findIndex((s) => s.id === step);
+  const cnjCheck = form.cnj ? validateCNJ(form.cnj) : null;
+
+  const clientOptions = useMemo(
+    () => (clients.data ?? []).map((c) => ({ value: String(c.id), label: clientName(c) })),
+    [clients.data],
+  );
+  const areaOptions = useMemo(() => {
+    const list = (areas.data ?? []).filter((a) => a.is_active !== false);
+    if (list.length === 0) {
+      return [
+        { value: "civel", label: "Cível" }, { value: "trabalhista", label: "Trabalhista" },
+        { value: "tributario", label: "Tributário" }, { value: "familia", label: "Família" },
+        { value: "empresarial", label: "Empresarial" }, { value: "criminal", label: "Criminal" },
+      ];
+    }
+    return list.map((a) => ({ value: String(a.area || a.id), label: a.name || a.area || "Área" }));
+  }, [areas.data]);
+
+  function set<K extends keyof Form>(k: K, v: Form[K]) {
+    setForm((f) => ({ ...f, [k]: v }));
+  }
+
+  async function submit() {
+    if (!form.cnj || !validateCNJ(form.cnj).ok) {
+      toast.error("Informe um número CNJ válido (20 dígitos).");
+      setStep("dados");
+      return;
+    }
+    try {
+      const payload: Record<string, unknown> = {
+        cnj: form.cnj,
+        area: form.area,
+        phase: form.phase,
+        status: form.status,
+        court: form.court || null,
+        court_division: form.court_division || null,
+        client: form.client || null,
+        plaintiff: form.plaintiff || null,
+        defendant: form.defendant || null,
+        subject: form.subject || null,
+        cause_value: form.cause_value ? Number(form.cause_value.replace(/\./g, "").replace(",", ".")) : null,
+        probability: form.probability,
+      };
+      const saved = await createProcess.mutateAsync(payload);
+      toast.success("Processo criado com sucesso.");
+      nav({ to: "/app/processos/$id", params: { id: String(saved.id) } });
+    } catch (err: any) {
+      toast.error(err?.detail || "Não foi possível criar o processo.");
+    }
+  }
 
   return (
     <div className="mx-auto max-w-[1100px] p-6 md:p-8 space-y-6">
@@ -36,7 +111,6 @@ function NovoProcesso() {
       </Link>
       <PageHeader eyebrow="Cadastros" title="Novo processo" description="Cadastre um novo processo judicial ou administrativo." />
 
-      {/* Stepper */}
       <div className="surface-card p-5">
         <div className="flex items-center">
           {STEPS.map((s, i) => {
@@ -62,7 +136,7 @@ function NovoProcesso() {
           <div className="space-y-5">
             <div>
               <label className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Número CNJ *</label>
-              <input value={cnj} onChange={(e) => setCnj(e.target.value)} placeholder="0000000-00.0000.0.00.0000"
+              <input value={form.cnj} onChange={(e) => set("cnj", e.target.value)} placeholder="0000000-00.0000.0.00.0000"
                 className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2.5 text-[13.5px] font-mono outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
               {cnjCheck && (
                 <div className={`mt-2 flex items-center gap-2 text-[12.5px] ${cnjCheck.ok ? "text-success" : "text-warning"}`}>
@@ -72,49 +146,41 @@ function NovoProcesso() {
               )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select label="Área do direito" options={["Cível", "Trabalhista", "Tributário", "Família", "Empresarial", "Ambiental", "Criminal", "Consumidor"]} />
-              <Select label="Fase atual" options={["Petição inicial", "Contestação", "Instrução", "Sentença", "Recurso"]} />
-              <Input label="Vara / Foro" placeholder="Ex.: 3ª Vara Cível — SP" />
-              <Input label="Comarca" placeholder="Ex.: São Paulo/SP" />
-              <Select label="Cliente" options={["Construtora Aurora S.A.", "Instituto Meridiano", "Petro Sul Refinaria", "Ana Beatriz Oliveira", "Grupo Vértice", "Marcelo Freitas"]} />
-              <Select label="Responsável" options={["Dra. Marina Souza", "Dr. Ricardo Lima", "Dr. André Palma", "Dra. Luísa Prado"]} />
+              <Select label="Área do direito" value={form.area} onChange={(v) => set("area", v)} options={areaOptions} />
+              <Select label="Fase atual" value={form.phase} onChange={(v) => set("phase", v)}
+                options={[
+                  { value: "conhecimento", label: "Conhecimento" }, { value: "recursal", label: "Recursal" },
+                  { value: "execucao", label: "Execução" }, { value: "cumprimento", label: "Cumprimento" },
+                ]} />
+              <Input label="Tribunal" value={form.court} onChange={(v) => set("court", v)} placeholder="Ex.: TJSP" />
+              <Input label="Vara / Foro" value={form.court_division} onChange={(v) => set("court_division", v)} placeholder="Ex.: 3ª Vara Cível" />
+              <Select label="Cliente" value={form.client} onChange={(v) => set("client", v)}
+                options={[{ value: "", label: "Selecione…" }, ...clientOptions]} />
+              <Select label="Status" value={form.status} onChange={(v) => set("status", v)}
+                options={[
+                  { value: "em_andamento", label: "Em andamento" }, { value: "pre_processual", label: "Pré-processual" },
+                  { value: "suspenso", label: "Suspenso" }, { value: "finalizado", label: "Finalizado" },
+                ]} />
               <div className="md:col-span-2">
                 <label className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Objeto / assunto</label>
-                <textarea rows={3} className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2.5 text-[13.5px]" placeholder="Descreva brevemente o objeto do processo..." />
+                <textarea value={form.subject} onChange={(e) => set("subject", e.target.value)} rows={3} className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2.5 text-[13.5px]" placeholder="Descreva brevemente o objeto do processo..." />
               </div>
             </div>
           </div>
         )}
 
         {step === "partes" && (
-          <div className="space-y-4">
-            <p className="text-[13px] text-muted-foreground">Adicione as partes envolvidas — autor, ré, terceiros, MP, perito.</p>
-            {[
-              { papel: "Autor", nome: "Construtora Aurora S.A.", doc: "12.345.678/0001-90" },
-              { papel: "Ré", nome: "Contraparte Empresarial Ltda.", doc: "88.777.666/0001-55" },
-            ].map((p) => (
-              <div key={p.papel} className="rounded-lg border border-border bg-card p-4 flex items-center justify-between">
-                <div>
-                  <span className={`inline-block rounded-full px-2 py-0.5 text-[10.5px] font-medium ${p.papel === "Autor" ? "bg-success/12 text-success" : "bg-destructive/12 text-destructive"}`}>{p.papel}</span>
-                  <p className="mt-1 font-medium">{p.nome}</p>
-                  <p className="text-[12px] text-muted-foreground font-mono">{p.doc}</p>
-                </div>
-                <button className="text-[12.5px] text-muted-foreground hover:text-foreground">Remover</button>
-              </div>
-            ))}
-            <button className="w-full rounded-md border-2 border-dashed border-border py-3 text-[13px] text-muted-foreground hover:border-primary hover:text-primary transition">+ Adicionar parte</button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Polo ativo (autor)" value={form.plaintiff} onChange={(v) => set("plaintiff", v)} placeholder="Nome do autor" />
+            <Input label="Parte contrária (ré)" value={form.defendant} onChange={(v) => set("defendant", v)} placeholder="Nome da parte contrária" />
           </div>
         )}
 
         {step === "financeiro" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Valor da causa (R$)" placeholder="0,00" />
-            <Select label="Tipo de honorário" options={["Contratual fixo", "Êxito", "Hora técnica", "Consultivo"]} />
-            <Input label="Valor honorário (R$)" placeholder="0,00" />
-            <Select label="Forma de pagamento" options={["À vista", "Parcelado", "Mensal"]} />
-            <div className="md:col-span-2 rounded-md bg-info/8 border border-info/20 p-4 text-[12.5px] text-foreground/85">
-              Um contrato pode ser gerado automaticamente ao final. Você poderá revisar antes de enviar ao cliente.
-            </div>
+            <Input label="Valor da causa (R$)" value={form.cause_value} onChange={(v) => set("cause_value", v)} placeholder="0,00" />
+            <Select label="Probabilidade de êxito" value={form.probability} onChange={(v) => set("probability", v)}
+              options={[{ value: "alta", label: "Alta" }, { value: "media", label: "Média" }, { value: "baixa", label: "Baixa" }]} />
           </div>
         )}
 
@@ -123,12 +189,12 @@ function NovoProcesso() {
             <p className="text-[13px] text-muted-foreground">Confirme os dados antes de salvar.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
-                { k: "Número CNJ", v: cnj || "—" },
-                { k: "Área", v: "Cível" },
-                { k: "Cliente", v: "Construtora Aurora S.A." },
-                { k: "Responsável", v: "Dra. Marina Souza" },
-                { k: "Valor causa", v: "R$ 250.000,00" },
-                { k: "Partes", v: "2 vinculadas" },
+                { k: "Número CNJ", v: form.cnj || "—" },
+                { k: "Área", v: areaOptions.find((a) => a.value === form.area)?.label || form.area },
+                { k: "Cliente", v: clientOptions.find((c) => c.value === form.client)?.label || "—" },
+                { k: "Tribunal / Vara", v: [form.court_division, form.court].filter(Boolean).join(" · ") || "—" },
+                { k: "Valor causa", v: form.cause_value ? `R$ ${form.cause_value}` : "—" },
+                { k: "Parte contrária", v: form.defendant || "—" },
               ].map((r) => (
                 <div key={r.k} className="rounded-md border border-border bg-card p-3">
                   <p className="text-[10.5px] uppercase tracking-wider text-muted-foreground">{r.k}</p>
@@ -136,12 +202,6 @@ function NovoProcesso() {
                 </div>
               ))}
             </div>
-            <label className="flex items-center gap-2 text-[13px]">
-              <input type="checkbox" className="rounded border-border" defaultChecked /> Gerar contrato de honorários automaticamente
-            </label>
-            <label className="flex items-center gap-2 text-[13px]">
-              <input type="checkbox" className="rounded border-border" defaultChecked /> Notificar cliente por e-mail
-            </label>
           </div>
         )}
 
@@ -151,7 +211,10 @@ function NovoProcesso() {
           {idx < STEPS.length - 1 ? (
             <button onClick={() => setStep(STEPS[idx + 1].id)} className="rounded-md bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">Próximo</button>
           ) : (
-            <button onClick={() => nav({ to: "/app/processos" })} className="rounded-md bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">Criar processo</button>
+            <button onClick={submit} disabled={createProcess.isPending}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+              {createProcess.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Criar processo
+            </button>
           )}
         </div>
       </div>
@@ -159,20 +222,20 @@ function NovoProcesso() {
   );
 }
 
-function Input({ label, placeholder }: { label: string; placeholder?: string }) {
+function Input({ label, placeholder, value, onChange }: { label: string; placeholder?: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{label}</label>
-      <input placeholder={placeholder} className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2.5 text-[13.5px] outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2.5 text-[13.5px] outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
     </div>
   );
 }
-function Select({ label, options }: { label: string; options: string[] }) {
+function Select({ label, options, value, onChange }: { label: string; options: { value: string; label: string }[]; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{label}</label>
-      <select className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2.5 text-[13.5px]">
-        {options.map((o) => <option key={o}>{o}</option>)}
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2.5 text-[13.5px] outline-none focus:border-primary">
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
   );
