@@ -67,10 +67,10 @@ Referência de diagnóstico: `AUDIT_NIMBUSLAW.md`.
 > Ordem = maior valor comercial por esforço. Blocos 1–4 técnicos acima permanecem como histórico.
 
 ### F1 🔴 Fluxo completo de Gestão Processual ("cockpit do processo")
-- [ ] Timeline unificada no detalhe (consumir `/processes/{id}/timeline/`)
-- [ ] Ações rápidas em pop-up dentro do processo: novo andamento, prazo, audiência, tarefa, hora, upload
-- [ ] Capa com partes do processo (CRUD `process-parties` no detalhe: autor/réu/advogado adverso/OAB)
-- [ ] Conflito de interesses automático ao informar parte contrária (usa `/conflict-check/`)
+- [x] Timeline unificada no detalhe (consumir `/processes/{id}/timeline/`)
+- [x] Ações rápidas em pop-up dentro do processo: novo andamento, prazo, audiência, tarefa, hora, upload (pré-vinculados)
+- [x] Capa com partes do processo (aba Partes: adicionar/remover, papel, doc, advogado adverso + OAB)
+- [x] Conflito de interesses automático: alerta na capa quando a parte contrária colide com clientes/partes do escritório
 - [ ] Encerramento com resultado (êxito/perda/acordo) refletindo em relatórios
 - [ ] Tudo que acontece no processo gera Movement/auditoria e aparece na timeline
 

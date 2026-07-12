@@ -17,10 +17,13 @@ export function DocumentoDialog({
   open,
   onOpenChange,
   onCreated,
+  defaultProcess,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onCreated?: () => void;
+  /** Pré-vincula o upload a um processo (cockpit do processo). */
+  defaultProcess?: string;
 }) {
   const qc = useQueryClient();
   const processes = useList<any>("processes");
@@ -34,9 +37,9 @@ export function DocumentoDialog({
 
   useEffect(() => {
     if (open) {
-      setTitle(""); setCategory("geral"); setProcess(""); setClient(""); setFile(null);
+      setTitle(""); setCategory("geral"); setProcess(defaultProcess || ""); setClient(""); setFile(null);
     }
-  }, [open]);
+  }, [open, defaultProcess]);
 
   const processOptions = useMemo(() => (processes.data ?? []).map((p) => ({ value: String(p.id), label: p.cnj || `Processo ${p.id}` })), [processes.data]);
   const clientOptions = useMemo(() => (clients.data ?? []).map((c) => ({ value: String(c.id), label: clientName(c) })), [clients.data]);
