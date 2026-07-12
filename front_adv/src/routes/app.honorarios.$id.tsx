@@ -1,37 +1,34 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { honorarios, fmtBRL, fmtDate } from "@/lib/mock";
+import { useDetail, fmtBRL, fmtDate, fmtDateTime, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/honorarios/$id")({
-  head: ({ params }) => ({ meta: [{ title: pageTitle(`Honorário ${params.id}`) }] }),
-  loader: ({ params }) => {
-    const rec = (honorarios as any[]).find((x) => x.id === params.id);
-    if (!rec) throw notFound();
-    return { rec };
-  },
+  head: () => ({ meta: [{ title: pageTitle("Honorário") }] }),
   component: Detail,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Honorário não encontrado.</div>
-  ),
 });
 
 function Detail() {
-  const { rec } = Route.useLoaderData() as { rec: any };
+  const { id } = useParams({ from: "/app/honorarios/$id" });
+  const { data: rec, isLoading } = useDetail<any>("invoices", id);
+  if (isLoading) return <div className="p-16 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+  if (!rec) return <div className="p-10 text-center text-muted-foreground">Registro não encontrado.</div>;
   return (
     <RecordDetail
       backTo="/app/honorarios"
       backLabel="Voltar para honorários"
       eyebrow="Honorários"
-      title={String(rec.cliente)}
-      subtitle={rec.tipo ? String(rec.tipo) : undefined}
+      title={`Fatura ${rec.number || rec.id}`}
+      status={rec.status ? String(rec.status) : undefined}
       fields={[
-              { label: "Cliente", value: String(rec.cliente) },
-              { label: "Tipo", value: String(rec.tipo) },
-              { label: "Valor", value: fmtBRL(rec.valor as number) },
-              { label: "Vencimento", value: fmtDate(rec.vencimento as string) },
-              { label: "Status", value: <StatusPill tone="info">{String(rec.status)}</StatusPill> }
+        { label: "Número", value: rec.number || rec.id },
+        { label: "Cliente", value: rec.client_name || rec.client || "—" },
+        { label: "Valor", value: fmtBRL(rec.amount ?? rec.total) },
+        { label: "Vencimento", value: fmtDate(rec.due_date) },
+        { label: "Emissão", value: fmtDate(rec.issue_date || rec.created_at) },
+        { label: "Status", value: humanize(rec.status) },
       ]}
     />
   );

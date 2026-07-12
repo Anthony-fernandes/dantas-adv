@@ -1,39 +1,34 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { documentos, fmtBRL, fmtDate } from "@/lib/mock";
+import { useDetail, fmtBRL, fmtDate, fmtDateTime, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/documentos/$id")({
-  head: ({ params }) => ({ meta: [{ title: pageTitle(`Documento ${params.id}`) }] }),
-  loader: ({ params }) => {
-    const rec = (documentos as any[]).find((x) => x.id === params.id);
-    if (!rec) throw notFound();
-    return { rec };
-  },
+  head: () => ({ meta: [{ title: pageTitle("Documento") }] }),
   component: Detail,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Documento não encontrado.</div>
-  ),
 });
 
 function Detail() {
-  const { rec } = Route.useLoaderData() as { rec: any };
+  const { id } = useParams({ from: "/app/documentos/$id" });
+  const { data: rec, isLoading } = useDetail<any>("documents", id);
+  if (isLoading) return <div className="p-16 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+  if (!rec) return <div className="p-10 text-center text-muted-foreground">Registro não encontrado.</div>;
   return (
     <RecordDetail
       backTo="/app/documentos"
       backLabel="Voltar para documentos"
       eyebrow="Documentos"
-      title={String(rec.nome)}
-      subtitle={rec.processo ? String(rec.processo) : undefined}
+      title={String(rec.title || rec.name || "Documento")}
+      status={rec.status ? String(rec.status) : undefined}
       fields={[
-              { label: "Nome", value: String(rec.nome) },
-              { label: "Tipo", value: String(rec.tipo) },
-              { label: "Processo", value: <span className="font-mono text-[13px]">{rec.processo}</span> },
-              { label: "Cliente", value: String(rec.cliente) },
-              { label: "Tamanho", value: String(rec.tamanho) },
-              { label: "Autor", value: String(rec.autor) },
-              { label: "Data", value: fmtDate(rec.data as string) }
+        { label: "Título", value: rec.title || rec.name || "—" },
+        { label: "Categoria", value: humanize(rec.category) },
+        { label: "Processo", value: <span className="font-mono text-[13px]">{rec.process_number || rec.process || "—"}</span> },
+        { label: "Cliente", value: rec.client_name || rec.client || "—" },
+        { label: "Enviado em", value: fmtDateTime(rec.created_at) },
+        { label: "Arquivo", value: rec.file || rec.file_url ? <a className="text-primary hover:underline" href={rec.file_url || rec.file} target="_blank" rel="noreferrer">Baixar arquivo</a> : "—" },
       ]}
     />
   );

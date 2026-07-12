@@ -1,40 +1,36 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { audiencias, fmtBRL, fmtDate } from "@/lib/mock";
+import { useDetail, fmtBRL, fmtDate, fmtDateTime, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/audiencias/$id")({
-  head: ({ params }) => ({ meta: [{ title: pageTitle(`Audiência ${params.id}`) }] }),
-  loader: ({ params }) => {
-    const rec = (audiencias as any[]).find((x) => x.id === params.id);
-    if (!rec) throw notFound();
-    return { rec };
-  },
+  head: () => ({ meta: [{ title: pageTitle("Audiência") }] }),
   component: Detail,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Audiência não encontrado.</div>
-  ),
 });
 
 function Detail() {
-  const { rec } = Route.useLoaderData() as { rec: any };
+  const { id } = useParams({ from: "/app/audiencias/$id" });
+  const { data: rec, isLoading } = useDetail<any>("hearings", id);
+  if (isLoading) return <div className="p-16 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+  if (!rec) return <div className="p-10 text-center text-muted-foreground">Registro não encontrado.</div>;
   return (
     <RecordDetail
       backTo="/app/audiencias"
       backLabel="Voltar para audiências"
       eyebrow="Audiências"
-      title={String(rec.tipo)}
-      subtitle={rec.processo ? String(rec.processo) : undefined}
+      title={String(rec.type || "Audiência")}
+      status={rec.status ? String(rec.status) : undefined}
       fields={[
-              { label: "Tipo", value: String(rec.tipo) },
-              { label: "Processo", value: <span className="font-mono text-[13px]">{rec.processo}</span> },
-              { label: "Data", value: fmtDate(rec.data as string) },
-              { label: "Hora", value: String(rec.hora) },
-              { label: "Fórum", value: String(rec.forum) },
-              { label: "Cidade", value: String(rec.cidade) },
-              { label: "Modalidade", value: String(rec.modalidade) },
-              { label: "Responsável", value: String(rec.responsavel) }
+        { label: "Tipo", value: rec.type || "—" },
+        { label: "Data e hora", value: fmtDateTime(rec.hearing_date) },
+        { label: "Processo", value: <span className="font-mono text-[13px]">{rec.process_number || rec.process || "—"}</span> },
+        { label: "Local", value: rec.location || "—" },
+        { label: "Modalidade", value: rec.modality || "—" },
+        { label: "Link", value: rec.online_link ? <a className="text-primary hover:underline" href={rec.online_link} target="_blank" rel="noreferrer">{rec.online_link}</a> : "—" },
+        { label: "Status", value: humanize(rec.status) },
+        { label: "Observações", value: rec.notes || "—" },
       ]}
     />
   );

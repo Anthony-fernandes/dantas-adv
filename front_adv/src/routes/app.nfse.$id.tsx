@@ -1,37 +1,34 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { nfse, fmtBRL, fmtDate } from "@/lib/mock";
+import { useDetail, fmtBRL, fmtDate, fmtDateTime, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/nfse/$id")({
-  head: ({ params }) => ({ meta: [{ title: pageTitle(`NFS-e ${params.id}`) }] }),
-  loader: ({ params }) => {
-    const rec = (nfse as any[]).find((x) => x.id === params.id);
-    if (!rec) throw notFound();
-    return { rec };
-  },
+  head: () => ({ meta: [{ title: pageTitle("NFS-e") }] }),
   component: Detail,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">NFS-e não encontrado.</div>
-  ),
 });
 
 function Detail() {
-  const { rec } = Route.useLoaderData() as { rec: any };
+  const { id } = useParams({ from: "/app/nfse/$id" });
+  const { data: rec, isLoading } = useDetail<any>("nfse", id);
+  if (isLoading) return <div className="p-16 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+  if (!rec) return <div className="p-10 text-center text-muted-foreground">Registro não encontrado.</div>;
   return (
     <RecordDetail
       backTo="/app/nfse"
       backLabel="Voltar para NFS-e"
-      eyebrow="Notas fiscais"
-      title={String(rec.numero)}
-      subtitle={rec.cliente ? String(rec.cliente) : undefined}
+      eyebrow="NFS-e"
+      title={`NFS-e ${rec.numero || rec.number || rec.id}`}
+      status={rec.status ? String(rec.status) : undefined}
       fields={[
-              { label: "Número", value: <span className="font-mono text-[13px]">{rec.numero}</span> },
-              { label: "Cliente", value: String(rec.cliente) },
-              { label: "Emissão", value: fmtDate(rec.emissao as string) },
-              { label: "Valor", value: fmtBRL(rec.valor as number) },
-              { label: "Status", value: <StatusPill tone="info">{String(rec.status)}</StatusPill> }
+        { label: "Número", value: rec.numero || rec.number || rec.id },
+        { label: "Competência", value: rec.competencia || "—" },
+        { label: "Tomador", value: rec.tomador_nome || rec.client_name || "—" },
+        { label: "Valor", value: fmtBRL(rec.valor ?? rec.amount) },
+        { label: "Emissão", value: fmtDateTime(rec.created_at) },
+        { label: "Status", value: humanize(rec.status) },
       ]}
     />
   );

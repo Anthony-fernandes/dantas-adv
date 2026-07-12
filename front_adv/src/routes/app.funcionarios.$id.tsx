@@ -1,37 +1,34 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { funcionarios, fmtBRL, fmtDate } from "@/lib/mock";
+import { useDetail, fmtBRL, fmtDate, fmtDateTime, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/funcionarios/$id")({
-  head: ({ params }) => ({ meta: [{ title: pageTitle(`Funcionário ${params.id}`) }] }),
-  loader: ({ params }) => {
-    const rec = (funcionarios as any[]).find((x) => x.id === params.id);
-    if (!rec) throw notFound();
-    return { rec };
-  },
+  head: () => ({ meta: [{ title: pageTitle("Funcionário") }] }),
   component: Detail,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Funcionário não encontrado.</div>
-  ),
 });
 
 function Detail() {
-  const { rec } = Route.useLoaderData() as { rec: any };
+  const { id } = useParams({ from: "/app/funcionarios/$id" });
+  const { data: rec, isLoading } = useDetail<any>("employees", id);
+  if (isLoading) return <div className="p-16 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+  if (!rec) return <div className="p-10 text-center text-muted-foreground">Registro não encontrado.</div>;
   return (
     <RecordDetail
       backTo="/app/funcionarios"
       backLabel="Voltar para funcionários"
       eyebrow="Funcionários"
-      title={String(rec.nome)}
-      subtitle={rec.cargo ? String(rec.cargo) : undefined}
+      title={String(rec.full_name || rec.name || "Funcionário")}
+      status={rec.status ? String(rec.status) : undefined}
       fields={[
-              { label: "Nome", value: String(rec.nome) },
-              { label: "Cargo", value: String(rec.cargo) },
-              { label: "E-mail", value: String(rec.email) },
-              { label: "OAB", value: <span className="font-mono text-[13px]">{rec.oab}</span> },
-              { label: "Ingresso", value: fmtDate(rec.ingresso as string) }
+        { label: "Nome", value: rec.full_name || rec.name || "—" },
+        { label: "E-mail", value: rec.email || "—" },
+        { label: "Telefone", value: rec.phone || "—" },
+        { label: "Cargo", value: rec.position_name || rec.cargo || "—" },
+        { label: "Admissão", value: fmtDate(rec.hire_date) },
+        { label: "Ativo", value: rec.is_active === false ? "Não" : "Sim" },
       ]}
     />
   );

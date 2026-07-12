@@ -1,38 +1,32 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { usuarios, fmtBRL, fmtDate } from "@/lib/mock";
+import { useDetail, fmtBRL, fmtDate, fmtDateTime, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/usuarios/$id")({
-  head: ({ params }) => ({ meta: [{ title: pageTitle(`Usuário ${params.id}`) }] }),
-  loader: ({ params }) => {
-    const rec = (usuarios as any[]).find((x) => x.id === params.id);
-    if (!rec) throw notFound();
-    return { rec };
-  },
+  head: () => ({ meta: [{ title: pageTitle("Usuário") }] }),
   component: Detail,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Usuário não encontrado.</div>
-  ),
 });
 
 function Detail() {
-  const { rec } = Route.useLoaderData() as { rec: any };
+  const { id } = useParams({ from: "/app/usuarios/$id" });
+  const { data: rec, isLoading } = useDetail<any>("users", id);
+  if (isLoading) return <div className="p-16 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+  if (!rec) return <div className="p-10 text-center text-muted-foreground">Registro não encontrado.</div>;
   return (
     <RecordDetail
       backTo="/app/usuarios"
       backLabel="Voltar para usuários"
       eyebrow="Usuários"
-      title={String(rec.nome)}
-      subtitle={rec.email ? String(rec.email) : undefined}
+      title={String(rec.full_name || rec.email || "Usuário")}
+      status={rec.status ? String(rec.status) : undefined}
       fields={[
-              { label: "Nome", value: String(rec.nome) },
-              { label: "E-mail", value: String(rec.email) },
-              { label: "Papel", value: String(rec.papel) },
-              { label: "MFA", value: String(rec.mfa) },
-              { label: "Último acesso", value: String(rec.ultimoAcesso) },
-              { label: "Status", value: <StatusPill tone="info">{String(rec.status)}</StatusPill> }
+        { label: "Nome", value: rec.full_name || "—" },
+        { label: "E-mail", value: rec.email || "—" },
+        { label: "Perfis", value: Array.isArray(rec.roles) ? rec.roles.join(", ") : rec.role || "—" },
+        { label: "Ativo", value: rec.is_active === false ? "Não" : "Sim" },
       ]}
     />
   );

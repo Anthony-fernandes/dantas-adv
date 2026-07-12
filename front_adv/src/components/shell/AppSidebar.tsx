@@ -31,7 +31,6 @@ const nav: Section[] = [
       { label: "Prazos", to: "/app/prazos", icon: Timer },
       { label: "Tarefas", to: "/app/tarefas", icon: CheckSquare },
       { label: "Horas", to: "/app/horas", icon: Clock },
-      { label: "Chat", to: "/app/chat", icon: MessageSquare },
       { label: "Agenda", to: "/app/agenda", icon: CalendarDays },
     ],
   },
@@ -41,8 +40,6 @@ const nav: Section[] = [
       { label: "Financeiro", to: "/app/financeiro", icon: DollarSign },
       { label: "Honorários", to: "/app/honorarios", icon: Banknote },
       { label: "NFS-e", to: "/app/nfse", icon: Receipt },
-      { label: "Contabilidade", to: "/app/contabilidade", icon: BookOpenCheck },
-      { label: "Relatórios", to: "/app/relatorios", icon: BarChart3 },
     ],
   },
   {
@@ -52,11 +49,7 @@ const nav: Section[] = [
       { label: "Cargos", to: "/app/cargos", icon: BriefcaseBusiness },
       { label: "Usuários", to: "/app/usuarios", icon: UserCog },
       { label: "Empresas", to: "/app/empresas", icon: Building2 },
-      { label: "Site institucional", to: "/app/landing", icon: Globe2 },
-      { label: "Blog", to: "/app/blog", icon: BookOpenText },
       { label: "Auditoria", to: "/app/auditoria", icon: Shield },
-      { label: "Integrações", to: "/app/integracoes", icon: Plug },
-      { label: "Configurações", to: "/app/configuracoes", icon: Settings },
     ],
   },
 ];

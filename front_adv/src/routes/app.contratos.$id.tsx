@@ -1,39 +1,34 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { contratos, fmtBRL, fmtDate } from "@/lib/mock";
+import { useDetail, fmtBRL, fmtDate, fmtDateTime, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/contratos/$id")({
-  head: ({ params }) => ({ meta: [{ title: pageTitle(`Contrato ${params.id}`) }] }),
-  loader: ({ params }) => {
-    const rec = (contratos as any[]).find((x) => x.id === params.id);
-    if (!rec) throw notFound();
-    return { rec };
-  },
+  head: () => ({ meta: [{ title: pageTitle("Contrato") }] }),
   component: Detail,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Contrato não encontrado.</div>
-  ),
 });
 
 function Detail() {
-  const { rec } = Route.useLoaderData() as { rec: any };
+  const { id } = useParams({ from: "/app/contratos/$id" });
+  const { data: rec, isLoading } = useDetail<any>("contracts", id);
+  if (isLoading) return <div className="p-16 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+  if (!rec) return <div className="p-10 text-center text-muted-foreground">Registro não encontrado.</div>;
   return (
     <RecordDetail
       backTo="/app/contratos"
       backLabel="Voltar para contratos"
       eyebrow="Contratos"
-      title={String(rec.numero)}
-      subtitle={rec.cliente ? String(rec.cliente) : undefined}
+      title={`Contrato ${humanize(rec.type) || ""}`}
+      status={rec.status ? String(rec.status) : undefined}
       fields={[
-              { label: "Número", value: <span className="font-mono text-[13px]">{rec.numero}</span> },
-              { label: "Cliente", value: String(rec.cliente) },
-              { label: "Objeto", value: String(rec.objeto) },
-              { label: "Início", value: fmtDate(rec.inicio as string) },
-              { label: "Fim", value: fmtDate(rec.fim as string) },
-              { label: "Valor", value: fmtBRL(rec.valor as number) },
-              { label: "Status", value: <StatusPill tone="info">{String(rec.status)}</StatusPill> }
+        { label: "Cliente", value: rec.client_name || rec.client || "—" },
+        { label: "Tipo", value: humanize(rec.type) },
+        { label: "Valor", value: fmtBRL(rec.fixed_value ?? rec.value) },
+        { label: "Início", value: fmtDate(rec.start_date) },
+        { label: "Fim", value: fmtDate(rec.end_date) },
+        { label: "Status", value: humanize(rec.status) },
       ]}
     />
   );

@@ -1,36 +1,31 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { cargos, fmtBRL, fmtDate } from "@/lib/mock";
+import { useDetail, fmtBRL, fmtDate, fmtDateTime, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/cargos/$id")({
-  head: ({ params }) => ({ meta: [{ title: pageTitle(`Cargo ${params.id}`) }] }),
-  loader: ({ params }) => {
-    const rec = (cargos as any[]).find((x) => x.id === params.id);
-    if (!rec) throw notFound();
-    return { rec };
-  },
+  head: () => ({ meta: [{ title: pageTitle("Cargo") }] }),
   component: Detail,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Cargo não encontrado.</div>
-  ),
 });
 
 function Detail() {
-  const { rec } = Route.useLoaderData() as { rec: any };
+  const { id } = useParams({ from: "/app/cargos/$id" });
+  const { data: rec, isLoading } = useDetail<any>("job-positions", id);
+  if (isLoading) return <div className="p-16 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></div>;
+  if (!rec) return <div className="p-10 text-center text-muted-foreground">Registro não encontrado.</div>;
   return (
     <RecordDetail
       backTo="/app/cargos"
       backLabel="Voltar para cargos"
       eyebrow="Cargos"
-      title={String(rec.nome)}
-      subtitle={rec.nivel ? String(rec.nivel) : undefined}
+      title={String(rec.name || "Cargo")}
+      status={rec.status ? String(rec.status) : undefined}
       fields={[
-              { label: "Nome", value: String(rec.nome) },
-              { label: "Nível", value: String(rec.nivel) },
-              { label: "Pessoas", value: String(rec.pessoas) },
-              { label: "Salário-base", value: fmtBRL(rec.salarioBase as number) }
+        { label: "Nome", value: rec.name || "—" },
+        { label: "Descrição", value: rec.description || "—" },
+        { label: "Ativo", value: rec.is_active === false ? "Não" : "Sim" },
       ]}
     />
   );

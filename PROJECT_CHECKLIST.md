@@ -27,29 +27,29 @@ Referência de diagnóstico: `AUDIT_NIMBUSLAW.md`.
 - [x] Varredura final documentada em `docs/BRANDING.md` (únicas refs restantes: migração legada em `api.ts` + docs de auditoria)
 - [x] Bonus: migração `finance.0007` gerada já blindada (rename de índice idempotente p/ SQLite)
 
-## 2. 🔴 Eliminar mocks — tudo consumindo API real
-- [ ] `app.prazos.$id` → API real (`deadlines/:id`)
-- [ ] `app.tarefas.$id` → API real (`tasks/:id`)
-- [ ] `app.audiencias.$id` → API real (`hearings/:id`)
-- [ ] `app.contratos.$id` → API real (`contracts/:id`)
-- [ ] `app.documentos.$id` → API real (`documents/:id` + download seguro)
-- [ ] `app.financeiro.$id` → API real (receber/pagar)
-- [ ] `app.honorarios.$id` → API real
-- [ ] `app.nfse.$id` → API real
-- [ ] `app.horas.$id` → API real (`time-entries/:id`)
-- [ ] `app.areas.$id` → API real (`causes/:id`)
-- [ ] `app.modelos.$id` → API real (`legal-templates/:id`)
-- [ ] `app.cargos.$id` → API real (`job-positions/:id`)
-- [ ] `app.funcionarios.$id` → API real (`employees/:id`)
-- [ ] `app.usuarios.$id` → API real (`users/:id`)
-- [ ] `app.empresas.$id` → API real (tenant/empresa)
-- [ ] `portal.index` → API real
-- [ ] `portal.financeiro` → API real
-- [ ] `portal.contratos` → API real
-- [ ] `app.agenda` → API real (prazos+audiências)
-- [ ] `app.chat` → API real (`chat`) ou remover se fora de escopo
-- [ ] Módulos "vitrine" (`blog/landing/relatorios/integracoes/contabilidade`): dados reais ou ocultar do menu
-- [ ] Excluir `src/lib/mock.ts` e garantir build limpo sem ele
+## 2. 🔴 Eliminar mocks — tudo consumindo API real  ✅ CONCLUÍDO
+- [x] `app.prazos.$id` → API real (`deadlines/:id`)
+- [x] `app.tarefas.$id` → API real (`tasks/:id`)
+- [x] `app.audiencias.$id` → API real (`hearings/:id`)
+- [x] `app.contratos.$id` → API real (`contracts/:id`)
+- [x] `app.documentos.$id` → API real (`documents/:id`; download seguro será endurecido no Bloco de uploads)
+- [x] `app.financeiro.$id` → API real (tenta receber e pagar)
+- [x] `app.honorarios.$id` → API real (`invoices/:id`)
+- [x] `app.nfse.$id` → API real (`nfse/:id`)
+- [x] `app.horas.$id` → API real (`time-entries/:id`)
+- [x] `app.areas.$id` → API real (`causes/:id`)
+- [x] `app.modelos.$id` → API real (`legal-templates/:id`)
+- [x] `app.cargos.$id` → API real (`job-positions/:id`)
+- [x] `app.funcionarios.$id` → API real (`employees/:id`)
+- [x] `app.usuarios.$id` → API real (`users/:id`)
+- [x] `app.empresas.$id` → dados reais (tenants da sessão)
+- [x] `portal.index` → API real (processos + documentos + contas a receber)
+- [x] `portal.financeiro` → API real (`accounts-receivable`)
+- [x] `portal.contratos` → API real (`contracts`)
+- [x] `app.agenda` → API real (semana com prazos + audiências, navegação de semanas)
+- [x] `app.chat` → removido do menu (backend de chat será avaliado em bloco futuro; rota preservada)
+- [x] Módulos "vitrine" ocultados do menu (blog, landing, relatórios, integrações, contabilidade, configurações) até terem backend real
+- [x] `src/lib/mock.ts` excluído — typecheck e build limpos
 
 ## 3. 🔴 Multiempresa (isolamento total)
 - [ ] Auditar todos os models: FK `tenant` obrigatória em todo registro de negócio
