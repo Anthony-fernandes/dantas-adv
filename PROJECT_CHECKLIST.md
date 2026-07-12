@@ -61,64 +61,82 @@ Referência de diagnóstico: `AUDIT_NIMBUSLAW.md`.
 - [x] Notificações tenant-scoped (NotificationViewSet); e-mails carregam office_name do tenant
 - [x] Testes de isolamento: processes (já existiam) + documents (lista/retrieve/download/auth: 6 testes) + finance (2 testes) — suite 68/68 OK
 
-## 4. 🟠 Admin Master (plataforma SaaS)
-- [ ] Separar visualmente do app do escritório (shell próprio, sem cara de tenant)
-- [ ] Gestão de escritórios (tenants): CRUD, status, suspensão
-- [ ] Planos e assinaturas (ligar ao app `billing`: Plan/Subscription)
-- [ ] Cobrança e uso (UsageSnapshot / limites)
-- [ ] Logs, métricas e auditoria da plataforma
-- [ ] Suporte e licenciamento
+## Roadmap por FLUXOS DE VALOR (reorganizado em 12/07 — ver PRODUCT_GAP_ANALYSIS.md)
 
-## 5. 🟠 Configurabilidade por tenant
-- [ ] Status configuráveis (processo/tarefa/financeiro)
-- [ ] Etiquetas/tags e categorias
-- [ ] Tipos, prioridades, etapas e motivos
-- [ ] Modelos de documento por tenant
-- [ ] Campos personalizados
-- [ ] Workflows/fluxos configuráveis
-- [ ] Substituir enums hardcoded do front por dados do backend
+> Um fluxo só é `[x]` quando funciona de ponta a ponta na mão do usuário.
+> Ordem = maior valor comercial por esforço. Blocos 1–4 técnicos acima permanecem como histórico.
 
-## 6. 🟠 Segurança Enterprise
+### F1 🔴 Fluxo completo de Gestão Processual ("cockpit do processo")
+- [ ] Timeline unificada no detalhe (consumir `/processes/{id}/timeline/`)
+- [ ] Ações rápidas em pop-up dentro do processo: novo andamento, prazo, audiência, tarefa, hora, upload
+- [ ] Capa com partes do processo (CRUD `process-parties` no detalhe: autor/réu/advogado adverso/OAB)
+- [ ] Conflito de interesses automático ao informar parte contrária (usa `/conflict-check/`)
+- [ ] Encerramento com resultado (êxito/perda/acordo) refletindo em relatórios
+- [ ] Tudo que acontece no processo gera Movement/auditoria e aparece na timeline
+
+### F2 🔴 Fluxo completo de Controladoria ("Meu Dia")
+- [ ] Central operacional "Meu Dia": prazos fatais, audiências de hoje/semana, tarefas atrasadas — com ação direta
+- [ ] Baixa de prazo com nota/comprovação → gera andamento na timeline do processo
+- [ ] Sino de notificações no topbar (API `notifications` pronta)
+- [ ] Busca global Cmd+K (API `/search/` pronta)
+- [ ] Atribuição de responsável em prazos/tarefas + filtro "meus itens"
+
+### F3 🔴 Fluxo completo do Portal do Cliente (ativável pelo escritório)
+- [ ] Ativar portal no detalhe do cliente (convite por e-mail → cria/vincula `portal_user`)
+- [ ] Caixa de mensagens do portal DENTRO do app (o escritório responde de lá)
+- [ ] Notificar cliente quando andamento/documento for publicado
+- [x] Portal consome apenas `/api/portal/*` com escopo por cliente (Bloco 4)
+- [x] Download seguro no portal (Bloco 4)
+
+### F4 🟠 Fluxo completo Financeiro + Honorários + Contratos
+- [ ] Contrato → "Gerar parcelas/recebíveis" na UI (action backend pronta)
+- [ ] Registrar pagamento (baixa) em pop-up na listagem financeira
+- [ ] Faturar horas: time-entries faturáveis → invoice
+- [ ] Fluxo de caixa mensal (previsto × realizado — `FinanceReportView`)
+- [ ] Caixa de entrada de LEADS da landing (API pronta, sem UI hoje)
+- [ ] Badge de inadimplência no cliente/processo
+- [ ] Régua de cobrança (lembretes automáticos por e-mail/portal)
+
+### F5 🟠 Fluxo completo de Documentos premium
+- [ ] Gerar documento por modelo (modelo + processo → preview → GED)
+- [ ] Histórico de versões + nova versão na UI
+- [ ] Fluxo de assinatura eletrônica (enviar, acompanhar, webhook → timeline)
+- [ ] Editor rich-text do processo (editor-documents + export PDF)
+
+### F6 🟠 Fluxo completo da Administração da Plataforma (SaaS)
+- [ ] Master real: empresas (lista/detalhe/suspensão), usuários globais, uso por tenant
+- [ ] Planos/assinaturas na UI (app billing) + limites aplicados
+- [ ] Onboarding self-service de escritório
+- [ ] Shell visual próprio NimbusLaw (sem cara de escritório)
+
+### F7 🟡 Configurabilidade por tenant
+- [ ] Modelo `TenantOption` genérico (status, etiquetas, categorias, tipos, prioridades, motivos)
+- [ ] Tela única "Configurações do escritório" (substitui rota estática)
+- [ ] Substituir enums hardcoded do front por opções do backend
+
+### F8 🟡 Segurança Enterprise (contínuo)
 - [ ] Throttling/rate limit DRF por escopo
-- [ ] Política de senha + MFA opcional por tenant
-- [ ] Validação de upload (tipo/tamanho/verredura) e download assinado
-- [ ] LGPD: export/retenção/eliminação por titular
-- [ ] Revisão de escopo/expiração dos JWT e refresh rotation
-- [ ] Revisão CORS/CSRF/headers para produção
+- [ ] Política de senha + MFA opcional
+- [ ] Validação de upload (tipo/tamanho) — download seguro ✔ (Bloco 3/4)
+- [ ] LGPD: export ✔ (`/tenant/export/`) · retenção/eliminação por titular pendente
+- [ ] Revisão JWT (rotation), CORS/CSRF/headers de produção
 
-## 7. 🟡 UX — central do processo e módulos secundários
-- [ ] Detalhe de processo como "central": partes, movimentações, honorários, comunicações, histórico unificado
-- [ ] Reduzir CRUD puro / cards desnecessários nas telas secundárias
-- [ ] Padronizar componentes (tabela, detalhe, filtros, pop-ups) num design system coeso
-- [ ] Revisão de responsividade (mobile/tablet) e dark mode em todas as telas
+### F9 🟡 Qualidade, performance e documentação (contínuo)
+- [ ] Testes por fluxo (portal cliente A×B, cockpit, financeiro)
+- [ ] E2E dos fluxos principais
+- [ ] N+1/paginação; padronização de hooks/services/nomenclatura
+- [ ] Documentação técnica + funcional + arquitetura por fluxo
 
-## 8. 🟡 Portal do cliente
-- [ ] Garantir escopo: cliente vê só o que é dele (processos, docs, contratos, movimentações, financeiro, mensagens, arquivos)
-- [ ] Todas as telas do portal em API real (ver Bloco 2)
-- [ ] Branding do escritório no portal (Bloco 1)
-
-## 9. 🟡 Testes
-- [ ] Autenticação e permissões (RBAC)
-- [ ] Isolamento multi-tenant (Bloco 3)
-- [ ] Portal, Processos, Clientes, Financeiro, Documentos, Contratos
-- [ ] E2E dos fluxos principais (login → processo → prazo → documento → financeiro)
-
-## 10. 🟡 Performance e padronização
-- [ ] Remover código morto, imports inúteis e componentes duplicados
-- [ ] Revisar queries N+1 e paginação/filtros em todos os endpoints
-- [ ] Padronizar hooks/services/DTOs/schemas/nomenclaturas/pastas
-
-## 11. 🟡 Documentação
-- [ ] Documentação técnica (setup, arquitetura, deploy)
-- [ ] Documentação funcional (módulos e fluxos)
-- [ ] Documentação de arquitetura (multi-tenant, segurança, billing)
-- [ ] Manter atualizada a cada bloco implementado
+### F10 🟡 IA (somente após F1–F5)
+- [ ] Resumo de timeline/andamentos
+- [ ] Rascunho de petição por modelo
+- [ ] Classificação automática de documento no upload
 
 ---
 
-### Convenção de execução por bloco
-1. Atualizar este checklist (marcar itens em andamento).
-2. Implementar.
-3. Validar (typecheck + build + testes + verificação funcional).
-4. Marcar `[x]` só o que foi 100% concluído.
-5. Relatar: o que mudou, arquivos alterados, pendências, próximo bloco.
+### Convenção de execução por fluxo
+1. Atualizar este checklist antes de começar.
+2. Implementar ponta a ponta (UI + API + integrações entre módulos + auditoria/timeline).
+3. Validar: typecheck + build + testes + walkthrough funcional.
+4. Marcar `[x]` só quando o fluxo estiver completo na mão do usuário.
+5. Relatar: valor entregue, decisões tomadas (e porquês), pendências, próximo fluxo.
