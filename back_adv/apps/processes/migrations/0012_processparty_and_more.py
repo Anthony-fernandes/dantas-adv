@@ -5,6 +5,59 @@ import uuid
 from django.db import migrations, models
 
 
+TABLE = "processes_tribunalsync"
+
+# (old_name, new_name, columns) — mesmos índices definidos em 0011.
+_INDEX_RENAMES = [
+    ("processes_tr_tenant_process_idx", "processes_t_tenant__6d72e9_idx", ("tenant_id", "process_id")),
+    ("processes_tr_tenant_syncstatus_idx", "processes_t_tenant__4c2603_idx", ("tenant_id", "sync_status")),
+]
+
+
+def _existing_indexes(schema_editor):
+    with schema_editor.connection.cursor() as cursor:
+        return {
+            name
+            for name, info in schema_editor.connection.introspection.get_constraints(
+                cursor, TABLE
+            ).items()
+            if info.get("index")
+        }
+
+
+def _rename_indexes_forward(apps, schema_editor):
+    """Renomeia os índices de forma idempotente.
+
+    Em SQLite, uma reconstrução de tabela (feita por migrações anteriores)
+    pode ter recriado os índices com o nome auto-gerado do Django, deixando
+    o nome explícito de 0011 ausente. Aqui garantimos o estado final sem
+    falhar caso o índice antigo não exista.
+    """
+    existing = _existing_indexes(schema_editor)
+    quote = schema_editor.quote_name
+    with schema_editor.connection.cursor() as cursor:
+        for old_name, new_name, columns in _INDEX_RENAMES:
+            if new_name in existing:
+                continue
+            if old_name in existing:
+                cursor.execute(f"DROP INDEX {quote(old_name)}")
+            cols = ", ".join(quote(c) for c in columns)
+            cursor.execute(f"CREATE INDEX {quote(new_name)} ON {quote(TABLE)} ({cols})")
+
+
+def _rename_indexes_backward(apps, schema_editor):
+    existing = _existing_indexes(schema_editor)
+    quote = schema_editor.quote_name
+    with schema_editor.connection.cursor() as cursor:
+        for old_name, new_name, columns in _INDEX_RENAMES:
+            if old_name in existing:
+                continue
+            if new_name in existing:
+                cursor.execute(f"DROP INDEX {quote(new_name)}")
+            cols = ", ".join(quote(c) for c in columns)
+            cursor.execute(f"CREATE INDEX {quote(old_name)} ON {quote(TABLE)} ({cols})")
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -84,15 +137,22 @@ class Migration(migrations.Migration):
                 "ordering": ["role", "name"],
             },
         ),
-        migrations.RenameIndex(
-            model_name="tribunalsync",
-            new_name="processes_t_tenant__6d72e9_idx",
-            old_name="processes_tr_tenant_process_idx",
-        ),
-        migrations.RenameIndex(
-            model_name="tribunalsync",
-            new_name="processes_t_tenant__4c2603_idx",
-            old_name="processes_tr_tenant_syncstatus_idx",
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.RenameIndex(
+                    model_name="tribunalsync",
+                    new_name="processes_t_tenant__6d72e9_idx",
+                    old_name="processes_tr_tenant_process_idx",
+                ),
+                migrations.RenameIndex(
+                    model_name="tribunalsync",
+                    new_name="processes_t_tenant__4c2603_idx",
+                    old_name="processes_tr_tenant_syncstatus_idx",
+                ),
+            ],
+            database_operations=[
+                migrations.RunPython(_rename_indexes_forward, _rename_indexes_backward),
+            ],
         ),
         migrations.AddField(
             model_name="processparty",
