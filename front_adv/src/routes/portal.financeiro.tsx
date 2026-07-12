@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { DollarSign, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
-import { useList, fmtBRL, fmtDate, humanize } from "@/lib/resources";
+import { usePortalGet, type PortalFinancial } from "@/lib/portal";
+import { fmtBRL, fmtDate, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/portal/financeiro")({
@@ -15,8 +16,8 @@ function isPaid(s?: string | null) {
 }
 
 function PortalFin() {
-  const receivables = useList<any>("accounts-receivable", { ordering: "-due_date" });
-  const rows = receivables.data ?? [];
+  const fin = usePortalGet<PortalFinancial>("/portal/financial/");
+  const rows = fin.data?.receivables ?? [];
 
   const stats = useMemo(() => {
     const open = rows.filter((f) => !isPaid(f.status));
@@ -54,8 +55,8 @@ function PortalFin() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {receivables.isLoading && <tr><td colSpan={4} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>}
-              {!receivables.isLoading && rows.length === 0 && <tr><td colSpan={4} className="px-5 py-10 text-center text-muted-foreground">Nenhum lançamento disponível.</td></tr>}
+              {fin.isLoading && <tr><td colSpan={4} className="px-5 py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>}
+              {!fin.isLoading && rows.length === 0 && <tr><td colSpan={4} className="px-5 py-10 text-center text-muted-foreground">Nenhum lançamento disponível.</td></tr>}
               {rows.map((f) => (
                 <tr key={f.id} className="hover:bg-muted/30">
                   <td className="px-5 py-3 font-medium">{f.description || "—"}</td>

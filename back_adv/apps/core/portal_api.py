@@ -203,11 +203,9 @@ class PortalDocumentSerializer(serializers.ModelSerializer):
         ]
 
     def get_download_url(self, obj: Document):
+        # Download SEMPRE via endpoint autenticado do portal (escopo por cliente).
         if obj.file:
-            try:
-                return obj.file.url
-            except Exception:
-                return None
+            return f"/api/portal/documents/{obj.id}/download/"
         return obj.file_url
 
 
@@ -230,6 +228,46 @@ class PortalDocumentsView(PortalProcessBase, generics.ListAPIView):
             .filter(role_filter)
             .order_by('-created_at')
         )
+
+
+class PortalDocumentDownloadView(generics.GenericAPIView):
+    """Download de documento pelo cliente do portal.
+
+    Só permite arquivos de processos vinculados ao cliente autenticado e que
+    sejam visíveis para a role CLIENT (mesma regra da listagem).
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsClient]
+
+    def get(self, request, pk=None, *args, **kwargs):
+        from django.http import FileResponse, Http404
+
+        tenant = request.tenant
+        role_filter = Q(access_level=DocumentAccess.TENANT) | (
+            Q(access_level=DocumentAccess.ROLES) & Q(allowed_roles__contains=[AppRole.CLIENT])
+        )
+        doc = (
+            Document.objects
+            .filter(tenant=tenant, process__client__portal_user=request.user)
+            .filter(role_filter)
+            .filter(pk=pk)
+            .first()
+        )
+        if doc is None:
+            raise Http404
+        if not doc.file:
+            if doc.file_url:
+                return Response({'redirect': doc.file_url})
+            raise Http404
+        try:
+            handle = doc.file.open('rb')
+        except FileNotFoundError:
+            raise Http404
+        filename = doc.filename or doc.file.name.rsplit('/', 1)[-1]
+        resp = FileResponse(handle, as_attachment=True, filename=filename)
+        if doc.content_type:
+            resp['Content-Type'] = doc.content_type
+        return resp
 
 
 class PortalFinancialView(generics.GenericAPIView):

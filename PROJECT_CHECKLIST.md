@@ -28,6 +28,8 @@ Referência de diagnóstico: `AUDIT_NIMBUSLAW.md`.
 - [x] Bonus: migração `finance.0007` gerada já blindada (rename de índice idempotente p/ SQLite)
 
 ## 2. 🔴 Eliminar mocks — tudo consumindo API real  ✅ CONCLUÍDO
+
+> **Bloco 4 (12/07):** portal migrado dos endpoints gerais para `/api/portal/*` com escopo por **cliente** (client.portal_user): dashboard, processos (+detalhe/movimentos/documentos), financeiro, contratos, documentos e mensagens (GET/POST reais). Download de documento do portal via endpoint autenticado `GET /api/portal/documents/{id}/download/` (não expõe /media).
 - [x] `app.prazos.$id` → API real (`deadlines/:id`)
 - [x] `app.tarefas.$id` → API real (`tasks/:id`)
 - [x] `app.audiencias.$id` → API real (`hearings/:id`)

@@ -58,6 +58,7 @@ from apps.core.landing_cms_api import (
     PublicTestimonialListView,
 )
 from apps.core.portal_api import (
+    PortalDocumentDownloadView,
     PortalDashboardView,
     PortalDocumentsView,
     PortalDocumentUploadView,
@@ -192,6 +193,7 @@ urlpatterns = [
     path("api/portal/processes/<uuid:pk>/documents/", PortalDocumentsView.as_view(), name="portal_process_documents"),
     path("api/portal/processes/<uuid:pk>/documents/upload/", PortalDocumentUploadView.as_view(), name="portal_process_document_upload"),
     path("api/portal/processes/<uuid:pk>/movements/", PortalMovementsView.as_view(), name="portal_process_movements"),
+    path("api/portal/documents/<uuid:pk>/download/", PortalDocumentDownloadView.as_view(), name="portal_document_download"),
     path("api/portal/financial/", PortalFinancialView.as_view(), name="portal_financial"),
     path("api/portal/contracts/", PortalContractsView.as_view(), name="portal_contracts"),
     path("api/portal/messages/", PortalMessagesView.as_view(), name="portal_messages"),
