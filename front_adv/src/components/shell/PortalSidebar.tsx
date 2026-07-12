@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { BrandLogo } from "@/components/shell/BrandLogo";
 import { Home, Gavel, FileStack, DollarSign, FileSignature, MessageSquare, Scale, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useActiveTenant } from "@/lib/auth";
@@ -20,7 +21,7 @@ export function PortalSidebar() {
     <aside className="hidden md:flex sticky top-0 h-screen w-[240px] shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       <div className="flex h-16 items-center gap-3 px-5 border-b border-sidebar-border">
         <div className="grid h-9 w-9 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-          <Scale className="h-4 w-4" />
+          <BrandLogo className="h-4.5 w-4.5" />
         </div>
         <div className="leading-tight min-w-0">
           <p className="font-display text-[15px] font-semibold truncate" title={tenant?.name}>

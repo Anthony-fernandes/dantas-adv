@@ -1,290 +1,344 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
-  Gavel, Users, Timer, DollarSign, TrendingUp,
-  ArrowUpRight, AlertTriangle, CheckSquare,
+  Gavel, Timer, CheckSquare, DollarSign, Clock, ArrowUpRight, Loader2,
+  CheckCircle2, CalendarCheck2, Sparkles, Command,
 } from "lucide-react";
-import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
+import { toast } from "sonner";
+import { StatCard, StatusPill } from "@/components/shell/PageHeader";
 import { ProcessoDialog } from "@/components/shell/ProcessoDialog";
-import { useList, fmtBRL, fmtDate, daysUntil, clientName } from "@/lib/resources";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useUpdate, useCreate, fmtBRL, fmtDate, fmtDateTime, daysUntil, humanize } from "@/lib/resources";
 
 export const Route = createFileRoute("/app/")({
-  component: Dashboard,
+  component: Workspace,
 });
 
-function isOpen(status?: string | null) {
-  const s = String(status || "").toLowerCase();
-  return !["finalizado", "arquivado", "encerrado", "concluido", "concluída", "cancelada", "pago"].includes(s);
+/** Lista paginada do DRF ou array puro. */
+function unwrap(payload: any): any[] {
+  if (Array.isArray(payload)) return payload;
+  return Array.isArray(payload?.results) ? payload.results : [];
 }
 
-function Dashboard() {
-  const { profile } = useAuth();
+/** Consulta condicionada ao papel do usuário (evita 403 para perfis sem acesso). */
+function useGated(resource: string, params: Record<string, any>, enabled: boolean) {
+  return useQuery<any[]>({
+    queryKey: [resource, "workspace", params],
+    queryFn: async () => unwrap(await api.get<any>(`/${resource}/`, params)),
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+function isDoneStatus(s?: string | null) {
+  return ["concluido", "concluida", "cumprido", "pago", "realizada", "cancelada", "cancelado"].includes(String(s || "").toLowerCase());
+}
+
+function Workspace() {
+  const { profile, roles, hasRole, isSuperuser } = useAuth();
   const navigate = useNavigate();
-  const [novoOpen, setNovoOpen] = useState(false);
-  const processes = useList<any>("processes", { ordering: "-updated_at" });
-  const clients = useList<any>("clients");
-  const deadlines = useList<any>("deadlines", { ordering: "due_date" });
-  const hearings = useList<any>("hearings", { ordering: "hearing_date" });
-  const tasks = useList<any>("tasks");
-  const receivables = useList<any>("accounts-receivable");
-  const payables = useList<any>("accounts-payable");
+  const [novoProcesso, setNovoProcesso] = useState(false);
 
-  const procList = processes.data ?? [];
-  const clientMap = useMemo(
-    () => Object.fromEntries((clients.data ?? []).map((c) => [String(c.id), clientName(c)])),
-    [clients.data],
-  );
+  const canLegal = isSuperuser || hasRole("OWNER", "ADMIN", "LAWYER", "ASSISTANT");
+  const canFinance = isSuperuser || hasRole("OWNER", "ADMIN", "FINANCE");
+  const isPartner = isSuperuser || hasRole("OWNER", "ADMIN");
 
-  const stats = useMemo(() => {
-    const activeProc = procList.filter((p) => isOpen(p.status)).length;
-    const activeClients = (clients.data ?? []).filter((c) => String(c.status || "ativo").toLowerCase() !== "inativo").length;
-    const weekDeadlines = (deadlines.data ?? []).filter((d) => {
-      const dd = daysUntil(d.due_date);
-      return dd !== null && dd >= 0 && dd <= 7 && isOpen(d.status);
-    }).length;
-    const aReceber = (receivables.data ?? [])
-      .filter((r) => isOpen(r.status))
-      .reduce((s, r) => s + Number(r.amount || r.value || 0), 0);
-    const aPagar = (payables.data ?? [])
-      .filter((r) => isOpen(r.status))
-      .reduce((s, r) => s + Number(r.amount || r.value || 0), 0);
-    return { activeProc, activeClients, weekDeadlines, aReceber, aPagar };
-  }, [procList, clients.data, deadlines.data, receivables.data, payables.data]);
+  // Fila jurídica (controladoria/advogado)
+  const deadlines = useGated("deadlines", { ordering: "due_date" }, canLegal);
+  const hearings = useGated("hearings", { ordering: "hearing_date" }, canLegal);
+  const tasks = useGated("tasks", {}, canLegal);
+  const processes = useGated("processes", { ordering: "-updated_at" }, canLegal);
+  const hoursToday = useGated("time-entries", { ordering: "-date" }, canLegal && hasRole("LAWYER"));
 
-  const criticalDeadlines = useMemo(
-    () =>
-      [...(deadlines.data ?? [])]
-        .filter((d) => isOpen(d.status))
-        .map((d) => ({ ...d, _d: daysUntil(d.due_date) }))
-        .filter((d) => d._d !== null)
-        .sort((a, b) => (a._d as number) - (b._d as number))
-        .slice(0, 5),
-    [deadlines.data],
-  );
+  // Fila financeira
+  const receivables = useGated("accounts-receivable", { ordering: "due_date" }, canFinance);
+  const payables = useGated("accounts-payable", { ordering: "due_date" }, canFinance);
 
-  const upcomingHearings = useMemo(
-    () =>
-      [...(hearings.data ?? [])]
-        .map((h) => ({ ...h, _d: daysUntil(h.hearing_date) }))
-        .filter((h) => h._d !== null && (h._d as number) >= 0)
-        .sort((a, b) => (a._d as number) - (b._d as number))
-        .slice(0, 4),
-    [hearings.data],
-  );
+  const updateDeadline = useUpdate<any>("deadlines");
+  const updateHearing = useUpdate<any>("hearings");
+  const updateTask = useUpdate<any>("tasks");
+  const updateReceivable = useUpdate<any>("accounts-receivable");
+  const createMovement = useCreate<any>("movements");
 
-  const myTasks = useMemo(
-    () => [...(tasks.data ?? [])].filter((t) => String(t.status).toLowerCase() !== "cancelada").slice(0, 5),
-    [tasks.data],
-  );
-
-  const recentProcesses = procList.slice(0, 5);
+  const today = new Date();
+  const greeting = today.getHours() < 12 ? "Bom dia" : today.getHours() < 18 ? "Boa tarde" : "Boa noite";
   const firstName = (profile?.full_name || "").split(" ")[0] || "";
 
+  // ---- Filas do dia ----
+  const queueDeadlines = useMemo(() => {
+    return (deadlines.data ?? [])
+      .filter((d) => !isDoneStatus(d.status))
+      .map((d) => ({ ...d, _d: daysUntil(d.due_date) }))
+      .filter((d) => d._d === null || d._d <= 7)
+      .sort((a, b) => (a._d ?? 999) - (b._d ?? 999))
+      .slice(0, 8);
+  }, [deadlines.data]);
+
+  const queueHearings = useMemo(() => {
+    return (hearings.data ?? [])
+      .filter((h) => !isDoneStatus(h.status))
+      .map((h) => ({ ...h, _d: daysUntil(h.hearing_date) }))
+      .filter((h) => h._d !== null && h._d >= 0 && h._d <= 7)
+      .sort((a, b) => (a._d ?? 999) - (b._d ?? 999))
+      .slice(0, 6);
+  }, [hearings.data]);
+
+  const queueTasks = useMemo(() => {
+    return (tasks.data ?? [])
+      .filter((t) => !isDoneStatus(t.status))
+      .map((t) => ({ ...t, _d: daysUntil(t.due_date) }))
+      .sort((a, b) => (a._d ?? 999) - (b._d ?? 999))
+      .slice(0, 6);
+  }, [tasks.data]);
+
+  const queueBills = useMemo(() => {
+    return (receivables.data ?? [])
+      .filter((r) => !isDoneStatus(r.status))
+      .map((r) => ({ ...r, _d: daysUntil(r.due_date) }))
+      .filter((r) => r._d === null || r._d <= 7)
+      .sort((a, b) => (a._d ?? 999) - (b._d ?? 999))
+      .slice(0, 8);
+  }, [receivables.data]);
+
+  // ---- Indicadores executivos (sócio/admin) ----
+  const kpis = useMemo(() => {
+    const recv = receivables.data ?? [];
+    const open = recv.filter((r) => !isDoneStatus(r.status));
+    const overdue = open.filter((r) => (daysUntil(r.due_date) ?? 1) < 0);
+    const pay = (payables.data ?? []).filter((r) => !isDoneStatus(r.status));
+    return {
+      aReceber: open.reduce((s, r) => s + Number(r.amount || 0), 0),
+      vencido: overdue.reduce((s, r) => s + Number(r.amount || 0), 0),
+      aPagar: pay.reduce((s, r) => s + Number(r.amount || 0), 0),
+      ativos: (processes.data ?? []).filter((p) => !["finalizado", "arquivado"].includes(String(p.status || "").toLowerCase())).length,
+    };
+  }, [receivables.data, payables.data, processes.data]);
+
+  const todayHours = useMemo(() => {
+    const iso = today.toISOString().slice(0, 10);
+    return (hoursToday.data ?? []).filter((h) => String(h.date).slice(0, 10) === iso)
+      .reduce((s, h) => s + Number(h.hours || 0), 0);
+  }, [hoursToday.data]);
+
+  // ---- Ações inline ----
+  async function concluirPrazo(d: any) {
+    try {
+      await updateDeadline.mutateAsync({ id: String(d.id), status: "concluido" });
+      if (d.process) {
+        // Baixa de prazo vira andamento na timeline do processo.
+        await createMovement.mutateAsync({
+          process: d.process, date: new Date().toISOString().slice(0, 10),
+          type: "Prazo cumprido", description: d.description || "Prazo baixado pela Central de Trabalho",
+        }).catch(() => null);
+      }
+      toast.success("Prazo baixado.");
+    } catch (e: any) { toast.error(e?.detail || "Não foi possível baixar o prazo."); }
+  }
+  async function confirmarAudiencia(h: any) {
+    try { await updateHearing.mutateAsync({ id: String(h.id), status: "confirmada" }); toast.success("Audiência confirmada."); }
+    catch (e: any) { toast.error(e?.detail || "Não foi possível confirmar."); }
+  }
+  async function concluirTarefa(t: any) {
+    try { await updateTask.mutateAsync({ id: String(t.id), status: "concluida" }); toast.success("Tarefa concluída."); }
+    catch (e: any) { toast.error(e?.detail || "Não foi possível concluir."); }
+  }
+  async function receberCobranca(r: any) {
+    try { await updateReceivable.mutateAsync({ id: String(r.id), status: "pago" }); toast.success("Pagamento registrado."); }
+    catch (e: any) { toast.error(e?.detail || "Não foi possível registrar."); }
+  }
+
+  const loadingLegal = canLegal && (deadlines.isLoading || hearings.isLoading || tasks.isLoading);
+
   return (
-    <div className="mx-auto max-w-[1400px] p-6 md:p-8 space-y-8">
-      <PageHeader
-        eyebrow="Painel"
-        title={firstName ? `Bem-vindo(a), ${firstName}.` : "Painel do escritório"}
-        description="Resumo operacional do escritório: prazos, audiências, tarefas e financeiro."
-        actions={
-          <>
-            <Link to="/app/processos" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3.5 py-2 text-[13px] hover:bg-muted transition">
-              Ver processos
-            </Link>
-            <button onClick={() => setNovoOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
+    <div className="mx-auto max-w-[1400px] p-6 md:p-8 space-y-6">
+      {/* Cabeçalho do workspace */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+            {today.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
+          </p>
+          <h1 className="font-display text-2xl md:text-[28px] font-semibold tracking-tight">
+            {greeting}{firstName ? `, ${firstName}` : ""} — seu dia de trabalho
+          </h1>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            {roles.includes("FINANCE") && !canLegal ? "Cobranças, recebimentos e caixa em um só lugar." : "Prazos, audiências, tarefas e pendências, priorizados para hoje."}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="hidden md:inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] text-muted-foreground">
+            <Command className="h-3.5 w-3.5" /> Ctrl+K para buscar ou criar
+          </span>
+          {canLegal && (
+            <button onClick={() => setNovoProcesso(true)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
               Novo processo <ArrowUpRight className="h-3.5 w-3.5" />
             </button>
-            <ProcessoDialog open={novoOpen} onOpenChange={setNovoOpen} onCreated={(p) => navigate({ to: "/app/processos/$id", params: { id: String(p.id) } })} />
-          </>
-        }
-      />
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Processos ativos" value={String(stats.activeProc)} icon={Gavel} hint="em andamento" />
-        <StatCard label="Clientes ativos" value={String(stats.activeClients)} icon={Users} tone="info" hint="carteira" />
-        <StatCard label="Prazos na semana" value={String(stats.weekDeadlines)} icon={Timer} tone="warning" hint="próximos 7 dias" />
-        <StatCard label="A receber (aberto)" value={fmtBRL(stats.aReceber)} icon={DollarSign} tone="success" hint="cobranças em aberto" />
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="surface-card lg:col-span-2 overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <div>
-              <h2 className="text-[15px] font-semibold">Prazos críticos</h2>
-              <p className="text-[12px] text-muted-foreground">Ordenados por urgência</p>
-            </div>
-            <Link to="/app/prazos" className="text-[12px] text-accent hover:underline">Ver todos →</Link>
-          </div>
-          <ul className="divide-y divide-border">
-            {criticalDeadlines.length === 0 && (
-              <li className="px-5 py-6 text-center text-[13px] text-muted-foreground">Nenhum prazo em aberto.</li>
-            )}
-            {criticalDeadlines.map((p) => {
-              const dias = p._d as number;
-              const tone = dias < 0 ? "destructive" : dias <= 3 ? "warning" : "info";
-              return (
-                <li key={p.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/40 transition">
-                  <div className="grid h-10 w-10 place-items-center rounded-md bg-warning/15 text-warning">
-                    <AlertTriangle className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13.5px] font-medium">{p.description || p.title || "Prazo"}</p>
-                    <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
-                      {clientMap[String(p.process)] || p.process_number || "Processo"}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <StatusPill tone={tone as any}>
-                      {dias < 0 ? `${Math.abs(dias)}d em atraso` : dias === 0 ? "Hoje" : `${dias}d restantes`}
-                    </StatusPill>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{fmtDate(p.due_date)}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+      {/* Indicadores executivos (sócio/admin) */}
+      {isPartner && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Processos ativos" value={String(kpis.ativos)} icon={Gavel} />
+          <StatCard label="A receber (aberto)" value={fmtBRL(kpis.aReceber)} icon={DollarSign} tone="info" />
+          <StatCard label="Vencido (inadimplência)" value={fmtBRL(kpis.vencido)} icon={DollarSign} tone="destructive" />
+          <StatCard label="A pagar (aberto)" value={fmtBRL(kpis.aPagar)} icon={DollarSign} tone="warning" />
+        </div>
+      )}
 
-        <section className="surface-card overflow-hidden">
-          <div className="border-b border-border px-5 py-4">
-            <h2 className="text-[15px] font-semibold">Próximas audiências</h2>
-            <p className="text-[12px] text-muted-foreground">Agenda</p>
-          </div>
-          <ul className="divide-y divide-border">
-            {upcomingHearings.length === 0 && (
-              <li className="px-5 py-6 text-center text-[13px] text-muted-foreground">Sem audiências agendadas.</li>
-            )}
-            {upcomingHearings.map((h) => {
-              const d = h.hearing_date ? new Date(h.hearing_date) : null;
-              return (
-                <li key={h.id} className="px-5 py-4 hover:bg-muted/40 transition">
-                  <div className="flex items-start gap-3">
-                    <div className="text-center shrink-0 rounded-md border border-border bg-muted/50 px-2 py-1.5 min-w-[52px]">
-                      <p className="font-display text-lg font-semibold leading-none">{d ? String(d.getDate()).padStart(2, "0") : "--"}</p>
-                      <p className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {d ? d.toLocaleDateString("pt-BR", { month: "short" }) : ""}
-                      </p>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13.5px] font-medium">
-                        {h.type || "Audiência"} {d ? `· ${d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                      </p>
-                      <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{h.location || "Local a definir"}</p>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <StatusPill tone={String(h.modality).toLowerCase().includes("virtual") ? "info" : "muted"}>
-                          {h.modality || "Presencial"}
-                        </StatusPill>
+      {/* CENTRAL DE TRABALHO */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Coluna 1-2: filas acionáveis */}
+        <div className="xl:col-span-2 space-y-6">
+          {canLegal && (
+            <section className="surface-card overflow-hidden">
+              <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                <h2 className="text-[15px] font-semibold inline-flex items-center gap-2"><Timer className="h-4 w-4 text-warning" /> Prazos — vencidos e próximos 7 dias</h2>
+                <Link to="/app/prazos" className="text-[12px] text-accent hover:underline">Ver todos →</Link>
+              </div>
+              <ul className="divide-y divide-border">
+                {loadingLegal && <li className="px-5 py-8 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></li>}
+                {!loadingLegal && queueDeadlines.length === 0 && <li className="px-5 py-8 text-center text-[13px] text-muted-foreground">Nenhum prazo na janela crítica. ✅</li>}
+                {queueDeadlines.map((d) => {
+                  const dd = d._d as number | null;
+                  return (
+                    <li key={d.id} className="flex items-center gap-3 px-5 py-3">
+                      <StatusPill tone={dd !== null && dd < 0 ? "destructive" : dd !== null && dd <= 1 ? "warning" : "info"}>
+                        {dd === null ? "—" : dd < 0 ? `${Math.abs(dd)}d atraso` : dd === 0 ? "HOJE" : `${dd}d`}
+                      </StatusPill>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13.5px] font-medium">{d.description || "Prazo"}</p>
+                        <p className="text-[11.5px] text-muted-foreground">{fmtDate(d.due_date)} · {humanize(d.priority)}</p>
                       </div>
+                      {d.process && (
+                        <button onClick={() => navigate({ to: "/app/processos/$id", params: { id: String(d.process) } })}
+                          className="hidden sm:inline text-[12px] text-accent hover:underline">processo</button>
+                      )}
+                      <button onClick={() => concluirPrazo(d)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium hover:bg-success/10 hover:text-success transition">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Baixar
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
+          {canLegal && (
+            <section className="surface-card overflow-hidden">
+              <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                <h2 className="text-[15px] font-semibold inline-flex items-center gap-2"><Gavel className="h-4 w-4 text-info" /> Audiências da semana</h2>
+                <Link to="/app/audiencias" className="text-[12px] text-accent hover:underline">Ver todas →</Link>
+              </div>
+              <ul className="divide-y divide-border">
+                {!loadingLegal && queueHearings.length === 0 && <li className="px-5 py-8 text-center text-[13px] text-muted-foreground">Nenhuma audiência nos próximos 7 dias.</li>}
+                {queueHearings.map((h) => (
+                  <li key={h.id} className="flex items-center gap-3 px-5 py-3">
+                    <StatusPill tone={h._d === 0 ? "warning" : "info"}>{h._d === 0 ? "HOJE" : `${h._d}d`}</StatusPill>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13.5px] font-medium">{h.type || "Audiência"} · {fmtDateTime(h.hearing_date)}</p>
+                      <p className="text-[11.5px] text-muted-foreground">{h.location || h.modality || "—"}</p>
                     </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+                    {String(h.status).toLowerCase() !== "confirmada" ? (
+                      <button onClick={() => confirmarAudiencia(h)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium hover:bg-info/10 hover:text-info transition">
+                        <CalendarCheck2 className="h-3.5 w-3.5" /> Confirmar
+                      </button>
+                    ) : (
+                      <StatusPill tone="success">Confirmada</StatusPill>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {canFinance && (
+            <section className="surface-card overflow-hidden">
+              <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                <h2 className="text-[15px] font-semibold inline-flex items-center gap-2"><DollarSign className="h-4 w-4 text-success" /> Cobranças — vencidas e da semana</h2>
+                <Link to="/app/financeiro" className="text-[12px] text-accent hover:underline">Financeiro →</Link>
+              </div>
+              <ul className="divide-y divide-border">
+                {receivables.isLoading && <li className="px-5 py-8 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></li>}
+                {!receivables.isLoading && queueBills.length === 0 && <li className="px-5 py-8 text-center text-[13px] text-muted-foreground">Nada vencendo nos próximos 7 dias. 🎉</li>}
+                {queueBills.map((r) => {
+                  const dd = r._d as number | null;
+                  return (
+                    <li key={r.id} className="flex items-center gap-3 px-5 py-3">
+                      <StatusPill tone={dd !== null && dd < 0 ? "destructive" : "warning"}>
+                        {dd === null ? "—" : dd < 0 ? `${Math.abs(dd)}d atraso` : dd === 0 ? "HOJE" : `${dd}d`}
+                      </StatusPill>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13.5px] font-medium">{r.description || "Cobrança"}</p>
+                        <p className="text-[11.5px] text-muted-foreground">{r.client_name || ""} · vence {fmtDate(r.due_date)}</p>
+                      </div>
+                      <span className="text-[13px] font-semibold tabular-nums">{fmtBRL(r.amount)}</span>
+                      <button onClick={() => receberCobranca(r)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium hover:bg-success/10 hover:text-success transition">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Receber
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        {/* Coluna 3: tarefas + produtividade pessoal */}
+        <div className="space-y-6">
+          {canLegal && (
+            <section className="surface-card overflow-hidden">
+              <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                <h2 className="text-[15px] font-semibold inline-flex items-center gap-2"><CheckSquare className="h-4 w-4 text-primary" /> Tarefas</h2>
+                <Link to="/app/tarefas" className="text-[12px] text-accent hover:underline">Todas →</Link>
+              </div>
+              <ul className="divide-y divide-border">
+                {!loadingLegal && queueTasks.length === 0 && <li className="px-5 py-8 text-center text-[13px] text-muted-foreground">Sem tarefas pendentes.</li>}
+                {queueTasks.map((t) => (
+                  <li key={t.id} className="flex items-center gap-3 px-5 py-3">
+                    <button aria-label="Concluir tarefa" onClick={() => concluirTarefa(t)}
+                      className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-border bg-background hover:border-success hover:text-success transition">
+                      <CheckCircle2 className="h-3.5 w-3.5 opacity-0 hover:opacity-100" />
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-medium">{t.title}</p>
+                      <p className="text-[11.5px] text-muted-foreground">{t.due_date ? `vence ${fmtDate(t.due_date)}` : "sem prazo"} · {humanize(t.priority)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {canLegal && hasRole("LAWYER") && (
+            <section className="surface-card p-5">
+              <h2 className="text-[15px] font-semibold inline-flex items-center gap-2"><Clock className="h-4 w-4 text-info" /> Suas horas hoje</h2>
+              <p className="mt-2 font-display text-3xl font-semibold tabular-nums">{todayHours.toFixed(1).replace(".", ",")}h</p>
+              <p className="text-[12px] text-muted-foreground">Horas lançadas em {fmtDate(today.toISOString())}</p>
+              <Link to="/app/horas" search={{ novo: 1 } as any} className="mt-3 block w-full rounded-md border border-border bg-card px-3 py-2 text-center text-[12.5px] hover:bg-muted transition">
+                Lançar horas agora
+              </Link>
+            </section>
+          )}
+
+          {/* IA-ready: ponto preparado para o assistente (resumo do dia, sugestões). */}
+          <section className="surface-card p-5 border-dashed">
+            <h2 className="text-[14px] font-semibold inline-flex items-center gap-2 text-muted-foreground">
+              <Sparkles className="h-4 w-4" /> Assistente NimbusLaw
+            </h2>
+            <p className="mt-1.5 text-[12.5px] text-muted-foreground">
+              Em breve: resumo inteligente do seu dia, sugestões de prioridade e rascunhos automáticos.
+            </p>
+          </section>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="surface-card lg:col-span-2 overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <div>
-              <h2 className="text-[15px] font-semibold">Tarefas</h2>
-              <p className="text-[12px] text-muted-foreground">Pendências do escritório</p>
-            </div>
-            <Link to="/app/tarefas" className="text-[12px] text-accent hover:underline">Ver todas →</Link>
-          </div>
-          <ul className="divide-y divide-border">
-            {myTasks.length === 0 && (
-              <li className="px-5 py-6 text-center text-[13px] text-muted-foreground">Nenhuma tarefa pendente.</li>
-            )}
-            {myTasks.map((t) => {
-              const done = String(t.status).toLowerCase() === "concluida";
-              const prio = String(t.priority || "media").toLowerCase();
-              return (
-                <li key={t.id} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition">
-                  <div className={`grid h-6 w-6 place-items-center rounded-md border ${done ? "bg-success text-success-foreground border-success" : "border-border bg-background"}`}>
-                    {done && <CheckSquare className="h-3.5 w-3.5" />}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`truncate text-[13.5px] ${done ? "text-muted-foreground line-through" : "font-medium"}`}>{t.title}</p>
-                  </div>
-                  <StatusPill tone={prio === "urgente" || prio === "alta" ? "destructive" : prio === "media" ? "warning" : "muted"}>
-                    {prio}
-                  </StatusPill>
-                  <span className="text-[11.5px] text-muted-foreground w-16 text-right shrink-0">{fmtDate(t.due_date)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
-        <section className="surface-card p-5 overflow-hidden">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold">Financeiro</h2>
-            <Link to="/app/financeiro" className="text-[12px] text-accent hover:underline">Detalhes →</Link>
-          </div>
-          <div className="mt-4 space-y-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">A receber (aberto)</p>
-              <p className="mt-1 font-display text-2xl font-semibold text-success tabular-nums">{fmtBRL(stats.aReceber)}</p>
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">A pagar (aberto)</p>
-              <p className="mt-1 font-display text-2xl font-semibold tabular-nums">{fmtBRL(stats.aPagar)}</p>
-            </div>
-            <div className="flex items-center gap-2 rounded-md border border-success/20 bg-success/8 px-3 py-2.5">
-              <TrendingUp className="h-4 w-4 text-success shrink-0" />
-              <p className="text-[12px] text-foreground">
-                Saldo projetado: <span className="font-semibold">{fmtBRL(stats.aReceber - stats.aPagar)}</span>.
-              </p>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <section className="surface-card overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <div>
-            <h2 className="text-[15px] font-semibold">Processos recentes</h2>
-            <p className="text-[12px] text-muted-foreground">Últimas atualizações</p>
-          </div>
-          <Link to="/app/processos" className="text-[12px] text-accent hover:underline">Ver todos →</Link>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
-            <thead className="bg-muted/40 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-              <tr>
-                <th className="px-5 py-2.5 text-left font-medium">Número CNJ</th>
-                <th className="px-4 py-2.5 text-left font-medium">Cliente</th>
-                <th className="px-4 py-2.5 text-left font-medium">Área</th>
-                <th className="px-4 py-2.5 text-left font-medium">Fase</th>
-                <th className="px-4 py-2.5 text-right font-medium">Valor</th>
-                <th className="px-5 py-2.5 text-left font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {recentProcesses.length === 0 && (
-                <tr><td colSpan={6} className="px-5 py-6 text-center text-muted-foreground">Nenhum processo cadastrado.</td></tr>
-              )}
-              {recentProcesses.map((p) => (
-                <tr key={p.id} className="hover:bg-muted/30 transition">
-                  <td className="px-5 py-3 font-mono text-[12.5px]">
-                    <Link to="/app/processos/$id" params={{ id: String(p.id) }} className="text-primary hover:underline">{p.cnj || "—"}</Link>
-                  </td>
-                  <td className="px-4 py-3 font-medium">{p.client_name || clientMap[String(p.client)] || "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.area || "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground capitalize">{p.phase || "—"}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{fmtBRL(p.cause_value)}</td>
-                  <td className="px-5 py-3">
-                    <StatusPill tone={isOpen(p.status) ? "info" : "muted"}>{p.status || "—"}</StatusPill>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <ProcessoDialog open={novoProcesso} onOpenChange={setNovoProcesso} onCreated={(p) => navigate({ to: "/app/processos/$id", params: { id: String(p.id) } })} />
     </div>
   );
 }

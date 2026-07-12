@@ -10,6 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 const ROLE_LABEL: Record<string, string> = {
   OWNER: "Proprietário", ADMIN: "Administrador", LAWYER: "Advogado(a)",
@@ -45,23 +47,23 @@ export function AppTopbar({ title, breadcrumb }: { title?: string; breadcrumb?: 
         {title && <h1 className="truncate text-[15px] font-semibold text-foreground">{title}</h1>}
       </div>
 
-      <div className="relative hidden lg:block w-[380px]">
+      {/* Abre o Command Palette (Ctrl/Cmd+K) */}
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))}
+        className="relative hidden lg:flex w-[380px] h-9 items-center rounded-md border border-border bg-muted/50 pl-9 pr-16 text-left text-[13px] text-muted-foreground hover:bg-background hover:border-ring transition"
+      >
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
-          placeholder="Buscar processos, clientes, prazos…"
-          className="h-9 w-full rounded-md border border-border bg-muted/50 pl-9 pr-16 text-[13px] outline-none focus:bg-background focus:border-ring focus:ring-2 focus:ring-ring/20 transition"
-        />
+        Buscar ou criar… processos, clientes, documentos
         <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
           <Command className="h-3 w-3" />K
         </kbd>
-      </div>
+      </button>
 
       <button onClick={toggle} aria-label="Alternar tema" className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition">
         {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </button>
-      <button aria-label="Notificações" className="relative grid h-9 w-9 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition">
-        <Bell className="h-4 w-4" />
-      </button>
+      <NotificationsBell />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -86,5 +88,61 @@ export function AppTopbar({ title, breadcrumb }: { title?: string; breadcrumb?: 
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
+  );
+}
+
+
+/** Sino de notificações — consome /api/notifications/ (por usuário, tenant-scoped). */
+function NotificationsBell() {
+  const qc = useQueryClient();
+  const notifications = useQuery<any[]>({
+    queryKey: ["notifications", "bell"],
+    queryFn: async () => {
+      const data = await api.get<any>("/notifications/", { ordering: "-created_at" });
+      return Array.isArray(data) ? data : data?.results ?? [];
+    },
+    refetchInterval: 60_000,
+  });
+  const items = notifications.data ?? [];
+  const unread = items.filter((n) => !n.read);
+
+  async function markRead(n: any) {
+    try {
+      await api.patch(`/notifications/${n.id}/`, { read: true });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+    } catch { /* silencioso */ }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button aria-label="Notificações" className="relative grid h-9 w-9 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition">
+          <Bell className="h-4 w-4" />
+          {unread.length > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[9.5px] font-semibold text-destructive-foreground">
+              {unread.length > 9 ? "9+" : unread.length}
+            </span>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80 p-0">
+        <div className="border-b border-border px-4 py-3">
+          <p className="text-[13px] font-semibold">Notificações</p>
+        </div>
+        <div className="max-h-[320px] overflow-y-auto">
+          {items.length === 0 && <p className="px-4 py-8 text-center text-[12.5px] text-muted-foreground">Nenhuma notificação.</p>}
+          {items.slice(0, 12).map((n) => (
+            <button key={n.id} onClick={() => markRead(n)}
+              className={`block w-full border-b border-border/60 px-4 py-3 text-left transition hover:bg-muted/40 ${n.read ? "opacity-60" : ""}`}>
+              <p className="text-[12.5px] font-medium leading-tight">{n.title}</p>
+              {n.message && <p className="mt-0.5 text-[12px] text-muted-foreground line-clamp-2">{n.message}</p>}
+              <p className="mt-1 text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                {new Date(n.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+              </p>
+            </button>
+          ))}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

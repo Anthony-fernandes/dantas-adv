@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { BrandLogo } from "@/components/shell/BrandLogo";
 import { useAuth, useActiveTenant } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
 import {
@@ -66,7 +67,7 @@ export function AppSidebar() {
       {/* Brand */}
       <div className="flex h-16 items-center gap-3 px-5 border-b border-sidebar-border">
         <div className="grid h-9 w-9 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-          <Scale className="h-4.5 w-4.5" />
+          <BrandLogo className="h-5 w-5" />
         </div>
         <div className="leading-tight min-w-0">
           <p className="font-display text-[15px] font-semibold text-sidebar-foreground truncate" title={tenant?.name}>

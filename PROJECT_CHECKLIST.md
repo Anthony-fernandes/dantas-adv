@@ -74,11 +74,11 @@ Referência de diagnóstico: `AUDIT_NIMBUSLAW.md`.
 - [ ] Encerramento com resultado (êxito/perda/acordo) refletindo em relatórios
 - [ ] Tudo que acontece no processo gera Movement/auditoria e aparece na timeline
 
-### F2 🔴 Fluxo completo de Controladoria ("Meu Dia")
-- [ ] Central operacional "Meu Dia": prazos fatais, audiências de hoje/semana, tarefas atrasadas — com ação direta
-- [ ] Baixa de prazo com nota/comprovação → gera andamento na timeline do processo
-- [ ] Sino de notificações no topbar (API `notifications` pronta)
-- [ ] Busca global Cmd+K (API `/search/` pronta)
+### F2 🔴 Fluxo completo de Controladoria ("Meu Dia")  — ver também USER_JOURNEYS.md
+- [x] **Meu Workspace** substitui o dashboard: Central de Trabalho com prazos (vencidos/7d), audiências da semana, tarefas e cobranças — todas com ação inline (baixar/confirmar/concluir/receber), composição por papel (LAWYER/ASSISTANT/FINANCE/OWNER)
+- [x] Baixa de prazo pela Central gera andamento 'Prazo cumprido' na timeline do processo
+- [x] Sino de notificações real no topbar (badge de não lidas, marcar como lida, refresh 60s)
+- [x] Command Palette Ctrl/Cmd+K: busca real (processos/clientes/documentos/tarefas) + comandos de criação que abrem o pop-up direto (?novo=1) + trocar escritório
 - [ ] Atribuição de responsável em prazos/tarefas + filtro "meus itens"
 
 ### F3 🔴 Fluxo completo do Portal do Cliente (ativável pelo escritório)

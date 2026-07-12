@@ -6,7 +6,7 @@ import { ClienteDialog } from "@/components/shell/ClienteDialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useList, clientName } from "@/lib/resources";
+import { useList, clientName , useNovoParam } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/clientes/")({
@@ -31,6 +31,7 @@ function ClientesPage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [open, setOpen] = useState(false);
+  useNovoParam(() => setOpen(true));
 
   const procByClient = useMemo(() => {
     const m: Record<string, number> = {};

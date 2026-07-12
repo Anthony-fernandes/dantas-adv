@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { FileStack, Upload, FileText, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { DocumentoDialog } from "@/components/shell/DocumentoDialog";
-import { useList, fmtDate } from "@/lib/resources";
+import { useList, fmtDate , useNovoParam } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/documentos/")({
@@ -22,6 +22,7 @@ function fmtSize(bytes?: number | null) {
 function DocumentosPage() {
   const documents = useList<any>("documents", { ordering: "-created_at" });
   const [open, setOpen] = useState(false);
+  useNovoParam(() => setOpen(true));
   const rows = documents.data ?? [];
 
   const stats = useMemo(() => ({

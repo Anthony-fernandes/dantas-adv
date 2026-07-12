@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { AppSidebar } from "@/components/shell/AppSidebar";
 import { AppTopbar } from "@/components/shell/AppTopbar";
+import { CommandPalette } from "@/components/shell/CommandPalette";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/app")({
@@ -38,6 +39,7 @@ function AppLayout() {
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
+      <CommandPalette />
       <AppSidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppTopbar />

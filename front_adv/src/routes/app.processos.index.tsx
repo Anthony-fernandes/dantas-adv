@@ -6,7 +6,7 @@ import { ProcessoDialog } from "@/components/shell/ProcessoDialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useList, fmtBRL, clientName } from "@/lib/resources";
+import { useList, fmtBRL, clientName , useNovoParam } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/processos/")({
@@ -34,6 +34,7 @@ function ProcessosPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [open, setOpen] = useState(false);
+  useNovoParam(() => setOpen(true));
 
   const clientMap = useMemo(
     () => Object.fromEntries((clients.data ?? []).map((c) => [String(c.id), clientName(c)])),

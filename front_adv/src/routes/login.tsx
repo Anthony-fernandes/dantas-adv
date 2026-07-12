@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { BrandLogo } from "@/components/shell/BrandLogo";
 import { Scale, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -41,7 +42,7 @@ function LoginPage() {
              style={{ backgroundImage: "radial-gradient(600px 400px at 20% 20%, oklch(1 0 0 / 0.15), transparent), radial-gradient(500px 300px at 80% 80%, oklch(0.55 0.14 255 / 0.4), transparent)" }} />
         <div className="relative flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-md bg-white/10 backdrop-blur">
-            <Scale className="h-5 w-5" />
+            <BrandLogo className="h-5 w-5" />
           </div>
           <div>
             <p className="font-display text-lg font-semibold">{BRAND.name}</p>
@@ -70,7 +71,7 @@ function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-8 flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
-              <Scale className="h-4 w-4" />
+              <BrandLogo className="h-4 w-4" />
             </div>
             <span className="font-display text-lg font-semibold">{BRAND.name}</span>
           </div>

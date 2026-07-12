@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BrandLogo } from "@/components/shell/BrandLogo";
 import { ArrowRight, Scale, ShieldCheck, Sparkles, LineChart, Users, Gavel } from "lucide-react";
 import { BRAND, pageTitle } from "@/lib/brand";
 
@@ -20,7 +21,7 @@ function Landing() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
-              <Scale className="h-4 w-4" />
+              <BrandLogo className="h-4 w-4" />
             </div>
             <span className="font-display text-[17px] font-semibold">{BRAND.name}</span>
           </Link>

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Timer, AlertTriangle, Clock, CheckCircle2, Plus, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
 import { FormDialog } from "@/components/shell/FormDialog";
-import { useList, useCreate, fmtDate, daysUntil, humanize } from "@/lib/resources";
+import { useList, useCreate, fmtDate, daysUntil, humanize , useNovoParam } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/prazos/")({
@@ -21,6 +21,7 @@ function PrazosPage() {
   const processes = useList<any>("processes");
   const create = useCreate<any>("deadlines");
   const [open, setOpen] = useState(false);
+  useNovoParam(() => setOpen(true));
   const rows = deadlines.data ?? [];
 
   const processOptions = useMemo(

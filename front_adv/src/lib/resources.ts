@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, apiGetAllPages } from "./api";
 import { useAuth } from "./auth";
@@ -97,4 +98,21 @@ export function humanize(value?: string | null) {
 
 export function clientName(c: any): string {
   return String(c?.name || c?.full_name || c?.razao_social || c?.client_name || c?.cliente_nome || "—").trim();
+}
+
+/**
+ * Abre o pop-up de cadastro quando a rota recebe `?novo=1`
+ * (usado pelo Command Palette: "Criar processo", "Criar cliente", …).
+ */
+export function useNovoParam(open: () => void) {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("novo")) {
+      open();
+      params.delete("novo");
+      const qs = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }

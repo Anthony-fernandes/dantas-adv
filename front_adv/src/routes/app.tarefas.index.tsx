@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Plus, Loader2, CheckCircle2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
 import { FormDialog } from "@/components/shell/FormDialog";
-import { useList, useUpdate, useCreate, fmtDate, humanize } from "@/lib/resources";
+import { useList, useUpdate, useCreate, fmtDate, humanize , useNovoParam } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/tarefas/")({
@@ -26,6 +26,7 @@ function TarefasPage() {
   const create = useCreate<any>("tasks");
   const [statusFilter, setStatusFilter] = useState("all");
   const [open, setOpen] = useState(false);
+  useNovoParam(() => setOpen(true));
   const rows = tasks.data ?? [];
 
   const processOptions = useMemo(

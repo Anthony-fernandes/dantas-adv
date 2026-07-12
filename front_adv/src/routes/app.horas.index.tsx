@@ -5,7 +5,7 @@ import { Clock, Plus, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { FormDialog } from "@/components/shell/FormDialog";
 import { StatusPill } from "@/components/shell/PageHeader";
-import { useList, useCreate, fmtBRL, fmtDate } from "@/lib/resources";
+import { useList, useCreate, fmtBRL, fmtDate , useNovoParam } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/horas/")({
@@ -26,6 +26,7 @@ function HorasPage() {
   const processes = useList<any>("processes");
   const create = useCreate<any>("time-entries");
   const [open, setOpen] = useState(false);
+  useNovoParam(() => setOpen(true));
   const rows = entries.data ?? [];
 
   const processOptions = useMemo(

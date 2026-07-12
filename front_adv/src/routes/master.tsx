@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
+import { BrandLogo } from "@/components/shell/BrandLogo";
 import { BRAND } from "@/lib/brand";
 import { Building2, Users, Shield, BarChart3, Scale, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,7 @@ function MasterLayout() {
       <aside className="hidden md:flex sticky top-0 h-screen w-[220px] shrink-0 flex-col bg-primary text-primary-foreground gradient-brand">
         <div className="flex h-16 items-center gap-3 px-5 border-b border-white/10">
           <div className="grid h-8 w-8 place-items-center rounded-md bg-white/10">
-            <Scale className="h-4 w-4" />
+            <BrandLogo className="h-4 w-4" />
           </div>
           <div>
             <p className="font-display text-[14.5px] font-semibold">{BRAND.name}</p>

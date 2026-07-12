@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Plus, MapPin, Video, FolderOpen, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
 import { FormDialog } from "@/components/shell/FormDialog";
-import { useList, useCreate, fmtDateTime, daysUntil } from "@/lib/resources";
+import { useList, useCreate, fmtDateTime, daysUntil , useNovoParam } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/audiencias/")({
@@ -21,6 +21,7 @@ function AudienciasPage() {
   const processes = useList<any>("processes");
   const create = useCreate<any>("hearings");
   const [open, setOpen] = useState(false);
+  useNovoParam(() => setOpen(true));
   const rows = hearings.data ?? [];
 
   const processOptions = useMemo(
