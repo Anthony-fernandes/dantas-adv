@@ -311,3 +311,39 @@ export async function apiGetAllPages<T>(path: string, params?: Params, maxPages 
   }
   return items;
 }
+
+/**
+ * Download autenticado (JWT + X-Tenant-ID) de um arquivo da API.
+ * Necessário porque <a href> não envia o header Authorization.
+ */
+export async function apiDownload(path: string, fallbackName = "arquivo"): Promise<void> {
+  const headers: Record<string, string> = {};
+  const access = getAccessToken();
+  const tenant = getActiveTenantId();
+  if (access) headers.Authorization = `Bearer ${access}`;
+  if (tenant) headers["X-Tenant-ID"] = tenant;
+  const resp = await fetch(buildUrl(path.startsWith("/api/") ? path.slice(4) : path), { headers });
+  if (!resp.ok) throw toApiError(resp.status, await readErrorPayload(resp));
+  const ct = resp.headers.get("Content-Type") || "";
+  if (ct.includes("application/json")) {
+    // Documento externo (file_url): backend devolve {redirect}
+    const data = await resp.json();
+    if (data?.redirect) {
+      window.open(data.redirect, "_blank", "noopener");
+      return;
+    }
+    throw { status: 500, detail: "Resposta de download inesperada." } as ApiError;
+  }
+  const blob = await resp.blob();
+  const dispo = resp.headers.get("Content-Disposition") || "";
+  const m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(dispo);
+  const name = m ? decodeURIComponent(m[1]) : fallbackName;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}

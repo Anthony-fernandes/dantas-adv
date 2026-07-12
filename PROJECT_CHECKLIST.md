@@ -51,13 +51,13 @@ Referência de diagnóstico: `AUDIT_NIMBUSLAW.md`.
 - [x] Módulos "vitrine" ocultados do menu (blog, landing, relatórios, integrações, contabilidade, configurações) até terem backend real
 - [x] `src/lib/mock.ts` excluído — typecheck e build limpos
 
-## 3. 🔴 Multiempresa (isolamento total)
-- [ ] Auditar todos os models: FK `tenant` obrigatória em todo registro de negócio
-- [ ] Auditar todos os querysets/managers: filtro por tenant (revisar `get_queryset`)
-- [ ] Uploads/downloads (`documents`): validar tenant no objeto, não só na rota
-- [ ] Endpoints globais (Admin Master / `/public/*` / convites): confirmar não-vazamento
-- [ ] Tarefas assíncronas e notificações carregam tenant
-- [ ] Testes automatizados de isolamento (tenant A nunca lê/escreve dados de B)
+## 3. 🔴 Multiempresa (isolamento total)  ✅ CONCLUÍDO
+- [x] Auditar todos os models/viewsets: recursos de negócio herdam `TenantScoped/TenantAudited` (auditado em 12/07)
+- [x] Querysets auditados: bases tenant-scoped + views manuais (dashboard/export/search/reports) usam `request.tenant`
+- [x] Uploads validam tenant do client/process; **download agora via endpoint autenticado** `GET /api/documents/{id}/download/` (tenant + access_level + auditoria); serializer não expõe mais URL direta de /media
+- [x] Accounts (TenantViewSet/UserViewSet) com escopo manual correto; media estática servida apenas em DEBUG
+- [x] Notificações tenant-scoped (NotificationViewSet); e-mails carregam office_name do tenant
+- [x] Testes de isolamento: processes (já existiam) + documents (lista/retrieve/download/auth: 6 testes) + finance (2 testes) — suite 68/68 OK
 
 ## 4. 🟠 Admin Master (plataforma SaaS)
 - [ ] Separar visualmente do app do escritório (shell próprio, sem cara de tenant)

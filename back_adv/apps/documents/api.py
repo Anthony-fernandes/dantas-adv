@@ -1,5 +1,6 @@
 ﻿from django.db import connection, models
 from django.db.models import Q
+from django.http import FileResponse, Http404
 from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -10,6 +11,7 @@ from rest_framework.exceptions import NotFound
 
 from apps.core.permissions import IsTenantMember, IsLegal
 from apps.core.viewsets import TenantScopedModelViewSet
+from apps.core.services.audit import audit_event
 from apps.accounts.models import UserRole
 from django.core.files.base import ContentFile
 
@@ -28,11 +30,10 @@ class DocumentSerializer(serializers.ModelSerializer):
         )
 
     def get_file_download_url(self, obj: Document):
+        # Download SEMPRE via endpoint autenticado e tenant-scoped —
+        # nunca a URL direta de /media (sem controle de acesso).
         if obj.file:
-            try:
-                return obj.file.url
-            except Exception:
-                return None
+            return f"/api/documents/{obj.id}/download/"
         return obj.file_url
 
 
@@ -201,6 +202,34 @@ class DocumentViewSet(TenantScopedModelViewSet):
         headers = self.get_success_headers(serializer.data)
         response_serializer = DocumentSerializer(serializer.instance, context=self.get_serializer_context())
         return Response(response_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=True, methods=['get'], url_path='download')
+    def download(self, request, pk=None):
+        """Download autenticado. get_object() usa o queryset tenant-scoped
+        (+ access_level/allowed_roles), então documento de outro tenant → 404."""
+        doc = self.get_object()
+        if not doc.file:
+            if doc.file_url:
+                return Response({'redirect': doc.file_url})
+            raise Http404
+        try:
+            handle = doc.file.open('rb')
+        except FileNotFoundError:
+            raise Http404
+        filename = doc.filename or doc.file.name.rsplit('/', 1)[-1]
+        resp = FileResponse(handle, as_attachment=True, filename=filename)
+        if doc.content_type:
+            resp['Content-Type'] = doc.content_type
+        audit_event(
+            tenant=request.tenant,
+            actor=request.user,
+            event_type='document_downloaded',
+            entity_type='Document',
+            entity_id=doc.id,
+            summary=f'Download de documento: {doc.title or filename}',
+            payload={'filename': filename},
+        )
+        return resp
 
     @action(detail=True, methods=['post'], url_path='new-version')
     def new_version(self, request, pk=None):

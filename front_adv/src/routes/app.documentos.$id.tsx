@@ -4,6 +4,8 @@ import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { useDetail, fmtBRL, fmtDate, fmtDateTime, humanize } from "@/lib/resources";
 import { pageTitle } from "@/lib/brand";
+import { apiDownload } from "@/lib/api";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/documentos/$id")({
   head: () => ({ meta: [{ title: pageTitle("Documento") }] }),
@@ -28,7 +30,7 @@ function Detail() {
         { label: "Processo", value: <span className="font-mono text-[13px]">{rec.process_number || rec.process || "—"}</span> },
         { label: "Cliente", value: rec.client_name || rec.client || "—" },
         { label: "Enviado em", value: fmtDateTime(rec.created_at) },
-        { label: "Arquivo", value: rec.file || rec.file_url ? <a className="text-primary hover:underline" href={rec.file_url || rec.file} target="_blank" rel="noreferrer">Baixar arquivo</a> : "—" },
+        { label: "Arquivo", value: rec.file_download_url ? <button className="text-primary hover:underline" onClick={() => apiDownload(rec.file_download_url, rec.filename || rec.title || "documento").catch((e: any) => toast.error(e?.detail || "Falha no download."))}>Baixar arquivo</button> : "—" },
       ]}
     />
   );
