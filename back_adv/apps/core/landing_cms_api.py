@@ -28,7 +28,7 @@ from apps.core.permissions import IsOwnerOrAdmin, IsTenantMember
 from apps.core.viewsets import TenantAuditedModelViewSet, TenantScopedModelViewSet
 from apps.processes.models import LegalCause, ProcessArea
 
-logger = logging.getLogger("lawflow.request")
+logger = logging.getLogger("nimbuslaw.request")
 
 
 def split_recipients(raw: str | None) -> list[str]:

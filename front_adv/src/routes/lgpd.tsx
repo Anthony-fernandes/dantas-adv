@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Shield, Lock, FileCheck2, UserCheck, Mail, Scale } from "lucide-react";
+import { BRAND, pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/lgpd")({
   head: () => ({
     meta: [
-      { title: "Política de Privacidade e LGPD — JurisFlow" },
-      { name: "description", content: "Como o JurisFlow trata dados pessoais em conformidade com a LGPD." },
+      { title: pageTitle("Política de Privacidade e LGPD") },
+      { name: "description", content: "Como o NimbusLaw trata dados pessoais em conformidade com a LGPD." },
     ],
   }),
   component: LgpdPage,
@@ -18,7 +19,7 @@ function LgpdPage() {
         <div className="mx-auto max-w-[1000px] px-6 py-5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground"><Scale className="h-4 w-4" /></div>
-            <span className="font-display font-semibold">JurisFlow</span>
+            <span className="font-display font-semibold">{BRAND.name}</span>
           </Link>
           <Link to="/login" className="text-[13px] text-muted-foreground hover:text-foreground">Entrar</Link>
         </div>
@@ -48,7 +49,7 @@ function LgpdPage() {
 
         <div className="prose prose-sm max-w-none mt-10 space-y-8 text-[14.5px] leading-relaxed text-foreground/85">
           <Section n="1" title="Controlador dos dados">
-            <p>A JurisFlow Tecnologia Jurídica Ltda., inscrita no CNPJ nº 00.000.000/0001-00, atua como <strong>controladora</strong> dos dados coletados diretamente por meio da plataforma e como <strong>operadora</strong> dos dados tratados em nome dos escritórios contratantes, nos termos da Lei nº 13.709/2018 (LGPD).</p>
+            <p>A NimbusLaw Tecnologia Jurídica Ltda., inscrita no CNPJ nº 00.000.000/0001-00, atua como <strong>controladora</strong> dos dados coletados diretamente por meio da plataforma e como <strong>operadora</strong> dos dados tratados em nome dos escritórios contratantes, nos termos da Lei nº 13.709/2018 (LGPD).</p>
           </Section>
           <Section n="2" title="Dados coletados">
             <ul className="list-disc pl-6 space-y-1.5">
@@ -73,7 +74,7 @@ function LgpdPage() {
           <Section n="7" title="Encarregado (DPO)">
             <div className="rounded-lg border border-border bg-card p-4 not-prose">
               <p className="inline-flex items-center gap-2 font-medium"><UserCheck className="h-4 w-4 text-primary" /> Dra. Beatriz Marinho — OAB/SP 145.909</p>
-              <p className="inline-flex items-center gap-2 mt-2 text-[13.5px] text-muted-foreground"><Mail className="h-4 w-4" /> dpo@jurisflow.com.br</p>
+              <p className="inline-flex items-center gap-2 mt-2 text-[13.5px] text-muted-foreground"><Mail className="h-4 w-4" /> dpo@nimbuslaw.com.br</p>
             </div>
           </Section>
         </div>
@@ -83,13 +84,13 @@ function LgpdPage() {
             <p className="font-display text-lg font-semibold">Preciso exercer um direito da LGPD</p>
             <p className="text-[13px] text-white/75">Responderemos em até 15 dias corridos.</p>
           </div>
-          <a href="mailto:dpo@jurisflow.com.br" className="rounded-md bg-white text-primary px-4 py-2 text-[13px] font-medium hover:bg-white/90">Contatar DPO</a>
+          <a href="mailto:dpo@nimbuslaw.com.br" className="rounded-md bg-white text-primary px-4 py-2 text-[13px] font-medium hover:bg-white/90">Contatar DPO</a>
         </div>
       </main>
 
       <footer className="border-t border-border mt-16">
         <div className="mx-auto max-w-[1000px] px-6 py-6 text-[12px] text-muted-foreground flex items-center justify-between">
-          <span>© 2026 JurisFlow · Todos os direitos reservados.</span>
+          <span>{BRAND.footer}.</span>
           <div className="flex gap-4">
             <Link to="/lgpd" className="hover:text-foreground">Privacidade</Link>
             <Link to="/" className="hover:text-foreground">Início</Link>

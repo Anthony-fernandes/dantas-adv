@@ -7,9 +7,10 @@ import { FormDialog } from "@/components/shell/FormDialog";
 import { RowActions } from "@/components/shell/RowActions";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { useList, useCreate, fmtDate } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/funcionarios/")({
-  head: () => ({ meta: [{ title: "Funcionários — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Funcionários") }] }),
   component: FuncionariosPage,
 });
 

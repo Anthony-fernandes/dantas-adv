@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
+import { BRAND } from "@/lib/brand";
 import { Building2, Users, Shield, BarChart3, Scale, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ function MasterLayout() {
             <Scale className="h-4 w-4" />
           </div>
           <div>
-            <p className="font-display text-[14.5px] font-semibold">JurisFlow</p>
+            <p className="font-display text-[14.5px] font-semibold">{BRAND.name}</p>
             <p className="text-[10px] uppercase tracking-[0.14em] text-white/60">Master</p>
           </div>
         </div>

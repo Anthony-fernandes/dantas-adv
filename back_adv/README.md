@@ -1,4 +1,4 @@
-# Lawflow (Django API + Admin)
+# NimbusLaw — Backend (Django API + Admin)
 
 Backend API skeleton to replace Supabase for the Lovable (Vite/React) frontend.
 

@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
 import { financeiro, fmtBRL, fmtBRLPreciso, fmtDate } from "@/lib/mock";
 import { DollarSign, Download } from "lucide-react";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/portal/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro — Portal" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Financeiro — Portal do Cliente") }] }),
   component: PortalFin,
 });
 

@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Shield, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { useList, fmtDateTime, humanize } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/auditoria")({
-  head: () => ({ meta: [{ title: "Auditoria — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Auditoria") }] }),
   component: AuditoriaPage,
 });
 

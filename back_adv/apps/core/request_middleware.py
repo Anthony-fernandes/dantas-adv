@@ -62,7 +62,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
             }
             import logging
 
-            logging.getLogger("lawflow.request").info(json.dumps(payload, default=str))
+            logging.getLogger("nimbuslaw.request").info(json.dumps(payload, default=str))
         except Exception:
             # Never break responses due to logging.
             pass

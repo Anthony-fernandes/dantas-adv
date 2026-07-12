@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FileStack, Download, FileText, Image as ImageIcon, File } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/portal/documentos")({
-  head: () => ({ meta: [{ title: "Documentos — Portal" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Documentos — Portal do Cliente") }] }),
   component: PortalDocs,
 });
 

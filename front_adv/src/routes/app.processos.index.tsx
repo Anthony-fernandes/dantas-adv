@@ -7,9 +7,10 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useList, fmtBRL, clientName } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/processos/")({
-  head: () => ({ meta: [{ title: "Processos — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Processos") }] }),
   component: ProcessosPage,
 });
 

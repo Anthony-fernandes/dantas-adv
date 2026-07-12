@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Scale, Mail, Building2, CheckCircle2, Shield } from "lucide-react";
+import { BRAND, pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/convite")({
-  head: () => ({ meta: [{ title: "Aceitar convite — JurisFlow" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Aceitar convite") }, { name: "robots", content: "noindex" }] }),
   component: ConvitePage,
 });
 
@@ -16,7 +17,7 @@ function ConvitePage() {
       <div className="w-full max-w-md">
         <div className="flex items-center gap-2 mb-6 justify-center">
           <div className="grid h-9 w-9 place-items-center rounded-md bg-primary text-primary-foreground"><Scale className="h-4 w-4" /></div>
-          <span className="font-display font-semibold text-lg">JurisFlow</span>
+          <span className="font-display font-semibold text-lg">{BRAND.name}</span>
         </div>
 
         {!accepted ? (

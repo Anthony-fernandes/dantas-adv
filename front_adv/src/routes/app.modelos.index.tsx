@@ -6,9 +6,10 @@ import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { FormDialog } from "@/components/shell/FormDialog";
 import { RowActions } from "@/components/shell/RowActions";
 import { useList, useCreate, fmtDate, humanize } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/modelos/")({
-  head: () => ({ meta: [{ title: "Modelos — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Modelos") }] }),
   component: ModelosPage,
 });
 

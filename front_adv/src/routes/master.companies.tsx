@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Building2, Plus, MoreHorizontal } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
+import { BRAND, pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/master/companies")({
-  head: () => ({ meta: [{ title: "Empresas — Master" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Empresas — Admin Master") }] }),
   component: MasterCompanies,
 });
 
@@ -18,7 +19,7 @@ const empresas = [
 function MasterCompanies() {
   return (
     <div className="mx-auto max-w-[1400px] p-6 md:p-8 space-y-6">
-      <PageHeader eyebrow="Master" title="Empresas na plataforma" description="Todos os escritórios que utilizam o JurisFlow."
+      <PageHeader eyebrow="Master" title="Empresas na plataforma" description={`Todos os escritórios que utilizam o ${BRAND.name}.`}
         actions={
           <button className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 transition">
             <Plus className="h-3.5 w-3.5" /> Cadastrar empresa

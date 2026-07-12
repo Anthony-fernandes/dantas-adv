@@ -245,3 +245,14 @@ export function useAuth(): AuthContextValue {
   if (!ctx) throw new Error("useAuth deve ser usado dentro de AuthProvider");
   return ctx;
 }
+
+/**
+ * Tenant (escritório) ativo da sessão, para exibir a marca do escritório.
+ * Retorna `null` quando ainda não carregado — a UI usa a identidade da
+ * plataforma apenas como fallback discreto.
+ */
+export function useActiveTenant(): Tenant | null {
+  const { tenants, activeTenantId } = useAuth();
+  if (!activeTenantId) return tenants[0] ?? null;
+  return tenants.find((t) => t.id === String(activeTenantId)) ?? tenants[0] ?? null;
+}

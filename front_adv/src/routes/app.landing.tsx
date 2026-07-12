@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Globe2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { pageTitle } from "@/lib/brand";
 export const Route = createFileRoute("/app/landing")({
-  head: () => ({ meta: [{ title: "Site institucional — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Site institucional") }] }),
   component: () => (
     <ModuleScaffold eyebrow="Marketing" title="Site institucional"
       description="CMS para o site do escritório: hero, serviços, equipe, casos e contato." icon={Globe2}

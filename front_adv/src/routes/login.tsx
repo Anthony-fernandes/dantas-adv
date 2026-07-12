@@ -3,9 +3,10 @@ import { Scale, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { BRAND, pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Entrar — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Entrar") }] }),
   component: LoginPage,
 });
 
@@ -43,7 +44,7 @@ function LoginPage() {
             <Scale className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-display text-lg font-semibold">JurisFlow</p>
+            <p className="font-display text-lg font-semibold">{BRAND.name}</p>
             <p className="text-[11px] uppercase tracking-[0.16em] text-white/60">Legal Suite</p>
           </div>
         </div>
@@ -61,7 +62,7 @@ function LoginPage() {
         </div>
 
         <div className="relative text-[11px] uppercase tracking-[0.16em] text-white/40">
-          © 2026 JurisFlow — Todos os direitos reservados
+          {BRAND.footer}
         </div>
       </div>
 
@@ -71,7 +72,7 @@ function LoginPage() {
             <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
               <Scale className="h-4 w-4" />
             </div>
-            <span className="font-display text-lg font-semibold">JurisFlow</span>
+            <span className="font-display text-lg font-semibold">{BRAND.name}</span>
           </div>
 
           <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Acesso ao sistema</p>

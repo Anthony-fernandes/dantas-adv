@@ -3,9 +3,10 @@ import { Building2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { useAuth } from "@/lib/auth";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/empresas/")({
-  head: () => ({ meta: [{ title: "Empresas — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Empresas") }] }),
   component: EmpresasPage,
 });
 

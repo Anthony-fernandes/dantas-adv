@@ -8,9 +8,10 @@ import { StatusPill } from "@/components/shell/PageHeader";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useList } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/usuarios/")({
-  head: () => ({ meta: [{ title: "Usuários — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Usuários") }] }),
   component: UsuariosPage,
 });
 

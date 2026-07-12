@@ -5,9 +5,10 @@ import { DollarSign, TrendingUp, TrendingDown, Wallet, Plus, ArrowUpRight, Arrow
 import { FormDialog } from "@/components/shell/FormDialog";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
 import { useList, useCreate, fmtBRL, fmtDate, clientName } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/financeiro/")({
-  head: () => ({ meta: [{ title: "Financeiro — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Financeiro") }] }),
   component: FinanceiroPage,
 });
 

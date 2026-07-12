@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Scale, Building2, Check, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { BRAND, pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/selecionar-tenant")({
-  head: () => ({ meta: [{ title: "Selecionar escritório — JurisFlow" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Selecionar escritório") }, { name: "robots", content: "noindex" }] }),
   component: SelecionarTenant,
 });
 
@@ -26,7 +27,7 @@ function SelecionarTenant() {
       <div className="w-full max-w-2xl">
         <div className="flex items-center gap-2 mb-6 justify-center">
           <div className="grid h-9 w-9 place-items-center rounded-md bg-primary text-primary-foreground"><Scale className="h-4 w-4" /></div>
-          <span className="font-display font-semibold text-lg">JurisFlow</span>
+          <span className="font-display font-semibold text-lg">{BRAND.name}</span>
         </div>
 
         <div className="text-center mb-8">

@@ -30,6 +30,8 @@ Rotas frontend: 86 arquivos em `src/routes/`.
 
 **90 ocorrências** de `JurisFlow` no frontend + referências a `LawFlow` no backend.
 
+> ✅ **RESOLVIDO no Bloco 1 (2026-07-12)** — branding centralizado em `src/lib/brand.ts`, storage migrado, tenant em destaque nas sidebars, e-mails separados plataforma×escritório. Detalhes: `docs/BRANDING.md`.
+
 Pontos concretos:
 - `front_adv/index.html` → `<title>JurisFlow — Plataforma Jurídica</title>` + `favicon.ico` genérico.
 - `AppSidebar.tsx` / `PortalSidebar.tsx` → nome **"JurisFlow" hardcoded** (deveria exibir a marca do escritório/tenant).

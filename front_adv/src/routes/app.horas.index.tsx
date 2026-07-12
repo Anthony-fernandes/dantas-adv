@@ -6,9 +6,10 @@ import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { FormDialog } from "@/components/shell/FormDialog";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { useList, useCreate, fmtBRL, fmtDate } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/horas/")({
-  head: () => ({ meta: [{ title: "Horas — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Horas") }] }),
   component: HorasPage,
 });
 

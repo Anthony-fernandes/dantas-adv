@@ -2,9 +2,10 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { nfse, fmtBRL, fmtDate } from "@/lib/mock";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/nfse/$id")({
-  head: ({ params }) => ({ meta: [{ title: `NFS-e ${params.id} — JurisFlow` }] }),
+  head: ({ params }) => ({ meta: [{ title: pageTitle(`NFS-e ${params.id}`) }] }),
   loader: ({ params }) => {
     const rec = (nfse as any[]).find((x) => x.id === params.id);
     if (!rec) throw notFound();

@@ -4,9 +4,10 @@ import { Banknote, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { useList, fmtBRL, fmtDate, clientName } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/honorarios/")({
-  head: () => ({ meta: [{ title: "Honorários — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Honorários") }] }),
   component: HonorariosPage,
 });
 

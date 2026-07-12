@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BarChart3, TrendingUp, DollarSign, Users, Building2, Zap } from "lucide-react";
 import { PageHeader, StatCard } from "@/components/shell/PageHeader";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/master/metrics")({
-  head: () => ({ meta: [{ title: "Métricas — Master JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Métricas — Admin Master") }] }),
   component: MasterMetrics,
 });
 

@@ -120,11 +120,11 @@ export const nfse = [
 ];
 
 export const funcionarios = [
-  { id: "fn-01", nome: "Marina Souza", cargo: "Sócia — Advogada", email: "marina@jurisflow.com.br", oab: "OAB/SP 123.456", ingresso: "2018-03-15" },
-  { id: "fn-02", nome: "Ricardo Lima", cargo: "Advogado sênior", email: "ricardo@jurisflow.com.br", oab: "OAB/SP 234.567", ingresso: "2020-08-01" },
-  { id: "fn-03", nome: "André Palma", cargo: "Advogado pleno", email: "andre@jurisflow.com.br", oab: "OAB/SP 298.112", ingresso: "2022-01-10" },
-  { id: "fn-04", nome: "Luísa Prado", cargo: "Advogada júnior", email: "luisa@jurisflow.com.br", oab: "OAB/RJ 145.098", ingresso: "2024-04-20" },
-  { id: "fn-05", nome: "Pedro Alves", cargo: "Estagiário", email: "pedro@jurisflow.com.br", oab: "—", ingresso: "2025-09-01" },
+  { id: "fn-01", nome: "Marina Souza", cargo: "Sócia — Advogada", email: "marina@exemplo.adv.br", oab: "OAB/SP 123.456", ingresso: "2018-03-15" },
+  { id: "fn-02", nome: "Ricardo Lima", cargo: "Advogado sênior", email: "ricardo@exemplo.adv.br", oab: "OAB/SP 234.567", ingresso: "2020-08-01" },
+  { id: "fn-03", nome: "André Palma", cargo: "Advogado pleno", email: "andre@exemplo.adv.br", oab: "OAB/SP 298.112", ingresso: "2022-01-10" },
+  { id: "fn-04", nome: "Luísa Prado", cargo: "Advogada júnior", email: "luisa@exemplo.adv.br", oab: "OAB/RJ 145.098", ingresso: "2024-04-20" },
+  { id: "fn-05", nome: "Pedro Alves", cargo: "Estagiário", email: "pedro@exemplo.adv.br", oab: "—", ingresso: "2025-09-01" },
 ];
 
 export const cargos = [
@@ -136,17 +136,17 @@ export const cargos = [
 ];
 
 export const usuarios = [
-  { id: "us-01", nome: "Marina Souza", email: "marina@jurisflow.com.br", papel: "Admin", mfa: true, ultimoAcesso: "há 2 min", status: "Ativo" },
-  { id: "us-02", nome: "Ricardo Lima", email: "ricardo@jurisflow.com.br", papel: "Advogado", mfa: true, ultimoAcesso: "há 1 h", status: "Ativo" },
-  { id: "us-03", nome: "André Palma", email: "andre@jurisflow.com.br", papel: "Advogado", mfa: false, ultimoAcesso: "há 4 h", status: "Ativo" },
-  { id: "us-04", nome: "Luísa Prado", email: "luisa@jurisflow.com.br", papel: "Advogado", mfa: true, ultimoAcesso: "ontem", status: "Ativo" },
-  { id: "us-05", nome: "Pedro Alves", email: "pedro@jurisflow.com.br", papel: "Estagiário", mfa: false, ultimoAcesso: "há 3 dias", status: "Ativo" },
+  { id: "us-01", nome: "Marina Souza", email: "marina@exemplo.adv.br", papel: "Admin", mfa: true, ultimoAcesso: "há 2 min", status: "Ativo" },
+  { id: "us-02", nome: "Ricardo Lima", email: "ricardo@exemplo.adv.br", papel: "Advogado", mfa: true, ultimoAcesso: "há 1 h", status: "Ativo" },
+  { id: "us-03", nome: "André Palma", email: "andre@exemplo.adv.br", papel: "Advogado", mfa: false, ultimoAcesso: "há 4 h", status: "Ativo" },
+  { id: "us-04", nome: "Luísa Prado", email: "luisa@exemplo.adv.br", papel: "Advogado", mfa: true, ultimoAcesso: "ontem", status: "Ativo" },
+  { id: "us-05", nome: "Pedro Alves", email: "pedro@exemplo.adv.br", papel: "Estagiário", mfa: false, ultimoAcesso: "há 3 dias", status: "Ativo" },
 ];
 
 export const empresas = [
-  { id: "em-01", nome: "JurisFlow Advocacia Matriz", cnpj: "10.234.567/0001-11", cidade: "São Paulo/SP", usuarios: 18, plano: "Enterprise" },
-  { id: "em-02", nome: "JurisFlow Filial Rio", cnpj: "10.234.567/0002-92", cidade: "Rio de Janeiro/RJ", usuarios: 7, plano: "Business" },
-  { id: "em-03", nome: "JurisFlow BH", cnpj: "10.234.567/0003-73", cidade: "Belo Horizonte/MG", usuarios: 4, plano: "Business" },
+  { id: "em-01", nome: "Escritório Exemplo Matriz", cnpj: "10.234.567/0001-11", cidade: "São Paulo/SP", usuarios: 18, plano: "Enterprise" },
+  { id: "em-02", nome: "Escritório Exemplo Rio", cnpj: "10.234.567/0002-92", cidade: "Rio de Janeiro/RJ", usuarios: 7, plano: "Business" },
+  { id: "em-03", nome: "Escritório Exemplo BH", cnpj: "10.234.567/0003-73", cidade: "Belo Horizonte/MG", usuarios: 4, plano: "Business" },
 ];
 
 export const areas = [

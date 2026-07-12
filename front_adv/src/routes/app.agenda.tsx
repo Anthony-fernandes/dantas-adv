@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { PageHeader, StatusPill } from "@/components/shell/PageHeader";
 import { audiencias, prazos } from "@/lib/mock";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/agenda")({
-  head: () => ({ meta: [{ title: "Agenda — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Agenda") }] }),
   component: AgendaPage,
 });
 

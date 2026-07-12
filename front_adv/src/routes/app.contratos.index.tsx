@@ -6,9 +6,10 @@ import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader"
 import { FormDialog } from "@/components/shell/FormDialog";
 import { RowActions } from "@/components/shell/RowActions";
 import { useList, useCreate, fmtBRL, fmtDate, clientName, humanize } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/contratos/")({
-  head: () => ({ meta: [{ title: "Contratos — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Contratos") }] }),
   component: ContratosPage,
 });
 

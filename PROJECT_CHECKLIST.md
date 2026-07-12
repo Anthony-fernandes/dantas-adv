@@ -11,19 +11,21 @@ Referência de diagnóstico: `AUDIT_NIMBUSLAW.md`.
 ## 0. Auditoria e Plano
 - [x] Auditoria completa do frontend, backend, tenancy, segurança, mocks e UX (`AUDIT_NIMBUSLAW.md`)
 - [x] Criar `PROJECT_CHECKLIST.md` (este documento)
-- [ ] Validação do plano com o Product Owner (aguardando OK para iniciar Bloco 1)
+- [x] Validação do plano com o Product Owner (aprovado — execução contínua autorizada)
 
 ---
 
-## 1. 🔴 Branding — NimbusLaw + marca por tenant
-- [ ] Centralizar branding da plataforma numa constante (`src/lib/brand.ts`: `PLATFORM = "NimbusLaw"`)
-- [ ] `index.html`: título e meta → NimbusLaw; favicon novo (placeholder textual por enquanto)
-- [ ] Sidebar app/portal: exibir **nome do escritório (tenant)**, com "powered by NimbusLaw" discreto
-- [ ] Remover "JurisFlow" de todos os `head/meta title` das rotas (helper de título)
-- [ ] Migrar chaves de storage `jurisflow.*` → `nimbuslaw.*` (com limpeza das antigas)
-- [ ] Backend: `EMAIL_BRAND_NAME`, `DEFAULT_FROM_EMAIL`, loggers `lawflow.*` → NimbusLaw/env
-- [ ] Remover branding antigo de `mock.ts` (ou eliminar o arquivo — ver Bloco 2)
-- [ ] Varredura final: 0 ocorrências de `JurisFlow`/`LawFlow` no repo (exceto histórico)
+## 1. 🔴 Branding — NimbusLaw + marca por tenant  ✅ CONCLUÍDO
+- [x] Centralizar branding da plataforma (`src/lib/brand.ts`: `BRAND`, `STORAGE_PREFIX`, `pageTitle()`)
+- [x] `index.html`: título e meta description → NimbusLaw (favicon oficial aguarda identidade NimbusDesk)
+- [x] Sidebar app/portal: exibir **nome do escritório (tenant)** via `useActiveTenant()`, com "Powered by NimbusLaw" discreto
+- [x] Títulos das rotas padronizados via `pageTitle()` (61 arquivos; padrão "Seção | NimbusLaw" / "… — Portal do Cliente" / "… — Admin Master")
+- [x] Migrar chaves de storage `jurisflow.*` → `nimbuslaw.*` (migração compatível, sem desconectar sessões — ver `docs/BRANDING.md`)
+- [x] Backend: `EMAIL_BRAND_NAME` default NimbusLaw, `DEFAULT_FROM_EMAIL` → `no-reply@nimbuslaw.local`, loggers `lawflow.request` → `nimbuslaw.request`
+- [x] E-mails: comunicação do escritório destaca o tenant + "Tecnologia fornecida por NimbusLaw" (`email_templates._base(office_name=…)`)
+- [x] Remover branding antigo de `mock.ts` (arquivo será eliminado no Bloco 2)
+- [x] Varredura final documentada em `docs/BRANDING.md` (únicas refs restantes: migração legada em `api.ts` + docs de auditoria)
+- [x] Bonus: migração `finance.0007` gerada já blindada (rename de índice idempotente p/ SQLite)
 
 ## 2. 🔴 Eliminar mocks — tudo consumindo API real
 - [ ] `app.prazos.$id` → API real (`deadlines/:id`)

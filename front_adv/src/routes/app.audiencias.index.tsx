@@ -5,9 +5,10 @@ import { Plus, MapPin, Video, FolderOpen, Loader2 } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
 import { FormDialog } from "@/components/shell/FormDialog";
 import { useList, useCreate, fmtDateTime, daysUntil } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/audiencias/")({
-  head: () => ({ meta: [{ title: "Audiências — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Audiências") }] }),
   component: AudienciasPage,
 });
 

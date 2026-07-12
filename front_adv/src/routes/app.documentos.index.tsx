@@ -4,9 +4,10 @@ import { FileStack, Upload, FileText, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { DocumentoDialog } from "@/components/shell/DocumentoDialog";
 import { useList, fmtDate } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/documentos/")({
-  head: () => ({ meta: [{ title: "Documentos — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Documentos") }] }),
   component: DocumentosPage,
 });
 

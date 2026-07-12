@@ -4,9 +4,10 @@ import { Receipt, Loader2 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { useList, fmtBRL, fmtDate } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/nfse/")({
-  head: () => ({ meta: [{ title: "NFS-e — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("NFS-e") }] }),
   component: NfsePage,
 });
 

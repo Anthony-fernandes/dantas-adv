@@ -3,9 +3,10 @@ import { useMemo, useState } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { PageHeader, StatusPill } from "@/components/shell/PageHeader";
 import { useList, fmtBRL, humanize } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/portal/processos/")({
-  head: () => ({ meta: [{ title: "Meus processos — Portal" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Meus processos — Portal do Cliente") }] }),
   component: PortalProcessos,
 });
 

@@ -3,9 +3,10 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, Scale, MapPin, Briefcase, Users, FileText, Loader2 } from "lucide-react";
 import { StatusPill, StatCard } from "@/components/shell/PageHeader";
 import { useDetail, useList, fmtBRL, fmtDate, fmtDateTime, clientName, humanize } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/processos/$id")({
-  head: ({ params }) => ({ meta: [{ title: `Processo — JurisFlow` }] }),
+  head: ({ params }) => ({ meta: [{ title: pageTitle(`Processo`) }] }),
   component: ProcessoDetalhe,
 });
 

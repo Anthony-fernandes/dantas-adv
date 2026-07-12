@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Plug } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { pageTitle } from "@/lib/brand";
 export const Route = createFileRoute("/app/integracoes")({
-  head: () => ({ meta: [{ title: "Integrações — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Integrações") }] }),
   component: () => (
     <ModuleScaffold eyebrow="Administração" title="Integrações"
       description="PJe, Projudi, e-Saj, tribunais, e-mail, WhatsApp e ferramentas contábeis." icon={Plug}

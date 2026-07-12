@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Send } from "lucide-react";
 import { PageHeader } from "@/components/shell/PageHeader";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/chat")({
-  head: () => ({ meta: [{ title: "Chat — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Chat") }] }),
   component: ChatPage,
 });
 

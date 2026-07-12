@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { pageTitle } from "@/lib/brand";
 export const Route = createFileRoute("/app/configuracoes")({
-  head: () => ({ meta: [{ title: "Configurações — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Configurações") }] }),
   component: () => (
     <ModuleScaffold eyebrow="Administração" title="Configurações do escritório"
       description="Identidade visual, planos, políticas de segurança, LGPD e customizações." icon={Settings}

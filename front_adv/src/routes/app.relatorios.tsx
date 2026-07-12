@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BarChart3 } from "lucide-react";
 import { ModuleScaffold } from "@/components/shell/ModuleScaffold";
+import { pageTitle } from "@/lib/brand";
 export const Route = createFileRoute("/app/relatorios")({
-  head: () => ({ meta: [{ title: "Relatórios — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Relatórios") }] }),
   component: () => (
     <ModuleScaffold eyebrow="Gestão" title="Relatórios executivos"
       description="BI e relatórios para sócios: produtividade, financeiro, contencioso e desempenho da equipe." icon={BarChart3}

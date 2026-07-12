@@ -2,9 +2,10 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { RecordDetail } from "@/components/shell/RecordScaffold";
 import { StatusPill } from "@/components/shell/PageHeader";
 import { financeiro, fmtBRL, fmtDate } from "@/lib/mock";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/financeiro/$id")({
-  head: ({ params }) => ({ meta: [{ title: `Lançamento ${params.id} — JurisFlow` }] }),
+  head: ({ params }) => ({ meta: [{ title: pageTitle(`Lançamento ${params.id}`) }] }),
   loader: ({ params }) => {
     const rec = (financeiro as any[]).find((x) => x.id === params.id);
     if (!rec) throw notFound();

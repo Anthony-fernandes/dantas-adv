@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Users, Search, Plus, Shield, Mail } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/master/users")({
-  head: () => ({ meta: [{ title: "Usuários — Master JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Usuários — Admin Master") }] }),
   component: MasterUsersPage,
 });
 

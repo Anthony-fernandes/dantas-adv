@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, StatusPill } from "@/components/shell/PageHeader";
 import { contratos, fmtBRL, fmtDate } from "@/lib/mock";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/portal/contratos")({
-  head: () => ({ meta: [{ title: "Contratos — Portal" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Contratos — Portal do Cliente") }] }),
   component: PortalContratos,
 });
 

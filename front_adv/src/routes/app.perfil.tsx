@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { useAuth } from "@/lib/auth";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/perfil")({
-  head: () => ({ meta: [{ title: "Perfil — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Perfil") }] }),
   component: PerfilPage,
 });
 

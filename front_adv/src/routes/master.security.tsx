@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Shield, AlertTriangle, Lock, Activity, Eye } from "lucide-react";
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/master/security")({
-  head: () => ({ meta: [{ title: "Segurança — Master JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Segurança — Admin Master") }] }),
   component: MasterSecurity,
 });
 

@@ -3,9 +3,10 @@ import { useState } from "react";
 import { UserCircle2, ArrowRight, Scale, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { BRAND, pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/portal/login")({
-  head: () => ({ meta: [{ title: "Portal do Cliente — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Portal do Cliente") }] }),
   component: PortalLoginPage,
 });
 
@@ -40,7 +41,7 @@ function PortalLoginPage() {
           <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
             <Scale className="h-4 w-4" />
           </div>
-          <span className="font-display text-lg font-semibold">JurisFlow</span>
+          <span className="font-display text-lg font-semibold">{BRAND.name}</span>
           <span className="ml-2 text-[10px] uppercase tracking-[0.16em] text-muted-foreground border border-border rounded-full px-2 py-0.5">Portal do cliente</span>
         </div>
 

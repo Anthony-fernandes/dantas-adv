@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ShieldCheck, ArrowRight } from "lucide-react";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/master/login")({
-  head: () => ({ meta: [{ title: "Master — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Master") }] }),
   component: MasterLoginPage,
 });
 

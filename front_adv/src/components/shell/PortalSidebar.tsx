@@ -1,6 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Gavel, FileStack, DollarSign, FileSignature, MessageSquare, Scale, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useActiveTenant } from "@/lib/auth";
+import { BRAND } from "@/lib/brand";
 
 const items = [
   { to: "/portal", label: "Início", icon: Home, exact: true },
@@ -13,15 +15,18 @@ const items = [
 
 export function PortalSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const tenant = useActiveTenant();
   return (
     <aside className="hidden md:flex sticky top-0 h-screen w-[240px] shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       <div className="flex h-16 items-center gap-3 px-5 border-b border-sidebar-border">
         <div className="grid h-9 w-9 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
           <Scale className="h-4 w-4" />
         </div>
-        <div className="leading-tight">
-          <p className="font-display text-[15px] font-semibold">JurisFlow</p>
-          <p className="text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/50">Portal do cliente</p>
+        <div className="leading-tight min-w-0">
+          <p className="font-display text-[15px] font-semibold truncate" title={tenant?.name}>
+            {tenant?.name || "Portal do cliente"}
+          </p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/50 truncate">Portal do cliente</p>
         </div>
       </div>
       <nav className="flex-1 p-3">
@@ -44,6 +49,7 @@ export function PortalSidebar() {
         </ul>
       </nav>
       <div className="border-t border-sidebar-border p-3">
+        <p className="px-2.5 pb-1.5 text-[9.5px] uppercase tracking-[0.14em] text-sidebar-foreground/35">{BRAND.poweredBy}</p>
         <Link to="/portal/login" className="flex items-center gap-2 rounded-md px-2.5 py-2 text-[12.5px] text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground">
           <LogOut className="h-4 w-4" /> Sair
         </Link>

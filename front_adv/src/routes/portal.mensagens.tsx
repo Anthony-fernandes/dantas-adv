@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/shell/PageHeader";
 import { Send } from "lucide-react";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/portal/mensagens")({
-  head: () => ({ meta: [{ title: "Mensagens — Portal" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Mensagens — Portal do Cliente") }] }),
   component: PortalMsg,
 });
 
@@ -19,7 +20,7 @@ function PortalMsg() {
       <PageHeader eyebrow="Portal" title="Mensagens" description="Converse diretamente com sua equipe jurídica." />
       <div className="surface-card flex flex-col min-h-[560px]">
         <div className="border-b border-border p-5">
-          <p className="text-[14px] font-semibold">Equipe JurisFlow</p>
+          <p className="text-[14px] font-semibold">Equipe do escritório</p>
           <p className="text-[11.5px] text-muted-foreground">Dra. Marina Souza · Dr. Ricardo Lima</p>
         </div>
         <div className="flex-1 p-5 space-y-4 overflow-y-auto">

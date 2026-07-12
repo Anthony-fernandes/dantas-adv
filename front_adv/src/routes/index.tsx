@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Scale, ShieldCheck, Sparkles, LineChart, Users, Gavel } from "lucide-react";
+import { BRAND, pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "JurisFlow — Plataforma jurídica premium para escritórios" },
+      { title: pageTitle("Plataforma jurídica premium para escritórios") },
       { name: "description", content: "Gestão completa de processos, prazos, clientes, financeiro e portal do cliente em uma única plataforma jurídica." },
     ],
   }),
@@ -21,7 +22,7 @@ function Landing() {
             <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
               <Scale className="h-4 w-4" />
             </div>
-            <span className="font-display text-[17px] font-semibold">JurisFlow</span>
+            <span className="font-display text-[17px] font-semibold">{BRAND.name}</span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-[13px] text-muted-foreground">
             <a href="#produto" className="hover:text-foreground transition">Produto</a>
@@ -111,7 +112,7 @@ function Landing() {
 
       <footer className="border-t border-border">
         <div className="mx-auto max-w-7xl px-6 py-8 flex flex-wrap items-center justify-between gap-4 text-[12px] text-muted-foreground">
-          <p>© 2026 JurisFlow. Todos os direitos reservados.</p>
+          <p>{BRAND.footer}.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-foreground">Termos</a>
             <a href="#" className="hover:text-foreground">Privacidade</a>

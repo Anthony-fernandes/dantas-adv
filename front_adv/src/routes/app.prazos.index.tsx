@@ -5,9 +5,10 @@ import { Timer, AlertTriangle, Clock, CheckCircle2, Plus, Loader2 } from "lucide
 import { PageHeader, StatCard, StatusPill } from "@/components/shell/PageHeader";
 import { FormDialog } from "@/components/shell/FormDialog";
 import { useList, useCreate, fmtDate, daysUntil, humanize } from "@/lib/resources";
+import { pageTitle } from "@/lib/brand";
 
 export const Route = createFileRoute("/app/prazos/")({
-  head: () => ({ meta: [{ title: "Prazos — JurisFlow" }] }),
+  head: () => ({ meta: [{ title: pageTitle("Prazos") }] }),
   component: PrazosPage,
 });
 

@@ -3,11 +3,24 @@ from __future__ import annotations
 from django.conf import settings
 
 
-def _base(title: str, body_html: str, footer_note: str = "") -> str:
-    brand = getattr(settings, "EMAIL_BRAND_NAME", "JurisFlow")
+def _base(title: str, body_html: str, footer_note: str = "", office_name: str | None = None) -> str:
+    """Layout base.
+
+    Quando `office_name` é informado, a comunicação é DO ESCRITÓRIO: o cabeçalho
+    destaca o nome do escritório e a plataforma aparece apenas como
+    "Tecnologia fornecida por {brand}". Sem `office_name`, é comunicação
+    administrativa da plataforma (brand em destaque).
+    """
+    brand = getattr(settings, "EMAIL_BRAND_NAME", "NimbusLaw")
     color = getattr(settings, "EMAIL_BRAND_COLOR", "#1d4ed8")
     base_url = getattr(settings, "FRONTEND_BASE_URL", "").rstrip("/")
     footer = footer_note or f"Você está recebendo este e-mail porque tem uma conta no {brand}."
+    header_name = office_name or brand
+    tech_line = (
+        f"<p style='margin:6px 0 0;color:#ffffffb3;font-size:11px;'>Tecnologia fornecida por {brand}</p>"
+        if office_name
+        else ""
+    )
     return f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -22,7 +35,8 @@ def _base(title: str, body_html: str, footer_note: str = "") -> str:
         <!-- Header -->
         <tr>
           <td style="background:{color};border-radius:12px 12px 0 0;padding:28px 32px;">
-            <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">{brand}</span>
+            <span style="color:#fff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">{header_name}</span>
+            {tech_line}
           </td>
         </tr>
         <!-- Body -->
@@ -47,7 +61,7 @@ def _base(title: str, body_html: str, footer_note: str = "") -> str:
 
 def invite_email(*, office_name: str, role_label: str, invite_url: str | None, token: str, expires_days: int = 7) -> tuple[str, str]:
     """Returns (subject, html_body)."""
-    brand = getattr(settings, "EMAIL_BRAND_NAME", "JurisFlow")
+    brand = getattr(settings, "EMAIL_BRAND_NAME", "NimbusLaw")
     subject = f"Você foi convidado para {office_name} — {brand}"
 
     cta = ""
@@ -84,12 +98,12 @@ def invite_email(*, office_name: str, role_label: str, invite_url: str | None, t
       Se você não esperava este convite, pode ignorar este e-mail com segurança.
     </p>"""
 
-    return subject, _base(subject, body, f"Você recebeu um convite do escritório {office_name}.")
+    return subject, _base(subject, body, f"Você recebeu um convite do escritório {office_name}.", office_name=office_name)
 
 
 def deadline_alert_email(*, user_name: str, deadline_description: str, due_date_str: str, process_cnj: str, days_until: int, office_name: str) -> tuple[str, str]:
     """Returns (subject, html_body) for deadline alert."""
-    brand = getattr(settings, "EMAIL_BRAND_NAME", "JurisFlow")
+    brand = getattr(settings, "EMAIL_BRAND_NAME", "NimbusLaw")
     urgency_color = "#dc2626" if days_until <= 1 else "#d97706" if days_until <= 3 else "#2563eb"
     urgency_label = "URGENTE — Vence hoje!" if days_until == 0 else f"Vence em {days_until} dia{'s' if days_until != 1 else ''}"
     subject = f"[{urgency_label}] Prazo: {deadline_description[:60]}"
@@ -112,7 +126,7 @@ def deadline_alert_email(*, user_name: str, deadline_description: str, due_date_
     </table>
     <p style="margin:0;color:#94a3b8;font-size:13px;">Enviado pelo escritório <strong>{office_name}</strong> via {brand}.</p>"""
 
-    return subject, _base(subject, body)
+    return subject, _base(subject, body, office_name=office_name)
 
 
 def hearing_alert_email(*, user_name: str, hearing_type: str, hearing_date_str: str, process_cnj: str, office_name: str) -> tuple[str, str]:
@@ -134,11 +148,11 @@ def hearing_alert_email(*, user_name: str, hearing_type: str, hearing_date_str: 
       </tr>
     </table>
     <p style="margin:0;color:#94a3b8;font-size:13px;">Enviado pelo escritório <strong>{office_name}</strong>.</p>"""
-    return subject, _base(subject, body)
+    return subject, _base(subject, body, office_name=office_name)
 
 
 def welcome_email(*, user_name: str, office_name: str, login_url: str | None) -> tuple[str, str]:
-    brand = getattr(settings, "EMAIL_BRAND_NAME", "JurisFlow")
+    brand = getattr(settings, "EMAIL_BRAND_NAME", "NimbusLaw")
     subject = f"Bem-vindo ao {office_name} — {brand}"
     cta = f'<div style="margin:28px 0;text-align:center;"><a href="{login_url}" style="display:inline-block;background:#1d4ed8;color:#fff;font-size:15px;font-weight:600;padding:14px 32px;border-radius:8px;text-decoration:none;">Acessar o sistema</a></div>' if login_url else ""
     body = f"""
@@ -152,4 +166,4 @@ def welcome_email(*, user_name: str, office_name: str, login_url: str | None) ->
     <p style="margin:0;color:#94a3b8;font-size:13px;line-height:1.6;">
       Caso tenha dúvidas, entre em contato com o administrador do escritório.
     </p>"""
-    return subject, _base(subject, body)
+    return subject, _base(subject, body, office_name=office_name)

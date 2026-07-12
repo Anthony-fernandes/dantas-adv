@@ -12,9 +12,37 @@ const RAW_API_BASE = String((import.meta as any).env?.VITE_API_BASE_URL || "").t
 const API_BASE = RAW_API_BASE.replace(/\/$/, "");
 const API_PREFIX = "/api";
 
-const ACCESS_KEY = "jurisflow.access";
-const REFRESH_KEY = "jurisflow.refresh";
-const TENANT_KEY = "jurisflow.tenant";
+import { STORAGE_PREFIX } from "./brand";
+
+const ACCESS_KEY = `${STORAGE_PREFIX}access`;
+const REFRESH_KEY = `${STORAGE_PREFIX}refresh`;
+const TENANT_KEY = `${STORAGE_PREFIX}tenant`;
+
+// --- Migração de chaves legadas (jurisflow.*) -> nimbuslaw.* ---
+// Estratégia compatível: lê a chave nova; se ausente, migra o valor da chave
+// antiga; remove a antiga em seguida. Evita desconectar usuários com sessão
+// ativa. Executa uma única vez no carregamento do módulo.
+// Chaves migradas: access, refresh (sessionStorage) e tenant (localStorage).
+// Documentado em docs/BRANDING.md.
+const LEGACY_PREFIX = "jurisflow.";
+function migrateLegacyKey(storage: Storage, suffix: string) {
+  const newKey = `${STORAGE_PREFIX}${suffix}`;
+  const oldKey = `${LEGACY_PREFIX}${suffix}`;
+  if (storage.getItem(newKey) === null) {
+    const legacy = storage.getItem(oldKey);
+    if (legacy !== null) storage.setItem(newKey, legacy);
+  }
+  storage.removeItem(oldKey);
+}
+if (typeof window !== "undefined") {
+  try {
+    migrateLegacyKey(window.sessionStorage, "access");
+    migrateLegacyKey(window.sessionStorage, "refresh");
+    migrateLegacyKey(window.localStorage, "tenant");
+  } catch {
+    /* storage indisponível (ex.: modo privado restrito) — segue sem migrar */
+  }
+}
 
 export type ApiError = {
   status: number;

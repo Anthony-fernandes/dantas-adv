@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth";
+import { useAuth, useActiveTenant } from "@/lib/auth";
+import { BRAND } from "@/lib/brand";
 import {
   LayoutDashboard, Users, Gavel, FolderKanban, FileStack, FileSignature,
   FileText, FolderOpen, Timer, CheckSquare, Clock, MessageSquare, CalendarDays,
@@ -63,6 +64,7 @@ const nav: Section[] = [
 export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { profile, roles, isSuperuser } = useAuth();
+  const tenant = useActiveTenant();
   const userInitials = (profile?.full_name || "U").split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() || "").join("");
   const roleLabel = isSuperuser ? "Superusuário" : (roles[0] || "Equipe interna");
 
@@ -73,9 +75,13 @@ export function AppSidebar() {
         <div className="grid h-9 w-9 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
           <Scale className="h-4.5 w-4.5" />
         </div>
-        <div className="leading-tight">
-          <p className="font-display text-[15px] font-semibold text-sidebar-foreground">JurisFlow</p>
-          <p className="text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/50">Legal Suite</p>
+        <div className="leading-tight min-w-0">
+          <p className="font-display text-[15px] font-semibold text-sidebar-foreground truncate" title={tenant?.name}>
+            {tenant?.name || BRAND.name}
+          </p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/50 truncate">
+            {tenant ? BRAND.poweredBy : "Legal Suite"}
+          </p>
         </div>
       </div>
 
